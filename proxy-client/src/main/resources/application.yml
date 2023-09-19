@@ -1,0 +1,22 @@
+
+server:
+  servlet:
+    context-path: /app
+
+spring:
+  application:
+    name: PROXY-CLIENT
+  profiles:
+    active:
+      - dev
+  graphql:
+    graphiql:
+      enabled: true
+      path: /graphiql
+
+logging:
+  file:
+    name: src/main/resources/script/stage_log.log
+  logback:
+    rollingpolicy:
+      clean-history-on-start: true

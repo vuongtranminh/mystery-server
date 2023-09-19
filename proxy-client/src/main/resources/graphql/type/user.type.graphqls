@@ -1,0 +1,11 @@
+type UserDto implements Node {
+    id: ID!
+    name: String
+    avatar: String
+    bio: String
+}
+
+type UserList implements PaginatedList {
+    items: [UserDto!]!
+    totalItems: Int!
+}

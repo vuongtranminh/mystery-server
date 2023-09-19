@@ -1,0 +1,60 @@
+syntax = "proto3";
+
+package vuong.app.v1.operator;
+option java_package = "com.vuong.app.v1.operator";
+option java_outer_classname = "OperatorProto";
+//option java_multiple_files = true;
+
+import "google/protobuf/any.proto";
+
+message BooleanOperators {
+  int32 eq = 1;
+}
+
+message DateRange {
+  string start = 1;
+  string end = 2;
+}
+
+message DateOperators {
+  string eq = 1;
+  string before = 2;
+  string after = 3;
+  DateRange between = 4;
+}
+
+enum SortOrder {
+    SORT_ORDER_UNSPECIFIED = 0;
+    ASC = 1;
+    DESC = 2;
+}
+
+message StringOperators {
+  string eq = 1;
+  string contains = 2;
+}
+
+message NumberRange {
+  string start = 1;
+  string end = 2;
+}
+
+message NumberOperators {
+  string eq = 1;
+  string lt = 2;
+  string lte = 3;
+  string gt = 4;
+  string gte = 5;
+  NumberRange between = 6;
+}
+
+enum LogicalOperator {
+    LOGICAL_UNSPECIFIED = 0;
+    AND = 1;
+    OR = 2;
+}
+
+message ListOperators {
+  repeated string in = 1;
+  repeated string not_in = 2;
+}
