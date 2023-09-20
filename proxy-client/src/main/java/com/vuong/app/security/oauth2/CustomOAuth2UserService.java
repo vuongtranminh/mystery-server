@@ -5,6 +5,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.vuong.app.business.auth.model.*;
+import com.vuong.app.exception.wrapper.ResourceNotFoundException;
 import com.vuong.app.grpc.service.AuthClientService;
 import com.vuong.app.exception.wrapper.OAuth2AuthenticationProcessingException;
 import com.vuong.app.grpc.message.auth.*;
@@ -77,28 +78,32 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
     }
 
     private UserDto registerNewUser(OAuth2UserRequest oAuth2UserRequest, OAuth2UserInfo oAuth2UserInfo) {
-        Optional<CreateUserResponse> createUserResponse = this.authClientService.create(CreateUserRequest.builder()
+        CreateUserResponse createUserResponse = this.authClientService.create(CreateUserRequest.builder()
                 .name(oAuth2UserInfo.getName())
                 .avatar(oAuth2UserInfo.getImageUrl())
                 .email(oAuth2UserInfo.getEmail())
                 .password("")
                 .provider(AuthProvider.valueOf(oAuth2UserRequest.getClientRegistration().getRegistrationId()))
                 .providerId(oAuth2UserInfo.getId())
-                .build());
+                .build()).get();
 
-        // throw EX
+        UserDto userDto = this.authClientService.getUserById(GetUserByIdRequest.builder().userId(createUserResponse.getUserId()).build())
+                .orElseThrow(() -> new ResourceNotFoundException("User", "id", createUserResponse.getUserId()));
 
-        return this.authClientService.getUserById(GetUserByIdRequest.builder().userId(createUserResponse.get().getUserId()).build()).get();
-        // throw EX
+        return userDto;
     }
 
     private UserDto updateExistingUser(UserDto existingUser, OAuth2UserInfo oAuth2UserInfo) {
-        Optional<UpdateUserResponse> updateUserResponse = this.authClientService.update(UpdateUserRequest.builder()
+        UpdateUserResponse updateUserResponse = this.authClientService.update(UpdateUserRequest.builder()
                 .userId(existingUser.getUserId())
                 .name(oAuth2UserInfo.getName())
                 .avatar(oAuth2UserInfo.getImageUrl())
-                .build());
-        return this.authClientService.getUserById(GetUserByIdRequest.builder().userId(updateUserResponse.get().getUserId()).build()).get();
+                .build()).get();
+
+        UserDto userDto = this.authClientService.getUserById(GetUserByIdRequest.builder().userId(updateUserResponse.getUserId()).build())
+                .orElseThrow(() -> new ResourceNotFoundException("User", "id", updateUserResponse.getUserId()));
+
+        return userDto;
     }
 
     private String requestEmail(String token) {
