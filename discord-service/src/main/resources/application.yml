@@ -1,0 +1,14 @@
+
+spring:
+  application:
+    name: DISCORD-SERVICE
+  profiles:
+    active:
+      - dev
+
+logging:
+  file:
+    name: src/main/resources/script/stage_log.log
+  logback:
+    rollingpolicy:
+      clean-history-on-start: true

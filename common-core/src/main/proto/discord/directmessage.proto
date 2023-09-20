@@ -1,0 +1,27 @@
+syntax = "proto3";
+
+package vuong.app.v1;
+option java_package = "com.vuong.app.v1";
+option java_multiple_files = true;
+option java_outer_classname = "DirectMessageProto";
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/field_mask.proto";
+import "common.proto";
+import "operator.proto";
+
+message GrpcDirectMessage {
+  int32 direct_message_id = 1;
+  string content = 2;
+  string file_url = 3;
+  int32 member_id = 4;
+  int32 conversation_id = 5;
+  bool deleted = 6;
+  string created_at = 7;
+  string updated_at = 8;
+  string deleted_at = 9;
+}
+
+service DirectMessage {
+
+}

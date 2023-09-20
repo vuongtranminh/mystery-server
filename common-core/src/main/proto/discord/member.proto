@@ -1,0 +1,59 @@
+syntax = "proto3";
+
+package vuong.app.v1;
+option java_package = "com.vuong.app.v1";
+option java_multiple_files = true;
+option java_outer_classname = "MemberProto";
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/field_mask.proto";
+import "common.proto";
+import "operator.proto";
+
+enum GrpcMemberRole {
+  MEMBER_ROLE_UNSPECIFIED = 0;
+  MEMBER_ROLE_ADMIN = 1;
+  MEMBER_ROLE_MODERATOR = 2;
+  MEMBER_ROLE_GUEST = 3;
+}
+
+message GrpcMember {
+  int32 member_id = 1;
+  GrpcMemberRole role = 2;
+  int32 profile_id = 3;
+  int32 server_id = 4;
+  string created_at = 5;
+  string updated_at = 6;
+}
+
+message GrpcGetMemberByServerIdAndProfileIdRequest {
+  int32 server_id = 1;
+  int32 profile_id = 2;
+}
+
+message GrpcGetMemberByServerIdAndProfileIdResponse {
+  GrpcMember member = 1;
+}
+
+message GrpcCreateMemberRequest {
+  GrpcMemberRole role = 1;
+  int32 profile_id = 2;
+  int32 server_id = 3;
+}
+
+message GrpcCreateMemberResponse {
+  int32 member_id = 1;
+}
+
+message GrpcDeleteMemberByServerIdAndProfileIdRequest {
+  int32 profile_id = 1; // delete when profile not owner server
+  int32 server_id = 2;
+}
+
+message GrpcDeleteMemberByServerIdAndProfileIdResponse {
+  bool deleted = 1;
+}
+
+service MemberService {
+
+}

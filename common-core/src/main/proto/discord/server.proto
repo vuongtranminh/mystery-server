@@ -1,0 +1,75 @@
+syntax = "proto3";
+
+package vuong.app.v1;
+option java_package = "com.vuong.app.v1";
+option java_multiple_files = true;
+option java_outer_classname = "ServerProto";
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/field_mask.proto";
+import "common.proto";
+import "operator.proto";
+
+message GrpcServer {
+  int32 server_id = 1;
+  string name = 2;
+  string img_url = 3;
+  string invite_code = 4;
+  int32 profile_id = 5;
+  string created_at = 6;
+  string updated_at = 7;
+}
+
+message GrpcCreateServerRequest {
+  string name = 1;
+  string img_url = 2;
+  int32 profile_id = 3;
+}
+
+message GrpcCreateServerResponse {
+  int32 server_id = 1;
+}
+
+message GrpcGetServerByInviteCodeRequest {
+  string invite_code = 1;
+}
+
+message GrpcGetServerByInviteCodeResponse {
+  GrpcServer server = 1;
+}
+
+message GrpcGetServerByServerIdRequest {
+  int32 server_id = 1;
+}
+
+message GrpcGetServerByServerIdResponse {
+  GrpcServer server = 1;
+}
+
+message GrpcDeleteServerByServerIdRequest {
+  int32 profile_id = 1; // delete when profile owner server
+  int32 server_id = 2;
+}
+
+message GrpcDeleteServerByServerIdResponse {
+  bool deleted = 1;
+}
+
+message GrpcUpdateServerByServerIdRequest {
+  int32 profile_id = 1; // update when profile owner server
+  int32 server_id = 2;
+  string name = 3;
+  string img_url = 4;
+}
+
+message GrpcUpdateServerByServerIdResponse {
+  int32 server_id = 1;
+}
+
+service ServerService {
+  rpc createServer(vuong.app.v1.message.GrpcRequest) returns (vuong.app.v1.message.GrpcResponse);
+  rpc getServerByInviteCode(vuong.app.v1.message.GrpcRequest) returns (vuong.app.v1.message.GrpcResponse);
+  rpc getServerByServerId(vuong.app.v1.message.GrpcRequest) returns (vuong.app.v1.message.GrpcResponse);
+  rpc deleteServerByServerId(vuong.app.v1.message.GrpcRequest) returns (vuong.app.v1.message.GrpcResponse);
+  rpc updateServerByServerId(vuong.app.v1.message.GrpcRequest) returns (vuong.app.v1.message.GrpcResponse);
+}
