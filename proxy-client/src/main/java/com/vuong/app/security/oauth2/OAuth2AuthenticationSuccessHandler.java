@@ -2,7 +2,11 @@ package com.vuong.app.security.oauth2;
 
 import com.vuong.app.config.AppProperties;
 import com.vuong.app.exception.wrapper.BadRequestException;
+import com.vuong.app.grpc.message.auth.CreateRefreshTokenRequest;
+import com.vuong.app.grpc.message.auth.CreateRefreshTokenResponse;
+import com.vuong.app.grpc.service.AuthClientService;
 import com.vuong.app.security.TokenProvider;
+import com.vuong.app.security.UserPrincipal;
 import com.vuong.app.util.CookieUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
@@ -29,6 +33,8 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
 
     private final HttpCookieOAuth2AuthorizationRequestRepository httpCookieOAuth2AuthorizationRequestRepository;
 
+    private final AuthClientService authClientService;
+
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException, ServletException {
         String targetUrl = determineTargetUrl(request, response, authentication);
@@ -52,10 +58,27 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
 
         String targetUrl = redirectUri.orElse(getDefaultTargetUrl());
 
-        String token = tokenProvider.createToken(authentication);
+        UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
+
+        TokenProvider.AccessToken accessToken = tokenProvider.generateAccessToken(userPrincipal.getUserId());
+        TokenProvider.RefreshToken refreshToken = tokenProvider.generateRefreshToken(userPrincipal.getUserId());
+
+        Optional<CreateRefreshTokenResponse> createRefreshTokenResponseOptional = this.authClientService.createRefreshToken(CreateRefreshTokenRequest.builder()
+                .refreshToken(refreshToken.getRefreshToken())
+                .expiresAt(refreshToken.getExpiresAt())
+                .userId(refreshToken.getUserId())
+                .status(refreshToken.getStatus())
+                .build());
+
+        if (!createRefreshTokenResponseOptional.isPresent()) {
+            // throw Create refresh token error
+        }
+
+        CookieUtils.addCookie(response, appProperties.getAuth().getAccessTokenCookieName(), accessToken.getAccessToken(), (int) appProperties.getAuth().getAccessTokenExpirationMsec());
+        CookieUtils.addCookie(response, appProperties.getAuth().getRefreshTokenCookieName(), refreshToken.getRefreshToken(), (int) appProperties.getAuth().getRefreshTokenExpirationMsec());
 
         return UriComponentsBuilder.fromUriString(targetUrl)
-                .queryParam("token", token)
+//                .queryParam("token", token)
                 .build().toUriString();
     }
 

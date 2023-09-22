@@ -173,4 +173,8 @@ public class AuthClientService extends BaseClientService {
 
         return unpackedResult.getExists();
     }
+
+    public Optional<CreateRefreshTokenResponse> createRefreshToken(CreateRefreshTokenRequest request) {
+        return Optional.empty();
+    }
 }
