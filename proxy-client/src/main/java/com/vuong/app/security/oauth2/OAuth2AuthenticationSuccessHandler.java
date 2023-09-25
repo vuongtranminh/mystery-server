@@ -63,16 +63,12 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
         TokenProvider.AccessToken accessToken = tokenProvider.generateAccessToken(userPrincipal.getUserId());
         TokenProvider.RefreshToken refreshToken = tokenProvider.generateRefreshToken(userPrincipal.getUserId());
 
-        Optional<CreateRefreshTokenResponse> createRefreshTokenResponseOptional = this.authClientService.createRefreshToken(CreateRefreshTokenRequest.builder()
+        this.authClientService.createRefreshToken(CreateRefreshTokenRequest.builder()
                 .refreshToken(refreshToken.getRefreshToken())
                 .expiresAt(refreshToken.getExpiresAt())
                 .userId(refreshToken.getUserId())
                 .status(refreshToken.getStatus())
                 .build());
-
-        if (!createRefreshTokenResponseOptional.isPresent()) {
-            // throw Create refresh token error
-        }
 
         CookieUtils.addCookie(response, appProperties.getAuth().getAccessTokenCookieName(), accessToken.getAccessToken(), (int) appProperties.getAuth().getAccessTokenExpirationMsec());
         CookieUtils.addCookie(response, appProperties.getAuth().getRefreshTokenCookieName(), refreshToken.getRefreshToken(), (int) appProperties.getAuth().getRefreshTokenExpirationMsec());

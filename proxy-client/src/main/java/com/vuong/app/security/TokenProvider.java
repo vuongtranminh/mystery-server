@@ -80,7 +80,7 @@ public class TokenProvider {
 
     @Data
     @Builder
-    public static class AccessToken {
+    public class AccessToken {
         private String tokenType = "Bearer";
         private String accessToken;
         private String expiresAt;
@@ -88,7 +88,7 @@ public class TokenProvider {
 
     @Data
     @Builder
-    public static class RefreshToken {
+    public class RefreshToken {
         private String refreshToken;
         private String expiresAt;
         private Integer userId;

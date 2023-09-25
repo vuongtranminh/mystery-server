@@ -34,6 +34,14 @@ public class UserService extends UserServiceGrpc.UserServiceImplBase {
 
     private final UserRepository userRepository;
 
+    private String buildMailVerify(VerificationToken verificationToken) {
+        Context context = new Context();
+        context.setVariable("otp", verificationToken.getOtp());
+        context.setVariable("link", "http://localhost:8080/auth/accountVerification/" + verificationToken.getToken());
+        context.setVariable("expireDate", verificationToken.getExpireDate());
+        return this.templateEngine.process("mailVerificationAccountTemplate", context);
+    }
+
     @Override
     public void grpcCreate(GrpcRequest request, StreamObserver<GrpcResponse> responseObserver) {
 

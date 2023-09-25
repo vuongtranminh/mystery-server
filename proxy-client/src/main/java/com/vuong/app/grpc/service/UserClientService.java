@@ -67,7 +67,7 @@ public class UserClientService extends BaseClientService {
 
         GrpcResponse response = this.synchronousClient.grpcFindById(req);
 
-        Optional<GrpcGetUserByIdResponse> unpackedResultOptional = unpackedResult(response, GrpcGetUserByIdResponse.class);
+        Optional<GrpcGetUserByIdResponse> unpackedResultOptional = unpackedResultQuery(response, GrpcGetUserByIdResponse.class);
 
         if (!unpackedResultOptional.isPresent()) {
             return Optional.empty();

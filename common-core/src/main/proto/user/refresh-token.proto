@@ -1,0 +1,27 @@
+syntax = "proto3";
+
+package vuong.app.v1;
+option java_package = "com.vuong.app.v1";
+option java_multiple_files = true;
+option java_outer_classname = "RefreshTokenProto";
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/field_mask.proto";
+import "common.proto";
+import "operator.proto";
+
+enum GrpcRefreshTokenStatus {
+  REFRESH_TOKEN_UNSPECIFIED = 0;
+  REFRESH_TOKEN_READY = 1;
+  REFRESH_TOKEN_USED = 2;
+}
+
+message GrpcRefreshToken {
+  int32 refresh_token_id = 1;
+  string refresh_token = 2;
+  string expires_at = 3;
+  int32 user_id = 4;
+  GrpcRefreshTokenStatus status = 5;
+  string created_at = 6;
+  string updated_at = 7;
+}

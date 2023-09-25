@@ -20,6 +20,7 @@ public class CreateUserRequest implements Serializable {
     private String avatar;
     private String email;
     private String password;
+    private boolean emailVerified;
     private AuthProvider provider;
     private String providerId;
 

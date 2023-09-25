@@ -40,7 +40,7 @@ public class AuthClientService extends BaseClientService {
 
         GrpcResponse response = this.synchronousClient.grpcFindByEmail(req);
 
-        Optional<GrpcGetUserByEmailResponse> unpackedResultOptional = unpackedResult(response, GrpcGetUserByEmailResponse.class);
+        Optional<GrpcGetUserByEmailResponse> unpackedResultOptional = unpackedResultQuery(response, GrpcGetUserByEmailResponse.class);
 
         if (!unpackedResultOptional.isPresent()) {
             return Optional.empty();
@@ -82,7 +82,7 @@ public class AuthClientService extends BaseClientService {
 
         GrpcResponse response = this.synchronousClient.grpcFindById(req);
 
-        Optional<GrpcGetUserByIdResponse> unpackedResultOptional = unpackedResult(response, GrpcGetUserByIdResponse.class);
+        Optional<GrpcGetUserByIdResponse> unpackedResultOptional = unpackedResultQuery(response, GrpcGetUserByIdResponse.class);
 
         if (!unpackedResultOptional.isPresent()) {
             return Optional.empty();
@@ -100,7 +100,7 @@ public class AuthClientService extends BaseClientService {
                 .build());
     }
 
-    public Optional<CreateUserResponse> create(CreateUserRequest request) {
+    public CreateUserResponse create(CreateUserRequest request) {
         GrpcRequest req = packRequest(GrpcCreateUserRequest.newBuilder()
                 .setName(request.getName())
                 .setAvatar(request.getAvatar())
@@ -112,20 +112,14 @@ public class AuthClientService extends BaseClientService {
 
         GrpcResponse response = this.synchronousClient.grpcCreate(req);
 
-        Optional<GrpcCreateUserResponse> unpackedResultOptional = unpackedResult(response, GrpcCreateUserResponse.class);
+        GrpcCreateUserResponse unpackedResult = unpackedResultCommand(response, GrpcCreateUserResponse.class);
 
-        if (!unpackedResultOptional.isPresent()) {
-            return Optional.empty();
-        }
-
-        GrpcCreateUserResponse unpackedResult = unpackedResultOptional.get();
-
-        return Optional.of(CreateUserResponse.builder()
+        return CreateUserResponse.builder()
                 .userId(unpackedResult.getUserId())
-                .build());
+                .build();
     }
 
-    public Optional<UpdateUserResponse> update(UpdateUserRequest request) {
+    public UpdateUserResponse update(UpdateUserRequest request) {
         Set<String> requestedFields = new HashSet<>();
         requestedFields.add(UserDto_.NAME);
         requestedFields.add(UserDto_.AVATAR);
@@ -143,17 +137,11 @@ public class AuthClientService extends BaseClientService {
 
         GrpcResponse response = this.synchronousClient.grpcUpdate(req);
 
-        Optional<GrpcUpdateUserResponse> unpackedResultOptional = unpackedResult(response, GrpcUpdateUserResponse.class);
+        GrpcUpdateUserResponse unpackedResult = unpackedResultCommand(response, GrpcUpdateUserResponse.class);
 
-        if (!unpackedResultOptional.isPresent()) {
-            return Optional.empty();
-        }
-
-        GrpcUpdateUserResponse unpackedResult = unpackedResultOptional.get();
-
-        return Optional.of(UpdateUserResponse.builder()
+        return UpdateUserResponse.builder()
                 .userId(unpackedResult.getUserId())
-                .build());
+                .build();
     }
 
     public boolean existsByEmail(String email) {
@@ -163,7 +151,7 @@ public class AuthClientService extends BaseClientService {
 
         GrpcResponse response = this.synchronousClient.grpcExistsByEmail(req);
 
-        Optional<GrpcExistsByEmailResponse> unpackedResultOptional = unpackedResult(response, GrpcExistsByEmailResponse.class);
+        Optional<GrpcExistsByEmailResponse> unpackedResultOptional = unpackedResultQuery(response, GrpcExistsByEmailResponse.class);
 
         if (!unpackedResultOptional.isPresent()) {
             return false;
@@ -174,7 +162,23 @@ public class AuthClientService extends BaseClientService {
         return unpackedResult.getExists();
     }
 
-    public Optional<CreateRefreshTokenResponse> createRefreshToken(CreateRefreshTokenRequest request) {
-        return Optional.empty();
+    public CreateRefreshTokenResponse createRefreshToken(CreateRefreshTokenRequest request) {
+        return CreateRefreshTokenResponse.builder().build();
+    }
+
+    public DeleteRefreshTokenResponse deleteRefreshToken(DeleteRefreshTokenRequest request) {
+        return DeleteRefreshTokenResponse.builder().build();
+    }
+
+    public Optional<GetRefreshTokenByRefreshTokenResponse> getRefreshTokenByRefreshToken(GetRefreshTokenByRefreshTokenRequest request) {
+        return Optional.of(GetRefreshTokenByRefreshTokenResponse.builder().build());
+    }
+
+    public DeleteAllRefreshTokenResponse deleteAllRefreshTokenByUserId(DeleteAllRefreshTokenRequest request) {
+        return DeleteAllRefreshTokenResponse.builder().build();
+    }
+
+    public UpdateRefreshTokenResponse updateRefreshToken(UpdateRefreshTokenRequest request) {
+        return UpdateRefreshTokenResponse.builder().build();
     }
 }

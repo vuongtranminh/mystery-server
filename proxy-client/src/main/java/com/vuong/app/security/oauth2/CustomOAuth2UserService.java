@@ -83,9 +83,10 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
                 .avatar(oAuth2UserInfo.getImageUrl())
                 .email(oAuth2UserInfo.getEmail())
                 .password("")
+                .emailVerified(true)
                 .provider(AuthProvider.valueOf(oAuth2UserRequest.getClientRegistration().getRegistrationId()))
                 .providerId(oAuth2UserInfo.getId())
-                .build()).get();
+                .build());
 
         UserDto userDto = this.authClientService.getUserById(GetUserByIdRequest.builder().userId(createUserResponse.getUserId()).build())
                 .orElseThrow(() -> new ResourceNotFoundException("User", "id", createUserResponse.getUserId()));
@@ -98,7 +99,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
                 .userId(existingUser.getUserId())
                 .name(oAuth2UserInfo.getName())
                 .avatar(oAuth2UserInfo.getImageUrl())
-                .build()).get();
+                .build());
 
         UserDto userDto = this.authClientService.getUserById(GetUserByIdRequest.builder().userId(updateUserResponse.getUserId()).build())
                 .orElseThrow(() -> new ResourceNotFoundException("User", "id", updateUserResponse.getUserId()));
@@ -118,9 +119,9 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
             ObjectMapper objectMapper = new ObjectMapper();
             objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
-            List<GithubEmailResponse> emails = new ArrayList<>();
+            List<GithubEmailResponse> emails;
             try {
-                emails = objectMapper.readValue(response.getBody(), new TypeReference<List<GithubEmailResponse>>() {});
+                emails = objectMapper.readValue(response.getBody(), new TypeReference<>() {});
             } catch (JsonProcessingException ex) {
                 throw new OAuth2AuthenticationProcessingException("Email not found from OAuth2 provider");
             }

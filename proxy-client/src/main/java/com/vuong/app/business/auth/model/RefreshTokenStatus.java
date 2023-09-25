@@ -2,8 +2,7 @@ package com.vuong.app.business.auth.model;
 
 public enum RefreshTokenStatus {
     READY(1),
-    USED(2),
-    DISABLE(3);
+    USED(2);
 
     private int value;
 
@@ -19,7 +18,6 @@ public enum RefreshTokenStatus {
         switch (value) {
             case 1: return READY;
             case 2: return USED;
-            case 3: return DISABLE;
             default: return null;
         }
     }

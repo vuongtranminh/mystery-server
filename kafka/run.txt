@@ -1,0 +1,28 @@
+cd ../../kafka
+
+// START THE KAFKA ENVIRONMENT
+
+// Terminal 1
+.\bin\windows\zookeeper-server-start.bat .\config\zookeeper.properties
+
+// Terminal 2
+.\bin\windows\kafka-server-start.bat .\config\server.properties
+
+// CREATE A TOPIC TO STORE YOUR EVENTS
+
+// Terminal 3
+.\bin\windows\kafka-topics.bat --create --topic notificationTopic --bootstrap-server localhost:9092
+
+// Description Topic
+.\bin\windows\kafka-topics.bat --describe --topic notificationTopic --bootstrap-server localhost:9092
+
+// To checklist of topic created
+.\bin\windows\kafka-topics.bat --list --bootstrap-server localhost:9092
+
+// WRITE SOME EVENTS INTO THE TOPIC
+
+.\bin\windows\kafka-console-producer.bat --topic notificationTopic --bootstrap-server localhost:9092
+
+// READ THE EVENTS
+
+.\bin\windows\kafka-console-consumer.bat --topic notificationTopic --from-beginning --bootstrap-server localhost:9092
