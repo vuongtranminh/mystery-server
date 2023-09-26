@@ -1,0 +1,47 @@
+syntax = "proto3";
+
+package vuong.app.v1;
+option java_package = "com.vuong.app.v1";
+option java_multiple_files = true;
+//option java_outer_classname = "VerificationTokenProto";
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/field_mask.proto";
+import "common.proto";
+import "operator.proto";
+
+message GrpcVerificationCredential {
+    int32 verification_credential_id = 1;
+    string verification_token = 2;
+    string verification_otp = 3;
+    string expire_date = 4;
+    int32 user_id = 5;
+}
+
+message GrpcGetVerificationCredentialByVerificationTokenRequest {
+    string verification_token = 1;
+}
+
+message GrpcGetVerificationCredentialByVerificationTokenResponse {
+    GrpcVerificationCredential verification_credential = 1;
+}
+
+message GrpcGetVerificationCredentialByVerificationOtpRequest {
+    string verification_otp = 1;
+}
+
+message GrpcGetVerificationCredentialByVerificationOtpResponse {
+    GrpcVerificationCredential verification_credential = 1;
+}
+
+message GrpcDeleteVerificationCredentialByUserIdRequest {
+    int32 user_id = 1;
+}
+
+message GrpcDeleteVerificationCredentialByUserIdResponse {
+    bool deleted = 1;
+}
+
+service VerificationCredentialService {
+    rpc 
+}
