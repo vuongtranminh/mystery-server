@@ -16,6 +16,8 @@ import javax.persistence.MappedSuperclass;
 import java.io.Serializable;
 import java.time.Instant;
 
+import static com.fasterxml.jackson.annotation.JsonFormat.Shape.STRING;
+
 @MappedSuperclass
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
@@ -30,12 +32,12 @@ abstract public class AbstractMappedEntity implements Serializable {
     private static final long serialVersionUID = 1L;
 
     @CreatedDate
-    @JsonFormat(shape = JsonFormat.Shape.STRING)
+    @JsonFormat(shape = STRING)
     @Column(name = "created_at")
     private Instant createdAt;
 
     @LastModifiedDate
-    @JsonFormat(shape = JsonFormat.Shape.STRING)
+    @JsonFormat(shape = STRING)
     @Column(name = "updated_at")
     private Instant updatedAt;
 

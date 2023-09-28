@@ -2,26 +2,36 @@ package com.vuong.app.jpa.query;
 
 import com.vuong.app.operator.*;
 import com.vuong.app.v1.operator.OperatorProto;
+import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
 public class QueryHelper {
 
-    public static void buildOneStringOperatorFilter(QueryBuilder queryBuilder, OperatorProto.StringOperators stringOperatorsProto,
-                                                    String fieldName) {
-        StringOperators stringOperators = OperatorClientUtil.parseStringOperators(stringOperatorsProto);
+    public static void buildOneListOperatorFilter(QueryBuilder queryBuilder, ListOperators listOperators,
+                                                  String fieldName) {
+        if (listOperators == null) return;
+        if (!CollectionUtils.isEmpty(listOperators.getIn())) {
+            queryBuilder.query((root, query, criteriaBuilder) -> root.get(fieldName).in(listOperators.getIn()));
+        } else if (!CollectionUtils.isEmpty(listOperators.getNotIn())) {
+            queryBuilder.query((root, query, criteriaBuilder) -> root.get(fieldName).in(listOperators.getIn()).not());
+        }
 
+    }
+
+    public static void buildOneStringOperatorFilter(QueryBuilder queryBuilder, StringOperators stringOperators,
+                                                    String fieldName) {
         if (stringOperators == null) return;
         if (!StringUtils.isEmpty(stringOperators.getEq())) {
-            queryBuilder.query((root, query, criteriaBuilder) -> criteriaBuilder.equal(root.get(fieldName), stringOperators.getEq()));
+            queryBuilder.query((root, query, criteriaBuilder) -> criteriaBuilder.equal(criteriaBuilder.upper(root.get(fieldName)), stringOperators.getEq().toUpperCase()));
         } else if (!StringUtils.isEmpty(stringOperators.getContains())) {
-            queryBuilder.query((root, query, criteriaBuilder) -> criteriaBuilder.like(root.get(fieldName), "%" + stringOperators.getContains() + "%"));
+            queryBuilder.query((root, query, criteriaBuilder) -> criteriaBuilder.like(
+                    criteriaBuilder.upper(root.get(fieldName)),
+                    "%" + stringOperators.getContains().toUpperCase() + "%"));
         }
     }
 
-    public static void buildOneDateOperatorFilter(QueryBuilder queryBuilder, OperatorProto.DateOperators dateOperatorsProto,
+    public static void buildOneDateOperatorFilter(QueryBuilder queryBuilder, DateOperators dateOperators,
                                                   String fieldName) {
-        DateOperators dateOperators = OperatorClientUtil.parseDateOperators(dateOperatorsProto);
-
         if (dateOperators == null) return;
         if (dateOperators.getEq() != null) {
             queryBuilder.query((root, query, criteriaBuilder) -> criteriaBuilder.equal(root.get(fieldName), dateOperators.getEq()));
@@ -37,20 +47,16 @@ public class QueryHelper {
         }
     }
 
-    public static void buildOneBooleanOperatorFilter(QueryBuilder queryBuilder, OperatorProto.BooleanOperators booleanOperatorsProto,
+    public static void buildOneBooleanOperatorFilter(QueryBuilder queryBuilder, BooleanOperators booleanOperators,
                                                      String fieldName) {
-        BooleanOperators booleanOperators = OperatorClientUtil.parseBooleanOperators(booleanOperatorsProto);
-
         if (booleanOperators == null) return;
         if (booleanOperators.getEq() != null) {
             queryBuilder.query((root, query, criteriaBuilder) -> criteriaBuilder.equal(root.get(fieldName), booleanOperators.getEq()));
         }
     }
 
-    public static void buildOneNumberOperatorFilter(QueryBuilder queryBuilder, OperatorProto.NumberOperators numberOperatorsProto,
+    public static void buildOneNumberOperatorFilter(QueryBuilder queryBuilder, NumberOperators numberOperators,
                                                     String fieldName) {
-        NumberOperators numberOperators = OperatorClientUtil.parseNumberOperators(numberOperatorsProto);
-
         if (numberOperators == null) return;
         if (numberOperators.getEq() != null) {
             queryBuilder.query((root, query, criteriaBuilder) -> criteriaBuilder.equal(root.get(fieldName), numberOperators.getEq()));
@@ -71,9 +77,7 @@ public class QueryHelper {
 
     }
 
-    public static void buildOneSortOrder(QueryBuilder queryBuilder, OperatorProto.SortOrder sortOrderProto, String fieldName) {
-        SortOrder sortOrder = OperatorClientUtil.parseSortOrder(sortOrderProto);
-
+    public static void buildOneSortOrder(QueryBuilder queryBuilder, SortOrder sortOrder, String fieldName) {
         if (sortOrder == null) return;
         if (sortOrder == SortOrder.ASC) {
             queryBuilder.query((root, query, criteriaBuilder) ->  {

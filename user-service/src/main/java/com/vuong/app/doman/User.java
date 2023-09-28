@@ -7,12 +7,14 @@ import org.hibernate.annotations.DynamicUpdate;
 
 import javax.persistence.*;
 import java.io.Serializable;
+import java.util.Set;
 
 @Entity
 @Table(name = "users")
 @NoArgsConstructor
 @AllArgsConstructor
-@EqualsAndHashCode(callSuper = true)
+@EqualsAndHashCode(callSuper = true, exclude = {"refreshTokens"})
+@ToString(exclude = {"refreshTokens"})
 @Data
 @Builder
 @DynamicInsert
@@ -46,6 +48,9 @@ public final class User extends AbstractMappedEntity implements Serializable {
     @Column(name = "password", nullable = false)
     private String password;
 
+    @Column(name = "verified", nullable = false)
+    private Boolean verified;
+
     @Column(name = "provider", nullable = false)
     @Enumerated(EnumType.STRING)
     private AuthProvider provider;
@@ -53,4 +58,17 @@ public final class User extends AbstractMappedEntity implements Serializable {
     @Column(name = "provider_id", nullable = false)
     private String providerId;
 
+    @JsonIgnore
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "user", fetch = FetchType.LAZY)
+    private Set<RefreshToken> refreshTokens;
+
+    public void addRefreshToken(RefreshToken refreshToken) {
+        refreshTokens.add(refreshToken);
+        refreshToken.setUser(this);
+    }
+
+    public void removeRefreshToken(RefreshToken refreshToken) {
+        refreshTokens.remove(refreshToken);
+        refreshToken.setUser(null);
+    }
 }
