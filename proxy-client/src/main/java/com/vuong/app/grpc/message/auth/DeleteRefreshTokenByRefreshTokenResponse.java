@@ -9,6 +9,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Data
 @Builder
-public class DeleteRefreshTokenResponse {
+public class DeleteRefreshTokenByRefreshTokenResponse {
     private boolean deleted;
 }

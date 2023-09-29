@@ -24,7 +24,7 @@ import java.util.Optional;
 @Transactional
 @Slf4j
 @RequiredArgsConstructor
-public class RefreshTokenService extends GrpcRefreshTokenServiceGrpc.GrpcRefreshTokenServiceImplBase {
+public class RefreshTokenService extends RefreshTokenServiceGrpc.RefreshTokenServiceImplBase {
 
     private final RefreshTokenRepository refreshTokenRepository;
     private final UserRepository userRepository;
@@ -44,7 +44,7 @@ public class RefreshTokenService extends GrpcRefreshTokenServiceGrpc.GrpcRefresh
                         .refreshToken(req.getRefreshToken())
                         .expiresAt(Instant.parse(req.getExpiresAt()))
                         .user(user)
-                        .status(RefreshTokenStatus.forNumber(req.getStatus().getNumber()))
+                        .status(RefreshTokenStatus.READY)
                         .build());
 
         GrpcCreateRefreshTokenResponse response = GrpcCreateRefreshTokenResponse.newBuilder().setRefreshTokenId(refreshToken.getRefreshTokenId()).build();
@@ -104,11 +104,17 @@ public class RefreshTokenService extends GrpcRefreshTokenServiceGrpc.GrpcRefresh
     public void deleteRefreshTokenByRefreshToken(GrpcRequest request, StreamObserver<GrpcResponse> responseObserver) {
         GrpcDeleteRefreshTokenByRefreshTokenRequest req = ServiceHelper.unpackedRequest(request, GrpcDeleteRefreshTokenByRefreshTokenRequest.class);
 
-        this.refreshTokenRepository.deleteByRefreshToken(req.getRefreshToken());
+        boolean exists = this.refreshTokenRepository.existsByRefreshToken(req.getRefreshToken());
 
         GrpcDeleteRefreshTokenByRefreshTokenResponse response = GrpcDeleteRefreshTokenByRefreshTokenResponse.newBuilder()
                 .setDeleted(true)
                 .build();
+
+        if (!exists) {
+            ServiceHelper.next(responseObserver, ServiceHelper.packedSuccessResponse(response));
+        }
+
+        this.refreshTokenRepository.deleteByRefreshToken(req.getRefreshToken());
 
         ServiceHelper.next(responseObserver, ServiceHelper.packedSuccessResponse(response));
     }
@@ -118,17 +124,17 @@ public class RefreshTokenService extends GrpcRefreshTokenServiceGrpc.GrpcRefresh
         GrpcDeleteAllRefreshTokenByUserIdRequest req = ServiceHelper.unpackedRequest(request, GrpcDeleteAllRefreshTokenByUserIdRequest.class);
         Optional<User> userOptional = this.userRepository.findById(req.getUserId());
 
+        GrpcDeleteAllRefreshTokenByUserIdResponse response = GrpcDeleteAllRefreshTokenByUserIdResponse.newBuilder()
+                .setDeleted(true)
+                .build();
+
         if (!userOptional.isPresent()) {
-            ServiceHelper.next(responseObserver, ServiceHelper.packedErrorResponse(GrpcErrorCode.ERROR_CODE_NOT_FOUND, "user not found with id"));
+            ServiceHelper.next(responseObserver, ServiceHelper.packedSuccessResponse(response));
         }
 
         User user = userOptional.get();
 
         this.refreshTokenRepository.deleteAllByUser(user);
-
-        GrpcDeleteAllRefreshTokenByUserIdResponse response = GrpcDeleteAllRefreshTokenByUserIdResponse.newBuilder()
-                .setDeleted(true)
-                .build();
 
         ServiceHelper.next(responseObserver, ServiceHelper.packedSuccessResponse(response));
     }

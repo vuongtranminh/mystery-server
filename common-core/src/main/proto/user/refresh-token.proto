@@ -30,7 +30,6 @@ message GrpcCreateRefreshTokenRequest {
   string refresh_token = 1;
   string expires_at = 2;
   int32 user_id = 3;
-  GrpcRefreshTokenStatus status = 4;
 }
 
 message GrpcCreateRefreshTokenResponse {
@@ -70,7 +69,7 @@ message GrpcDeleteAllRefreshTokenByUserIdResponse {
   bool deleted = 1;
 }
 
-service GrpcRefreshTokenService {
+service RefreshTokenService {
   rpc createRefreshToken(vuong.app.v1.message.GrpcRequest) returns (vuong.app.v1.message.GrpcResponse);
   rpc getRefreshTokenByRefreshToken(vuong.app.v1.message.GrpcRequest) returns (vuong.app.v1.message.GrpcResponse);
   rpc updateRefreshTokenByRefreshTokenId(vuong.app.v1.message.GrpcRequest) returns (vuong.app.v1.message.GrpcResponse);

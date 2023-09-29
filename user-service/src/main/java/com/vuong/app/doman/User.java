@@ -62,6 +62,13 @@ public final class User extends AbstractMappedEntity implements Serializable {
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "user", fetch = FetchType.LAZY)
     private Set<RefreshToken> refreshTokens;
 
+    // https://www.baeldung.com/jpa-one-to-one
+
+    // use mappedBy để khi xoá VerificationCredential không xoá user
+    // khi xoá user sẽ xoá cả VerificationCredential
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private VerificationCredential verificationCredential;
+
     public void addRefreshToken(RefreshToken refreshToken) {
         refreshTokens.add(refreshToken);
         refreshToken.setUser(this);

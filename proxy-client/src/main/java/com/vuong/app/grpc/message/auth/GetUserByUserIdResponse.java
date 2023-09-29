@@ -13,7 +13,7 @@ import java.io.Serializable;
 @AllArgsConstructor
 @Data
 @Builder
-public class GetUserByIdResponse implements UserDto, Serializable {
+public class GetUserByUserIdResponse implements UserDto, Serializable {
     private static final long serialVersionUID = 1L;
 
     private Integer userId;

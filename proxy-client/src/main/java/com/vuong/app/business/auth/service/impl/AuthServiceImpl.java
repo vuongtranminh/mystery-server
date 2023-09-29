@@ -2,9 +2,7 @@ package com.vuong.app.business.auth.service.impl;
 
 import com.vuong.app.business.auth.model.AuthProvider;
 import com.vuong.app.business.auth.model.RefreshTokenStatus;
-import com.vuong.app.business.auth.model.payload.SignInRequest;
-import com.vuong.app.business.auth.model.payload.SignUpRequest;
-import com.vuong.app.business.auth.model.payload.SignUpResponse;
+import com.vuong.app.business.auth.model.payload.*;
 import com.vuong.app.business.auth.service.AuthService;
 import com.vuong.app.common.api.ExceptionMsg;
 import com.vuong.app.common.api.ResponseMsg;
@@ -28,7 +26,7 @@ import org.springframework.stereotype.Service;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.util.Date;
+import java.time.Instant;
 import java.util.Optional;
 
 @Service
@@ -47,7 +45,10 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public boolean existsByEmail(String email) {
-        return this.authClientService.existsByEmail(email);
+        ExistsUserByEmailResponse existsUserByEmailResponse = this.authClientService.existsUserByEmail(ExistsUserByEmailRequest.builder()
+                .email(email)
+                .build());
+        return existsUserByEmailResponse.isExists();
     }
 
     @Override
@@ -71,7 +72,6 @@ public class AuthServiceImpl implements AuthService {
                 .refreshToken(refreshToken.getRefreshToken())
                 .expiresAt(refreshToken.getExpiresAt())
                 .userId(refreshToken.getUserId())
-                .status(refreshToken.getStatus())
                 .build());
 
         CookieUtils.addCookie(response, appProperties.getAuth().getAccessTokenCookieName(), accessToken.getAccessToken(), (int) appProperties.getAuth().getAccessTokenExpirationMsec());
@@ -86,7 +86,7 @@ public class AuthServiceImpl implements AuthService {
             throw new BadRequestException("Email address already in use.");
         }
 
-        CreateUserResponse createUserResponse = this.authClientService.create(CreateUserRequest.builder()
+        CreateUserResponse createUserResponse = this.authClientService.createUser(CreateUserRequest.builder()
                 .name(signUpRequest.getName())
                 .email(signUpRequest.getEmail())
                 .password(passwordEncoder.encode(signUpRequest.getPassword()))
@@ -101,7 +101,7 @@ public class AuthServiceImpl implements AuthService {
     public ResponseObject logout(HttpServletRequest request, HttpServletResponse response) {
         Optional<Cookie> refreshTokenOptional = CookieUtils.getCookie(request, appProperties.getAuth().getRefreshTokenCookieName());
         if (refreshTokenOptional.isPresent()) {
-            this.authClientService.deleteRefreshToken(DeleteRefreshTokenRequest.builder()
+            this.authClientService.deleteRefreshTokenByRefreshToken(DeleteRefreshTokenByRefreshTokenRequest.builder()
                     .refreshToken(refreshTokenOptional.get().getValue())
                     .build());
 
@@ -139,7 +139,7 @@ public class AuthServiceImpl implements AuthService {
         GetRefreshTokenByRefreshTokenResponse getRefreshTokenByRefreshTokenResponse = getRefreshTokenByRefreshTokenResponseOptional.get();
 
         if (!getRefreshTokenByRefreshTokenResponse.getStatus().equals(RefreshTokenStatus.READY)) {
-            this.authClientService.deleteAllRefreshTokenByUserId(DeleteAllRefreshTokenRequest.builder()
+            this.authClientService.deleteAllRefreshTokenByUserId(DeleteAllRefreshTokenByUserIdRequest.builder()
                     .userId(getRefreshTokenByRefreshTokenResponse.getUserId())
                     .build());
 
@@ -149,7 +149,7 @@ public class AuthServiceImpl implements AuthService {
 
         TokenProvider.RefreshToken refreshToken = tokenProvider.generateRefreshToken(oldRefreshToken);
         // update refresh token to status used
-        this.authClientService.updateRefreshToken(UpdateRefreshTokenRequest.builder()
+        this.authClientService.updateRefreshTokenByRefreshTokenId(UpdateRefreshTokenByRefreshTokenIdRequest.builder()
                 .refreshTokenId(getRefreshTokenByRefreshTokenResponse.getRefreshTokenId())
                 .status(RefreshTokenStatus.USED)
                 .build());
@@ -158,7 +158,6 @@ public class AuthServiceImpl implements AuthService {
                 .refreshToken(refreshToken.getRefreshToken())
                 .expiresAt(refreshToken.getExpiresAt())
                 .userId(refreshToken.getUserId())
-                .status(refreshToken.getStatus())
                 .build());
         // insert refresh token to DB
         TokenProvider.AccessToken accessToken = tokenProvider.generateAccessToken(refreshToken.getUserId());
@@ -167,5 +166,38 @@ public class AuthServiceImpl implements AuthService {
         CookieUtils.addCookie(response, appProperties.getAuth().getRefreshTokenCookieName(), refreshToken.getRefreshToken(), (int) appProperties.getAuth().getRefreshTokenExpirationMsec());
 
         return new ResponseMsg("Provide new access token successfully!", HttpStatus.OK);
+    }
+
+    @Override
+    public ResponseObject verificationCredential(boolean isOtp, String verify) {
+        if (isOtp) {
+            this.authClientService.verificationCredentialByVerificationOtp(VerificationCredentialByVerificationOtpRequest.builder()
+                    .verificationOtp(verify)
+                    .build());
+        } else {
+            this.authClientService.verificationCredentialByVerificationToken(VerificationCredentialByVerificationTokenRequest.builder()
+                    .verificationToken(verify)
+                    .build());
+        }
+
+        return new ResponseMsg("Verify credential successfully!", HttpStatus.OK);
+    }
+
+    @Override
+    public ResponseObject reissueVerificationCredential(ReissueVerificationCredentialRequest request) {
+        this.authClientService.reissueVerificationCredentialByUserId(ReissueVerificationCredentialByUserIdRequest.builder()
+                .userId(request.getUserId())
+                .build());
+        return new ResponseMsg("Verify credential successfully!", HttpStatus.OK);
+    }
+
+    @Override
+    public ResponseObject changeUserPassword(ChangeUserPasswordRequest request) {
+        this.authClientService.changeUserPasswordByUserId(ChangeUserPasswordByUserIdRequest.builder()
+                .userId(request.getUserId())
+                .oldPassword(passwordEncoder.encode(request.getOldPassword()))
+                .newPassword(passwordEncoder.encode(request.getNewPassword()))
+                .build());
+        return new ResponseMsg("Change password successfully!", HttpStatus.OK);
     }
 }

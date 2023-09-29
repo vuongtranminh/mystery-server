@@ -5,14 +5,10 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.io.Serializable;
-
 @NoArgsConstructor
 @AllArgsConstructor
 @Data
 @Builder
-public class GetUserByIdRequest implements Serializable {
-    private static final long serialVersionUID = 1L;
-
-    private Integer userId;
+public class VerificationCredentialByVerificationTokenRequest {
+    private String verificationToken;
 }

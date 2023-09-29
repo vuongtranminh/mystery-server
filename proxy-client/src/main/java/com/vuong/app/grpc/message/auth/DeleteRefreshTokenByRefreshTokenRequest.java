@@ -9,6 +9,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Data
 @Builder
-public class DeleteAllRefreshTokenRequest {
-    private Integer userId;
+public class DeleteRefreshTokenByRefreshTokenRequest {
+    private String refreshToken;
 }

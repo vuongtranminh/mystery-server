@@ -8,6 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
+import java.time.Instant;
 import java.util.Date;
 import java.util.UUID;
 import java.util.function.Function;
@@ -32,7 +33,7 @@ public class TokenProvider {
 
         return AccessToken.builder()
                 .accessToken(accessToken)
-                .expiresAt(expiryDate.toString())
+                .expiresAt(expiryDate.toInstant())
                 .build();
     }
 
@@ -49,7 +50,7 @@ public class TokenProvider {
 
         return RefreshToken.builder()
                 .refreshToken(refreshToken)
-                .expiresAt(expiryDate.toString())
+                .expiresAt(expiryDate.toInstant())
                 .userId(userId)
                 .status(RefreshTokenStatus.READY)
                 .build();
@@ -72,7 +73,7 @@ public class TokenProvider {
 
         return RefreshToken.builder()
                 .refreshToken(refreshToken)
-                .expiresAt(expiryDate.toString())
+                .expiresAt(expiryDate.toInstant())
                 .userId(userId)
                 .status(RefreshTokenStatus.READY)
                 .build();
@@ -83,14 +84,14 @@ public class TokenProvider {
     public static final class AccessToken {
         private String tokenType = "Bearer";
         private String accessToken;
-        private String expiresAt;
+        private Instant expiresAt;
     }
 
     @Data
     @Builder
     public static final class RefreshToken {
         private String refreshToken;
-        private String expiresAt;
+        private Instant expiresAt;
         private Integer userId;
         private RefreshTokenStatus status;
     }

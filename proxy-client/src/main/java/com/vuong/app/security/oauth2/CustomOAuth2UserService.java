@@ -24,7 +24,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -78,7 +77,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
     }
 
     private UserDto registerNewUser(OAuth2UserRequest oAuth2UserRequest, OAuth2UserInfo oAuth2UserInfo) {
-        CreateUserResponse createUserResponse = this.authClientService.create(CreateUserRequest.builder()
+        CreateUserResponse createUserResponse = this.authClientService.createUser(CreateUserRequest.builder()
                 .name(oAuth2UserInfo.getName())
                 .avatar(oAuth2UserInfo.getImageUrl())
                 .email(oAuth2UserInfo.getEmail())
@@ -88,21 +87,21 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
                 .providerId(oAuth2UserInfo.getId())
                 .build());
 
-        UserDto userDto = this.authClientService.getUserById(GetUserByIdRequest.builder().userId(createUserResponse.getUserId()).build())
+        UserDto userDto = this.authClientService.getUserByUserId(GetUserByUserIdRequest.builder().userId(createUserResponse.getUserId()).build())
                 .orElseThrow(() -> new ResourceNotFoundException("User", "id", createUserResponse.getUserId()));
 
         return userDto;
     }
 
     private UserDto updateExistingUser(UserDto existingUser, OAuth2UserInfo oAuth2UserInfo) {
-        UpdateUserResponse updateUserResponse = this.authClientService.update(UpdateUserRequest.builder()
+        UpdateUserByUserIdResponse updateUserByUserIdResponse = this.authClientService.updateUserByUserIdRequest(UpdateUserByUserIdRequest.builder()
                 .userId(existingUser.getUserId())
                 .name(oAuth2UserInfo.getName())
                 .avatar(oAuth2UserInfo.getImageUrl())
                 .build());
 
-        UserDto userDto = this.authClientService.getUserById(GetUserByIdRequest.builder().userId(updateUserResponse.getUserId()).build())
-                .orElseThrow(() -> new ResourceNotFoundException("User", "id", updateUserResponse.getUserId()));
+        UserDto userDto = this.authClientService.getUserByUserId(GetUserByUserIdRequest.builder().userId(updateUserByUserIdResponse.getUserId()).build())
+                .orElseThrow(() -> new ResourceNotFoundException("User", "id", updateUserByUserIdResponse.getUserId()));
 
         return userDto;
     }

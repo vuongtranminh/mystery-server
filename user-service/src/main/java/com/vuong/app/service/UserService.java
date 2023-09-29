@@ -37,16 +37,7 @@ import java.util.Optional;
 public class UserService extends UserServiceGrpc.UserServiceImplBase {
 
     private final UserRepository userRepository;
-
-//    private String buildMailVerify(VerificationToken verificationToken) {
-//        Context context = new Context();
-//        context.setVariable("otp", verificationToken.getOtp());
-//        context.setVariable("link", "http://localhost:8080/auth/accountVerification/" + verificationToken.getToken());
-//        context.setVariable("expireDate", verificationToken.getExpireDate());
-//
-//        TemplateEngine templateEngine = new TemplateEngine();
-//        return templateEngine.process("mailVerificationAccountTemplate", context);
-//    }
+    private final VerificationCredentialService verificationCredentialService;
 
     @Override
     public void createUser(GrpcRequest request, StreamObserver<GrpcResponse> responseObserver) {
@@ -65,9 +56,10 @@ public class UserService extends UserServiceGrpc.UserServiceImplBase {
                         .providerId(req.getProviderId())
                 .build());
 
-        GrpcCreateUserResponse response = GrpcCreateUserResponse.newBuilder().setUserId(user.getUserId()).build();
+        // send mail verify
+        this.verificationCredentialService.sendMailVerifyCreateUser(user);
 
-        // build mail verify send to kafka
+        GrpcCreateUserResponse response = GrpcCreateUserResponse.newBuilder().setUserId(user.getUserId()).build();
 
         ServiceHelper.next(responseObserver, ServiceHelper.packedSuccessResponse(response));
     }

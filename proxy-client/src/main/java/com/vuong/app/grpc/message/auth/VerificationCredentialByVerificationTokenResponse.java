@@ -9,6 +9,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Data
 @Builder
-public class DeleteRefreshTokenRequest {
-    private String refreshToken;
+public class VerificationCredentialByVerificationTokenResponse {
+    private boolean verified;
 }

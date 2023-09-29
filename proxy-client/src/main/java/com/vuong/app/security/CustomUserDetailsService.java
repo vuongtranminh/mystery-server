@@ -1,7 +1,7 @@
 package com.vuong.app.security;
 
 import com.vuong.app.grpc.message.auth.GetUserByEmailRequest;
-import com.vuong.app.grpc.message.auth.GetUserByIdRequest;
+import com.vuong.app.grpc.message.auth.GetUserByUserIdRequest;
 import com.vuong.app.business.auth.model.UserDto;
 import com.vuong.app.grpc.service.AuthClientService;
 import com.vuong.app.exception.wrapper.ResourceNotFoundException;
@@ -26,7 +26,7 @@ public class CustomUserDetailsService implements UserDetailsService {
     }
 
     public UserDetails loadUserById(Integer userId) {
-        UserDto userDto = authClientService.getUserById(GetUserByIdRequest.builder().userId(userId).build())
+        UserDto userDto = authClientService.getUserByUserId(GetUserByUserIdRequest.builder().userId(userId).build())
                 .orElseThrow(() -> new ResourceNotFoundException("User", "id", userId));
 
         return UserPrincipal.create(userDto);

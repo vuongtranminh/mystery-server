@@ -1,4 +1,4 @@
-package com.vuong.app.grpc.message.auth;
+package com.vuong.app.business.auth.model.payload;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -9,6 +9,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Data
 @Builder
-public class UpdateRefreshTokenResponse {
-    private Integer refreshTokenId;
+public class VerificationCredentialRequest {
+    private String verificationOtp;
 }

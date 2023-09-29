@@ -1,5 +1,7 @@
 package com.vuong.app.business.auth.service;
 
+import com.vuong.app.business.auth.model.payload.ChangeUserPasswordRequest;
+import com.vuong.app.business.auth.model.payload.ReissueVerificationCredentialRequest;
 import com.vuong.app.business.auth.model.payload.SignInRequest;
 import com.vuong.app.business.auth.model.payload.SignUpRequest;
 import com.vuong.app.common.api.ResponseObject;
@@ -15,5 +17,7 @@ public interface AuthService {
     ResponseObject signUp(SignUpRequest signUpRequest);
     ResponseObject logout(HttpServletRequest request, HttpServletResponse response);
     ResponseObject refeshToken(HttpServletRequest request, HttpServletResponse response);
-
+    ResponseObject verificationCredential(boolean isOtp, String verify);
+    ResponseObject reissueVerificationCredential(ReissueVerificationCredentialRequest request);
+    ResponseObject changeUserPassword(ChangeUserPasswordRequest request);
 }

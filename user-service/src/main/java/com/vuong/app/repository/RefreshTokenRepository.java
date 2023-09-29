@@ -13,4 +13,6 @@ public interface RefreshTokenRepository extends JpaRepository<RefreshToken, Inte
     void deleteByRefreshToken(String refreshToken);
 
     void deleteAllByUser(User user);
+
+    boolean existsByRefreshToken(String refreshToken);
 }

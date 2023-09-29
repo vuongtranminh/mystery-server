@@ -11,13 +11,8 @@ import java.io.Serializable;
 @AllArgsConstructor
 @Data
 @Builder
-public class UpdateUserRequest implements Serializable {
+public class UpdateUserByUserIdResponse implements Serializable {
     private static final long serialVersionUID = 1L;
 
     private Integer userId;
-    private String name;
-    private String avatar;
-    private String bio;
-    private String password;
-
 }
