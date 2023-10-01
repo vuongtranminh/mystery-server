@@ -1,0 +1,109 @@
+syntax = "proto3";
+
+package vuong.app.v1;
+option java_package = "com.vuong.app.v1";
+option java_multiple_files = true;
+option java_outer_classname = "UserProto";
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/field_mask.proto";
+import "common.proto";
+import "operator.proto";
+
+enum GrpcAuthProvider {
+  AUTH_PROVIDER_UNSPECIFIED = 0;
+  AUTH_PROVIDER_LOCAL = 1;
+  AUTH_PROVIDER_FACEBOOK = 2;
+  AUTH_PROVIDER_GOOGLE = 3;
+  AUTH_PROVIDER_GITHUB = 4;
+}
+
+message GrpcUser {
+  int32 user_id = 1;
+  string name = 2;
+  string avatar = 3;
+  string bio = 4;
+  string email = 5;
+  string password = 6;
+  bool verified = 7;
+  GrpcAuthProvider provider = 8;
+  string provider_id = 9;
+  string created_at = 10;
+  string updated_at = 11;
+}
+
+message GrpcCreateUserRequest {
+  string name = 1;
+  string avatar = 2;
+  string email = 4;
+  string password = 5;
+  GrpcAuthProvider provider = 6;
+  string provider_id = 7;
+}
+
+message GrpcCreateUserResponse {
+  int32 user_id = 1;
+}
+
+message GrpcUpdateUserByUserIdRequest {
+  int32 user_id = 1;
+  string name = 2;
+  string avatar = 3;
+  string bio = 4;
+}
+
+message GrpcUpdateUserByUserIdResponse {
+  int32 user_id = 1;
+}
+
+message GrpcChangeUserPasswordByUserIdRequest {
+  int32 user_id = 1;
+  string old_password = 2;
+  string new_password = 3;
+}
+
+message GrpcChangeUserPasswordByUserIdResponse {
+  int32 user_id = 1;
+}
+
+message GrpcExistsUserByEmailRequest {
+  string email = 1;
+}
+
+message GrpcExistsUserByEmailResponse {
+  bool exists = 1;
+}
+
+message GrpcCheckUserVerifiedByUserIdRequest {
+  int32 user_id = 1;
+}
+
+message GrpcCheckUserVerifiedByUserIdResponse {
+  bool verified = 1;
+}
+
+message GrpcGetUserByUserIdRequest {
+  int32 user_id = 1;
+}
+
+message GrpcGetUserByUserIdResponse {
+  GrpcUser user = 1;
+}
+
+message GrpcGetUserByEmailRequest {
+  string email = 1;
+}
+
+message GrpcGetUserByEmailResponse {
+  GrpcUser user = 1;
+}
+
+service UserService {
+  rpc createUser(vuong.app.v1.message.GrpcRequest) returns (vuong.app.v1.message.GrpcResponse);
+  rpc updateUserByUserId(vuong.app.v1.message.GrpcRequest) returns (vuong.app.v1.message.GrpcResponse);
+  rpc changeUserPasswordByUserId(vuong.app.v1.message.GrpcRequest) returns (vuong.app.v1.message.GrpcResponse);
+  rpc existsUserByEmail(vuong.app.v1.message.GrpcRequest) returns (vuong.app.v1.message.GrpcResponse);
+  rpc checkUserVerifiedByUserId(vuong.app.v1.message.GrpcRequest) returns (vuong.app.v1.message.GrpcResponse);
+  rpc getUserByUserId(vuong.app.v1.message.GrpcRequest) returns (vuong.app.v1.message.GrpcResponse);
+  rpc getUserByEmail(vuong.app.v1.message.GrpcRequest) returns (vuong.app.v1.message.GrpcResponse);
+}

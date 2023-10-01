@@ -24,7 +24,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -78,30 +77,32 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
     }
 
     private UserDto registerNewUser(OAuth2UserRequest oAuth2UserRequest, OAuth2UserInfo oAuth2UserInfo) {
-        CreateUserResponse createUserResponse = this.authClientService.create(CreateUserRequest.builder()
+        CreateUserResponse createUserResponse = this.authClientService.createUser(CreateUserRequest.builder()
                 .name(oAuth2UserInfo.getName())
                 .avatar(oAuth2UserInfo.getImageUrl())
                 .email(oAuth2UserInfo.getEmail())
                 .password("")
+                .emailVerified(true)
                 .provider(AuthProvider.valueOf(oAuth2UserRequest.getClientRegistration().getRegistrationId()))
                 .providerId(oAuth2UserInfo.getId())
-                .build()).get();
+                .build());
 
-        UserDto userDto = this.authClientService.getUserById(GetUserByIdRequest.builder().userId(createUserResponse.getUserId()).build())
+        UserDto userDto = this.authClientService.getUserByUserId(GetUserByUserIdRequest.builder().userId(createUserResponse.getUserId()).build())
                 .orElseThrow(() -> new ResourceNotFoundException("User", "id", createUserResponse.getUserId()));
 
         return userDto;
     }
 
     private UserDto updateExistingUser(UserDto existingUser, OAuth2UserInfo oAuth2UserInfo) {
-        UpdateUserResponse updateUserResponse = this.authClientService.update(UpdateUserRequest.builder()
+        UpdateUserByUserIdResponse updateUserByUserIdResponse = this.authClientService.updateUserByUserIdRequest(UpdateUserByUserIdRequest.builder()
                 .userId(existingUser.getUserId())
                 .name(oAuth2UserInfo.getName())
                 .avatar(oAuth2UserInfo.getImageUrl())
-                .build()).get();
+                .bio(existingUser.getBio())
+                .build());
 
-        UserDto userDto = this.authClientService.getUserById(GetUserByIdRequest.builder().userId(updateUserResponse.getUserId()).build())
-                .orElseThrow(() -> new ResourceNotFoundException("User", "id", updateUserResponse.getUserId()));
+        UserDto userDto = this.authClientService.getUserByUserId(GetUserByUserIdRequest.builder().userId(updateUserByUserIdResponse.getUserId()).build())
+                .orElseThrow(() -> new ResourceNotFoundException("User", "id", updateUserByUserIdResponse.getUserId()));
 
         return userDto;
     }
@@ -118,9 +119,9 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
             ObjectMapper objectMapper = new ObjectMapper();
             objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
-            List<GithubEmailResponse> emails = new ArrayList<>();
+            List<GithubEmailResponse> emails;
             try {
-                emails = objectMapper.readValue(response.getBody(), new TypeReference<List<GithubEmailResponse>>() {});
+                emails = objectMapper.readValue(response.getBody(), new TypeReference<>() {});
             } catch (JsonProcessingException ex) {
                 throw new OAuth2AuthenticationProcessingException("Email not found from OAuth2 provider");
             }

@@ -1,0 +1,39 @@
+
+spring:
+  application:
+    name: NOTIFICATION-SERVICE
+  profiles:
+    active:
+      - dev
+  kafka:
+    bootstrap-servers: localhost:9092
+    template:
+      default-topic: notificationTopic
+    consumer:
+      group-id: notificationId
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.ErrorHandlingDeserializer
+      properties:
+        spring:
+          json:
+            trusted:
+              packages: com.selimhorri.app.event
+          deserializer:
+            value:
+              delegate:
+                class: org.springframework.kafka.support.serializer.JsonDeserializer
+#              mapping: event:com.vdev.app.event.NotificationEmailEvent
+  mail:
+    host: sandbox.smtp.mailtrap.io
+    port: 2525
+    username: 00c617bff6db52
+    password: 3d98c9ad823a71
+    protocol: smtp
+
+logging:
+  file:
+    name: src/main/resources/script/stage_log.log
+  logback:
+    rollingpolicy:
+      clean-history-on-start: true

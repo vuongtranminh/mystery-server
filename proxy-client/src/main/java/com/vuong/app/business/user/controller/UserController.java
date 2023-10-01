@@ -1,10 +1,10 @@
 package com.vuong.app.business.user.controller;
 
-import com.vuong.app.business.user.model.UserDto;
 import com.vuong.app.business.user.service.UserService;
 import com.vuong.app.security.CurrentUser;
 import com.vuong.app.security.UserPrincipal;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -19,8 +19,8 @@ public class UserController {
 
     @GetMapping("/me")
     @PreAuthorize("hasRole('USER')")
-    public UserDto getCurrentUser(@CurrentUser UserPrincipal userPrincipal) {
-        return this.userService.getUserById(userPrincipal.getUserId());
+    public ResponseEntity<?> getCurrentUser(@CurrentUser UserPrincipal currentUser) {
+        return ResponseEntity.ok(this.userService.getCurrentUser(currentUser));
     }
 
 }

@@ -34,6 +34,10 @@
 			<artifactId>spring-boot-starter-test</artifactId>
 			<scope>test</scope>
 		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-thymeleaf</artifactId>
+		</dependency>
 	</dependencies>
 
 	<modules>
@@ -41,6 +45,7 @@
 		<module>common-jpa</module>
 		<module>user-service</module>
 		<module>discord-service</module>
+		<module>notification-service</module>
 		<module>proxy-client</module>
 	</modules>
 

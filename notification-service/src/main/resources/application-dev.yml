@@ -1,0 +1,17 @@
+
+grpc:
+  server:
+    port: 8700
+
+logging:
+  level:
+    org:
+      springframework:
+        web: DEBUG
+        data: DEBUG
+      boot:
+        autoconfigure:
+          data:
+            rest: DEBUG
+            jpa: DEBUG
+            orm: DEBUG

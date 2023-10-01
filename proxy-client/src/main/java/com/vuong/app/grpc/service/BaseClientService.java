@@ -3,6 +3,8 @@ package com.vuong.app.grpc.service;
 import com.google.protobuf.Any;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.Message;
+import com.vuong.app.exception.wrapper.CommandException;
+import com.vuong.app.exception.wrapper.ConvertResponseTypeException;
 import com.vuong.app.exception.wrapper.ResourceNotFoundException;
 import com.vuong.app.v1.message.GrpcErrorCode;
 import com.vuong.app.v1.message.GrpcRequest;
@@ -12,7 +14,7 @@ import java.util.Optional;
 
 public abstract class BaseClientService {
 
-    protected <T extends Message> Optional<T> unpackedResult(GrpcResponse response, Class<T> responseType) {
+    private <T extends Message> Optional<T> unpackedResult(GrpcResponse response, Class<T> responseType) {
 
         GrpcResponse.ResponseCase responseCase = response.getResponseCase();
 
@@ -27,13 +29,17 @@ public abstract class BaseClientService {
             if (errorCode.compareTo(GrpcErrorCode.ERROR_CODE_NOT_FOUND) == 0) {
                 return Optional.empty();
             }
+
+            if (errorCode.compareTo(GrpcErrorCode.ERROR_CODE_BAD_REQUEST) == 0) { // return create false
+                throw new CommandException(message);
+            }
         }
 
         // end handle error
 
         Any result = response.getSuccessResponse().getResult();
         if (!result.is(responseType)) {
-            throw new RuntimeException("Error Response : " + response.getErrorResponse().getErrorCode());
+            throw new ConvertResponseTypeException();
         }
 
         T unpackedResult = null;
@@ -41,10 +47,18 @@ public abstract class BaseClientService {
         try {
             unpackedResult = result.unpack(responseType);
         } catch (InvalidProtocolBufferException e) {
-            throw new RuntimeException("Error Response : " + response.getErrorResponse().getErrorCode());
+            throw new ConvertResponseTypeException("Unpack response exception : " + response.getErrorResponse().getErrorCode());
         }
 
         return Optional.of(unpackedResult);
+    }
+
+    protected <T extends Message> T unpackedResultCommand(GrpcResponse response, Class<T> responseType) {
+        return this.unpackedResult(response, responseType).get();
+    }
+
+    protected <T extends Message> Optional<T> unpackedResultQuery(GrpcResponse response, Class<T> responseType) {
+        return this.unpackedResult(response, responseType);
     }
 
     protected <T extends Message> GrpcRequest packRequest(T request, String correlationId) {

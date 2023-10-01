@@ -3,7 +3,8 @@ package com.vuong.app.jpa.query;
 import com.google.protobuf.Any;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.Message;
-import com.vuong.app.v1.message.GrpcRequest;
+import com.vuong.app.v1.message.*;
+import io.grpc.stub.StreamObserver;
 
 public class ServiceHelper {
 
@@ -36,6 +37,38 @@ public class ServiceHelper {
         }
 
         return unpackedRequest;
+    }
+
+    public static GrpcResponse packedSuccessResponse(Message message) {
+
+        GrpcResponse.Builder builderResponse = GrpcResponse.newBuilder();
+
+        builderResponse.setSuccessResponse(GrpcSuccessResponse.newBuilder()
+                .setResult(Any.pack(message))
+                .build());
+
+        GrpcResponse response = builderResponse.build();
+
+        return response;
+    }
+
+    public static GrpcResponse packedErrorResponse(GrpcErrorCode errorCode, String message) {
+
+        GrpcResponse.Builder builderResponse = GrpcResponse.newBuilder();
+
+        builderResponse.setErrorResponse(GrpcErrorResponse.newBuilder()
+                    .setErrorCode(errorCode)
+                    .setMessage(message)
+                    .build());
+
+        GrpcResponse response = builderResponse.build();
+
+        return response;
+    }
+
+    public static void next(StreamObserver<GrpcResponse> responseObserver, GrpcResponse response) {
+        responseObserver.onNext(response);
+        responseObserver.onCompleted();
     }
 
 }
