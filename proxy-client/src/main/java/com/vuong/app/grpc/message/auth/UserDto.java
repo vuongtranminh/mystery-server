@@ -1,4 +1,6 @@
-package com.vuong.app.business.auth.model;
+package com.vuong.app.grpc.message.auth;
+
+import com.vuong.app.business.auth.model.AuthProvider;
 
 public interface UserDto {
 
@@ -25,6 +27,10 @@ public interface UserDto {
     String getPassword();
 
     void setPassword(String password);
+
+    Boolean getVerified();
+
+    void setVerified(Boolean verified);
 
     AuthProvider getProvider();
 

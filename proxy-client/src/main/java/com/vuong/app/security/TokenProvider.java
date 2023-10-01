@@ -5,12 +5,10 @@ import com.vuong.app.config.AppProperties;
 import io.jsonwebtoken.*;
 import lombok.*;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 import java.util.Date;
-import java.util.UUID;
 import java.util.function.Function;
 
 @Service
@@ -22,11 +20,11 @@ public class TokenProvider {
 
     public AccessToken generateAccessToken(Integer userId) {
         Date now = new Date();
-        Date expiryDate = new Date(now.getTime() + appProperties.getAuth().getAccessTokenSecret());
+        Date expiryDate = new Date(now.getTime() + appProperties.getAuth().getAccessTokenExpirationMsec());
 
         String accessToken = Jwts.builder()
                 .setSubject(Integer.toString(userId))
-                .setIssuedAt(new Date())
+                .setIssuedAt(now)
                 .setExpiration(expiryDate)
                 .signWith(SignatureAlgorithm.HS256, appProperties.getAuth().getAccessTokenSecret())
                 .compact();

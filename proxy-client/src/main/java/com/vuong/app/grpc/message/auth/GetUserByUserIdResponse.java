@@ -1,7 +1,6 @@
 package com.vuong.app.grpc.message.auth;
 
 import com.vuong.app.business.auth.model.AuthProvider;
-import com.vuong.app.business.auth.model.UserDto;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -22,6 +21,7 @@ public class GetUserByUserIdResponse implements UserDto, Serializable {
     private String bio;
     private String email;
     private String password;
+    private Boolean verified;
     private AuthProvider provider;
     private String providerId;
 }

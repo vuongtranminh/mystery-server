@@ -11,7 +11,7 @@ import java.io.Serializable;
 @AllArgsConstructor
 @Data
 @Builder
-public class GetUserByIdRequest implements Serializable {
+public class GetUserByUserIdRequest implements Serializable {
     private static final long serialVersionUID = 1L;
 
     private Integer userId;

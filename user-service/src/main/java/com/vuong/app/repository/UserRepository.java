@@ -6,12 +6,13 @@ import com.vuong.app.doman.User;
 import com.vuong.app.jpa.specification.JpaSpecificationExecutorWithProjection;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.time.Instant;
 import java.util.Optional;
 import java.util.Set;
 
 public interface UserRepository extends JpaRepository<User, Integer>, JpaSpecificationExecutorWithProjection<User, Integer> {
 
-    interface UserTest{
+    interface UserWithoutVerificationCredential{
         Integer getUserId();
         String getName();
         String getAvatar();
@@ -21,6 +22,8 @@ public interface UserRepository extends JpaRepository<User, Integer>, JpaSpecifi
         Boolean getVerified();
         AuthProvider getProvider();
         String getProviderId();
+        Instant getCreatedAt();
+        Instant getUpdatedAt();
     }
 
     interface UserVerified{

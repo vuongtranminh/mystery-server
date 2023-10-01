@@ -10,7 +10,7 @@ import java.io.Serializable;
 import java.time.Instant;
 
 @Entity
-@Table(name = "users")
+@Table(name = "refresh_tokens")
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = true, exclude = {"user"})
@@ -35,7 +35,7 @@ public final class RefreshToken extends AbstractMappedEntity implements Serializ
     private Instant expiresAt;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "userId")
+    @JoinColumn(name = "user_id")
     private User user;
 
     @Column(name = "status", nullable = false)

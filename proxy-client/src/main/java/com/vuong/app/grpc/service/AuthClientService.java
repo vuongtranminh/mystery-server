@@ -25,21 +25,8 @@ public class AuthClientService extends BaseClientService {
     VerificationCredentialServiceGrpc.VerificationCredentialServiceBlockingStub verificationCredentialServiceBlockingStub;
 
     public Optional<GetUserByEmailResponse> getUserByEmail(GetUserByEmailRequest request) {
-//        Set<String> requestedFields = new HashSet<>();
-//        requestedFields.add(UserDto_.USER_ID);
-//        requestedFields.add(UserDto_.NAME);
-//        requestedFields.add(UserDto_.AVATAR);
-//        requestedFields.add(UserDto_.BIO);
-//        requestedFields.add(UserDto_.EMAIL);
-//        requestedFields.add(UserDto_.PASSWORD);
-//        requestedFields.add(UserDto_.PROVIDER);
-//        requestedFields.add(UserDto_.PROVIDER_ID);
-
         GrpcRequest req = packRequest(GrpcGetUserByEmailRequest.newBuilder()
                 .setEmail(request.getEmail())
-//                .setFieldMask(FieldMask.newBuilder()
-//                        .addAllPaths(requestedFields)
-//                        .build())
                 .build());
 
         GrpcResponse response = this.userServiceBlockingStub.getUserByEmail(req);
@@ -61,27 +48,15 @@ public class AuthClientService extends BaseClientService {
                 .bio(grpcUser.getBio())
                 .email(grpcUser.getEmail())
                 .password(grpcUser.getPassword())
+                .verified(grpcUser.getVerified())
                 .provider(AuthProvider.forNumber(grpcUser.getProvider().getNumber()))
                 .providerId(grpcUser.getProviderId())
                 .build());
     }
 
     public Optional<GetUserByUserIdResponse> getUserByUserId(GetUserByUserIdRequest request) {
-//        Set<String> requestedFields = new HashSet<>();
-//        requestedFields.add(UserDto_.USER_ID);
-//        requestedFields.add(UserDto_.NAME);
-//        requestedFields.add(UserDto_.AVATAR);
-//        requestedFields.add(UserDto_.BIO);
-//        requestedFields.add(UserDto_.EMAIL);
-//        requestedFields.add(UserDto_.PASSWORD);
-//        requestedFields.add(UserDto_.PROVIDER);
-//        requestedFields.add(UserDto_.PROVIDER_ID);
-
         GrpcRequest req = packRequest(GrpcGetUserByUserIdRequest.newBuilder()
                 .setUserId(request.getUserId())
-//                .setFieldMask(FieldMask.newBuilder()
-//                        .addAllPaths(requestedFields)
-//                        .build())
                 .build());
 
         GrpcResponse response = this.userServiceBlockingStub.getUserByUserId(req);
@@ -103,6 +78,7 @@ public class AuthClientService extends BaseClientService {
                 .bio(grpcUser.getBio())
                 .email(grpcUser.getEmail())
                 .password(grpcUser.getPassword())
+                .verified(grpcUser.getVerified())
                 .provider(AuthProvider.forNumber(grpcUser.getProvider().getNumber()))
                 .providerId(grpcUser.getProviderId())
                 .build());
@@ -128,22 +104,11 @@ public class AuthClientService extends BaseClientService {
     }
 
     public UpdateUserByUserIdResponse updateUserByUserIdRequest(UpdateUserByUserIdRequest request) {
-//        Set<String> requestedFields = new HashSet<>();
-//        requestedFields.add(UserDto_.NAME);
-//        requestedFields.add(UserDto_.AVATAR);
-
         GrpcRequest req = packRequest(GrpcUpdateUserByUserIdRequest.newBuilder()
                 .setUserId(request.getUserId())
                 .setName(request.getName())
                 .setAvatar(request.getAvatar())
                 .setBio(request.getBio())
-//                .setUpdate(GrpcUserUpdateOperation.newBuilder()
-//                        .setName(request.getName())
-//                        .setAvatar(request.getAvatar())
-//                        .build())
-//                .setUpdateMask(FieldMask.newBuilder()
-//                        .addAllPaths(requestedFields)
-//                        .build())
                 .build());
 
         GrpcResponse response = this.userServiceBlockingStub.updateUserByUserId(req);

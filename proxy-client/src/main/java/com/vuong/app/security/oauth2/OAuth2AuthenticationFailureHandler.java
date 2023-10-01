@@ -1,5 +1,6 @@
 package com.vuong.app.security.oauth2;
 
+import com.vuong.app.config.AppProperties;
 import com.vuong.app.util.CookieUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +21,7 @@ import static com.vuong.app.security.oauth2.HttpCookieOAuth2AuthorizationRequest
 @RequiredArgsConstructor
 public class OAuth2AuthenticationFailureHandler extends SimpleUrlAuthenticationFailureHandler {
 
+    private final AppProperties appProperties;
     private final HttpCookieOAuth2AuthorizationRequestRepository httpCookieOAuth2AuthorizationRequestRepository;
 
     @Override
@@ -28,7 +30,11 @@ public class OAuth2AuthenticationFailureHandler extends SimpleUrlAuthenticationF
                 .map(Cookie::getValue)
                 .orElse(("/"));
 
-        targetUrl = UriComponentsBuilder.fromUriString(targetUrl)
+//        targetUrl = UriComponentsBuilder.fromUriString(targetUrl)
+//                .queryParam("error", exception.getLocalizedMessage())
+//                .build().toUriString();
+
+        targetUrl = UriComponentsBuilder.fromUriString(appProperties.getOauth2().getAuthorizedRedirectFailureUri())
                 .queryParam("error", exception.getLocalizedMessage())
                 .build().toUriString();
 

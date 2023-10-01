@@ -58,3 +58,5 @@ app:
       - http://localhost:3000/oauth2/redirect
       - myandroidapp://oauth2/redirect
       - myiosapp://oauth2/redirect
+    authorizedRedirectSuccessUri: http://localhost:3000
+    authorizedRedirectFailureUri: http://localhost:3000/sign-in

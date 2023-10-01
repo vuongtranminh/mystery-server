@@ -36,6 +36,7 @@ public class RefreshTokenService extends RefreshTokenServiceGrpc.RefreshTokenSer
 
         if (!userOptional.isPresent()) {
             ServiceHelper.next(responseObserver, ServiceHelper.packedErrorResponse(GrpcErrorCode.ERROR_CODE_NOT_FOUND, "user not found with id"));
+            return;
         }
 
         User user = userOptional.get();
@@ -59,6 +60,7 @@ public class RefreshTokenService extends RefreshTokenServiceGrpc.RefreshTokenSer
 
         if (!refreshTokenOptional.isPresent()) {
             ServiceHelper.next(responseObserver, ServiceHelper.packedErrorResponse(GrpcErrorCode.ERROR_CODE_NOT_FOUND, "refreshToken not found with refreshToken"));
+            return;
         }
 
         RefreshToken refreshToken = refreshTokenOptional.get();
@@ -85,6 +87,7 @@ public class RefreshTokenService extends RefreshTokenServiceGrpc.RefreshTokenSer
 
         if (!updateRefreshTokenOptional.isPresent()) {
             ServiceHelper.next(responseObserver, ServiceHelper.packedErrorResponse(GrpcErrorCode.ERROR_CODE_NOT_FOUND, "refreshToken not found with refreshToken"));
+            return;
         }
 
         RefreshToken updateRefreshToken = updateRefreshTokenOptional.get();

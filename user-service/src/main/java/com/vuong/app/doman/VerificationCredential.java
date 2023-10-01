@@ -12,11 +12,14 @@ import static com.fasterxml.jackson.annotation.JsonFormat.Shape.STRING;
 @Table(name = "verification_credentials")
 @NoArgsConstructor
 @AllArgsConstructor
+@EqualsAndHashCode(exclude = { "user" })
+@ToString(exclude = { "user" })
 @Data
 @Builder
 public class VerificationCredential {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "verification_credential_id", unique = true, nullable = false, updatable = false)
     private Integer verificationCredentialId;
 
@@ -43,8 +46,8 @@ public class VerificationCredential {
 //    @PrimaryKeyJoinColumn
 //    private User user;
 
-    @OneToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "user_id", referencedColumnName = "verification_credential_id")
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", referencedColumnName = "user_id") // name là tên cột khóa ngoại trong bảng VC, referencedColumnName là id của của bảng user
     private User user;
 
     //	Khi bạn thực hiện một câu lệnh insert vào bảng chứa một quan hệ One-to-One trong Hibernate, Hibernate có thể sinh ra một câu lệnh select để tải đối tượng liên quan trước, trước khi thực hiện insert, và đây là hành vi mặc định của Hibernate.

@@ -1,21 +1,16 @@
-package com.vuong.app.business.user.model;
+package com.vuong.app.business.user.model.payload;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.io.Serializable;
-
 @NoArgsConstructor
 @AllArgsConstructor
 @Data
 @Builder
-public class UserCreate implements Serializable {
-    private static final long serialVersionUID = 1L;
-
+public class UserSummary {
+    private Integer userId;
     private String name;
     private String avatar;
-    private String bio;
-
 }

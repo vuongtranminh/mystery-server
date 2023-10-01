@@ -13,6 +13,7 @@ import com.vuong.app.jpa.query.PageInfo;
 import com.vuong.app.jpa.query.QueryBuilder;
 import com.vuong.app.jpa.query.QueryHelper;
 import com.vuong.app.jpa.query.ServiceHelper;
+import com.vuong.app.operator.StringOperators;
 import com.vuong.app.v1.*;
 import com.vuong.app.repository.UserRepository;
 import com.vuong.app.v1.message.*;
@@ -57,7 +58,9 @@ public class UserService extends UserServiceGrpc.UserServiceImplBase {
                 .build());
 
         // send mail verify
-        this.verificationCredentialService.sendMailVerifyCreateUser(user);
+        if (!verified) {
+            this.verificationCredentialService.sendMailVerifyCreateUser(user);
+        }
 
         GrpcCreateUserResponse response = GrpcCreateUserResponse.newBuilder().setUserId(user.getUserId()).build();
 
@@ -72,6 +75,7 @@ public class UserService extends UserServiceGrpc.UserServiceImplBase {
 
         if (!updateUserOptional.isPresent()) {
             ServiceHelper.next(responseObserver, ServiceHelper.packedErrorResponse(GrpcErrorCode.ERROR_CODE_NOT_FOUND, "user not found with id"));
+            return;
         }
 
         User updateUser = updateUserOptional.get();
@@ -94,12 +98,14 @@ public class UserService extends UserServiceGrpc.UserServiceImplBase {
 
         if (!updateUserOptional.isPresent()) {
             ServiceHelper.next(responseObserver, ServiceHelper.packedErrorResponse(GrpcErrorCode.ERROR_CODE_NOT_FOUND, "user not found with id"));
+            return;
         }
 
         User updateUser = updateUserOptional.get();
 
         if (!updateUser.getPassword().equals(req.getOldPassword())) {
             ServiceHelper.next(responseObserver, ServiceHelper.packedErrorResponse(GrpcErrorCode.ERROR_CODE_NOT_FOUND, "Old password wrong!"));
+            return;
         }
 
         updateUser.setPassword(req.getNewPassword());
@@ -144,13 +150,14 @@ public class UserService extends UserServiceGrpc.UserServiceImplBase {
     public void getUserByUserId(GrpcRequest request, StreamObserver<GrpcResponse> responseObserver) {
         GrpcGetUserByUserIdRequest req = ServiceHelper.unpackedRequest(request, GrpcGetUserByUserIdRequest.class);
 
-        Optional<User> userOptional = this.userRepository.findById(req.getUserId());
+        Optional<UserRepository.UserWithoutVerificationCredential> userOptional = this.userRepository.findById(req.getUserId(), UserRepository.UserWithoutVerificationCredential.class);
 
         if (!userOptional.isPresent()) {
             ServiceHelper.next(responseObserver, ServiceHelper.packedErrorResponse(GrpcErrorCode.ERROR_CODE_NOT_FOUND, "user not found with id"));
+            return;
         }
 
-        User user = userOptional.get();
+        UserRepository.UserWithoutVerificationCredential user = userOptional.get();
 
         GrpcGetUserByUserIdResponse response = GrpcGetUserByUserIdResponse.newBuilder().setUser(GrpcUser.newBuilder()
                 .setUserId(user.getUserId())
@@ -173,13 +180,24 @@ public class UserService extends UserServiceGrpc.UserServiceImplBase {
     public void getUserByEmail(GrpcRequest request, StreamObserver<GrpcResponse> responseObserver) {
         GrpcGetUserByEmailRequest req = ServiceHelper.unpackedRequest(request, GrpcGetUserByEmailRequest.class);
 
-        Optional<User> userOptional = this.userRepository.findByEmail(req.getEmail());
+        QueryBuilder queryBuilder = new QueryBuilder();
+
+        StringOperators emailOperator = new StringOperators();
+        emailOperator.setEq(req.getEmail());
+
+        UserFilterParameter filterParameter = new UserFilterParameter();
+        filterParameter.setEmail(emailOperator);
+
+        this.buildFilter(queryBuilder, filterParameter);
+
+        Optional<UserRepository.UserWithoutVerificationCredential> userOptional = this.userRepository.findOne(queryBuilder.build(), UserRepository.UserWithoutVerificationCredential.class);
 
         if (!userOptional.isPresent()) {
             ServiceHelper.next(responseObserver, ServiceHelper.packedErrorResponse(GrpcErrorCode.ERROR_CODE_NOT_FOUND, "user not found with email"));
+            return;
         }
 
-        User user = userOptional.get();
+        UserRepository.UserWithoutVerificationCredential user = userOptional.get();
 
         GrpcGetUserByEmailResponse response = GrpcGetUserByEmailResponse.newBuilder().setUser(GrpcUser.newBuilder()
                 .setUserId(user.getUserId())

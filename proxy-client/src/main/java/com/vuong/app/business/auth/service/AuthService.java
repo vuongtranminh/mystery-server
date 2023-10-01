@@ -11,7 +11,7 @@ import javax.servlet.http.HttpServletResponse;
 
 public interface AuthService {
 
-    boolean existsByEmail(String email);
+//    boolean existsByEmail(String email);
 
     ResponseObject signIn(SignInRequest signInRequest, HttpServletResponse response);
     ResponseObject signUp(SignUpRequest signUpRequest);

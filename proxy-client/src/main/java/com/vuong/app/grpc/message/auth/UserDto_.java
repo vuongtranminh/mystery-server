@@ -1,4 +1,4 @@
-package com.vuong.app.business.auth.model;
+package com.vuong.app.grpc.message.auth;
 
 public class UserDto_ {
     public static final String PASSWORD = "password";

@@ -43,13 +43,13 @@ public class AuthServiceImpl implements AuthService {
 
     private final AppProperties appProperties;
 
-    @Override
-    public boolean existsByEmail(String email) {
-        ExistsUserByEmailResponse existsUserByEmailResponse = this.authClientService.existsUserByEmail(ExistsUserByEmailRequest.builder()
-                .email(email)
-                .build());
-        return existsUserByEmailResponse.isExists();
-    }
+//    @Override
+//    public boolean existsByEmail(String email) {
+//        ExistsUserByEmailResponse existsUserByEmailResponse = this.authClientService.existsUserByEmail(ExistsUserByEmailRequest.builder()
+//                .email(email)
+//                .build());
+//        return existsUserByEmailResponse.isExists();
+//    }
 
     @Override
     public ResponseObject signIn(SignInRequest signInRequest, HttpServletResponse response) {
@@ -74,17 +74,23 @@ public class AuthServiceImpl implements AuthService {
                 .userId(refreshToken.getUserId())
                 .build());
 
-        CookieUtils.addCookie(response, appProperties.getAuth().getAccessTokenCookieName(), accessToken.getAccessToken(), (int) appProperties.getAuth().getAccessTokenExpirationMsec());
-        CookieUtils.addCookie(response, appProperties.getAuth().getRefreshTokenCookieName(), refreshToken.getRefreshToken(), (int) appProperties.getAuth().getRefreshTokenExpirationMsec());
+        CookieUtils.addCookie(response, appProperties.getAuth().getAccessTokenCookieName(), CookieUtils.serialize(accessToken.getAccessToken()), (int) appProperties.getAuth().getAccessTokenExpirationMsec());
+        CookieUtils.addCookie(response, appProperties.getAuth().getRefreshTokenCookieName(), CookieUtils.serialize(refreshToken.getRefreshToken()), (int) appProperties.getAuth().getRefreshTokenExpirationMsec());
 
         return new ResponseMsg("Sign in successfully!", HttpStatus.OK);
     }
 
     @Override
     public ResponseObject signUp(SignUpRequest signUpRequest) {
-        if(this.existsByEmail(signUpRequest.getEmail())) {
+        ExistsUserByEmailResponse existsUserByEmailResponse = this.authClientService.existsUserByEmail(ExistsUserByEmailRequest.builder()
+                .email(signUpRequest.getEmail())
+                .build());
+        if (existsUserByEmailResponse.isExists()) {
             throw new BadRequestException("Email address already in use.");
         }
+//        if(this.existsByEmail(signUpRequest.getEmail())) {
+//            throw new BadRequestException("Email address already in use.");
+//        }
 
         CreateUserResponse createUserResponse = this.authClientService.createUser(CreateUserRequest.builder()
                 .name(signUpRequest.getName())
@@ -162,8 +168,8 @@ public class AuthServiceImpl implements AuthService {
         // insert refresh token to DB
         TokenProvider.AccessToken accessToken = tokenProvider.generateAccessToken(refreshToken.getUserId());
 
-        CookieUtils.addCookie(response, appProperties.getAuth().getAccessTokenCookieName(), accessToken.getAccessToken(), (int) appProperties.getAuth().getAccessTokenExpirationMsec());
-        CookieUtils.addCookie(response, appProperties.getAuth().getRefreshTokenCookieName(), refreshToken.getRefreshToken(), (int) appProperties.getAuth().getRefreshTokenExpirationMsec());
+        CookieUtils.addCookie(response, appProperties.getAuth().getAccessTokenCookieName(), CookieUtils.serialize(accessToken.getAccessToken()), (int) appProperties.getAuth().getAccessTokenExpirationMsec());
+        CookieUtils.addCookie(response, appProperties.getAuth().getRefreshTokenCookieName(), CookieUtils.serialize(refreshToken.getRefreshToken()), (int) appProperties.getAuth().getRefreshTokenExpirationMsec());
 
         return new ResponseMsg("Provide new access token successfully!", HttpStatus.OK);
     }

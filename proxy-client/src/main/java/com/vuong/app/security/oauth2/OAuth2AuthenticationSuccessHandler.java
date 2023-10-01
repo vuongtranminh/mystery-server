@@ -67,13 +67,15 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
                 .refreshToken(refreshToken.getRefreshToken())
                 .expiresAt(refreshToken.getExpiresAt())
                 .userId(refreshToken.getUserId())
-                .status(refreshToken.getStatus())
                 .build());
 
-        CookieUtils.addCookie(response, appProperties.getAuth().getAccessTokenCookieName(), accessToken.getAccessToken(), (int) appProperties.getAuth().getAccessTokenExpirationMsec());
-        CookieUtils.addCookie(response, appProperties.getAuth().getRefreshTokenCookieName(), refreshToken.getRefreshToken(), (int) appProperties.getAuth().getRefreshTokenExpirationMsec());
+        CookieUtils.addCookie(response, appProperties.getAuth().getAccessTokenCookieName(), CookieUtils.serialize(accessToken.getAccessToken()), (int) appProperties.getAuth().getAccessTokenExpirationMsec());
+        CookieUtils.addCookie(response, appProperties.getAuth().getRefreshTokenCookieName(), CookieUtils.serialize(refreshToken.getRefreshToken()), (int) appProperties.getAuth().getRefreshTokenExpirationMsec());
 
-        return UriComponentsBuilder.fromUriString(targetUrl)
+//        return UriComponentsBuilder.fromUriString("http://localhost:3000")
+//                .queryParam("token", token)
+//                .build().toUriString();
+        return UriComponentsBuilder.fromUriString(appProperties.getOauth2().getAuthorizedRedirectSuccessUri())
 //                .queryParam("token", token)
                 .build().toUriString();
     }

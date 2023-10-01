@@ -1,6 +1,6 @@
 package com.vuong.app.security;
 
-import com.vuong.app.business.auth.model.UserDto;
+import com.vuong.app.grpc.message.auth.UserDto;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;

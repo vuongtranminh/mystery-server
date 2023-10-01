@@ -1,7 +1,7 @@
 package com.vuong.app.grpc.message.user;
 
 import com.vuong.app.business.auth.model.AuthProvider;
-import com.vuong.app.business.auth.model.UserDto;
+import com.vuong.app.grpc.message.auth.UserDto;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -13,7 +13,7 @@ import java.io.Serializable;
 @AllArgsConstructor
 @Data
 @Builder
-public class GetUserByIdResponse implements UserDto, Serializable {
+public class GetUserByUserIdResponse implements UserDto, Serializable {
     private static final long serialVersionUID = 1L;
 
     private Integer userId;
@@ -22,6 +22,7 @@ public class GetUserByIdResponse implements UserDto, Serializable {
     private String bio;
     private String email;
     private String password;
+    private Boolean verified;
     private AuthProvider provider;
     private String providerId;
 }

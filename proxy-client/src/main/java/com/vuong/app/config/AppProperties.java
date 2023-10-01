@@ -17,11 +17,12 @@ public class AppProperties {
     @Getter
     @Setter
     public static class Auth {
-
         private String accessTokenSecret;
         private long accessTokenExpirationMsec;
+
         private String refreshTokenSecret;
         private long refreshTokenExpirationMsec;
+
         private String accessTokenCookieName;
         private String refreshTokenCookieName;
     }
@@ -30,6 +31,8 @@ public class AppProperties {
     @Setter
     public static final class OAuth2 {
         private List<String> authorizedRedirectUris = new ArrayList<>();
+        private String authorizedRedirectSuccessUri;
+        private String authorizedRedirectFailureUri;
     }
 
 }

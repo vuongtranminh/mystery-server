@@ -1,24 +1,51 @@
 package com.vuong.app.grpc.service;
 
-import com.google.protobuf.FieldMask;
-import com.vuong.app.business.auth.model.UserDto_;
-import com.vuong.app.grpc.message.user.GetUserByIdRequest;
-import com.vuong.app.grpc.message.user.GetUserByIdResponse;
+import com.vuong.app.business.auth.model.AuthProvider;
+import com.vuong.app.grpc.message.auth.GetUserByUserIdRequest;
+import com.vuong.app.grpc.message.auth.GetUserByUserIdResponse;
 import com.vuong.app.v1.*;
 import com.vuong.app.v1.message.GrpcRequest;
 import com.vuong.app.v1.message.GrpcResponse;
 import net.devh.boot.grpc.client.inject.GrpcClient;
 import org.springframework.stereotype.Service;
 
-import java.util.HashSet;
 import java.util.Optional;
-import java.util.Set;
 
 @Service
 public class UserClientService extends BaseClientService {
 
     @GrpcClient("grpc-user-service")
-    UserServiceGrpc.UserServiceBlockingStub synchronousClient;
+    UserServiceGrpc.UserServiceBlockingStub userServiceBlockingStub;
+
+    public Optional<GetUserByUserIdResponse> getUserByUserId(GetUserByUserIdRequest request) {
+        GrpcRequest req = packRequest(GrpcGetUserByUserIdRequest.newBuilder()
+                .setUserId(request.getUserId())
+                .build());
+
+        GrpcResponse response = this.userServiceBlockingStub.getUserByUserId(req);
+
+        Optional<GrpcGetUserByUserIdResponse> unpackedResultOptional = unpackedResultQuery(response, GrpcGetUserByUserIdResponse.class);
+
+        if (!unpackedResultOptional.isPresent()) {
+            return Optional.empty();
+        }
+
+        GrpcGetUserByUserIdResponse unpackedResult = unpackedResultOptional.get();
+
+        GrpcUser grpcUser = unpackedResult.getUser();
+
+        return Optional.of(GetUserByUserIdResponse.builder()
+                .userId(grpcUser.getUserId())
+                .name(grpcUser.getName())
+                .avatar(grpcUser.getAvatar())
+                .bio(grpcUser.getBio())
+                .email(grpcUser.getEmail())
+                .password(grpcUser.getPassword())
+                .verified(grpcUser.getVerified())
+                .provider(AuthProvider.forNumber(grpcUser.getProvider().getNumber()))
+                .providerId(grpcUser.getProviderId())
+                .build());
+    }
 
 //    public UserList getUsers(UserListOptions options, DataFetchingEnvironment env) {
 //
@@ -47,42 +74,42 @@ public class UserClientService extends BaseClientService {
 //                .build();
 //    }
 
-    public Optional<GetUserByIdResponse> getUserById(GetUserByIdRequest request) {
-        Set<String> requestedFields = new HashSet<>();
-        requestedFields.add(UserDto_.USER_ID);
-        requestedFields.add(UserDto_.NAME);
-        requestedFields.add(UserDto_.AVATAR);
-        requestedFields.add(UserDto_.BIO);
-        requestedFields.add(UserDto_.EMAIL);
-        requestedFields.add(UserDto_.PASSWORD);
-        requestedFields.add(UserDto_.PROVIDER);
-        requestedFields.add(UserDto_.PROVIDER_ID);
-
-        GrpcRequest req = packRequest(GrpcGetUserByIdRequest.newBuilder()
-                .setUserId(request.getUserId())
-                .setFieldMask(FieldMask.newBuilder()
-                        .addAllPaths(requestedFields)
-                        .build())
-                .build());
-
-        GrpcResponse response = this.synchronousClient.grpcFindById(req);
-
-        Optional<GrpcGetUserByIdResponse> unpackedResultOptional = unpackedResultQuery(response, GrpcGetUserByIdResponse.class);
-
-        if (!unpackedResultOptional.isPresent()) {
-            return Optional.empty();
-        }
-
-        GrpcGetUserByIdResponse unpackedResult = unpackedResultOptional.get();
-
-        return Optional.of(GetUserByIdResponse.builder()
-                .userId(unpackedResult.getUser().getUserId())
-                .name(unpackedResult.getUser().getName())
-                .avatar(unpackedResult.getUser().getAvatar())
-                .bio(unpackedResult.getUser().getBio())
-                .email(unpackedResult.getUser().getEmail())
-                .password(unpackedResult.getUser().getPassword())
-                .build());
-    }
+//    public Optional<GetUserByIdResponse> getUserById(GetUserByIdRequest request) {
+//        Set<String> requestedFields = new HashSet<>();
+//        requestedFields.add(UserDto_.USER_ID);
+//        requestedFields.add(UserDto_.NAME);
+//        requestedFields.add(UserDto_.AVATAR);
+//        requestedFields.add(UserDto_.BIO);
+//        requestedFields.add(UserDto_.EMAIL);
+//        requestedFields.add(UserDto_.PASSWORD);
+//        requestedFields.add(UserDto_.PROVIDER);
+//        requestedFields.add(UserDto_.PROVIDER_ID);
+//
+//        GrpcRequest req = packRequest(GrpcGetUserByIdRequest.newBuilder()
+//                .setUserId(request.getUserId())
+//                .setFieldMask(FieldMask.newBuilder()
+//                        .addAllPaths(requestedFields)
+//                        .build())
+//                .build());
+//
+//        GrpcResponse response = this.synchronousClient.grpcFindById(req);
+//
+//        Optional<GrpcGetUserByIdResponse> unpackedResultOptional = unpackedResultQuery(response, GrpcGetUserByIdResponse.class);
+//
+//        if (!unpackedResultOptional.isPresent()) {
+//            return Optional.empty();
+//        }
+//
+//        GrpcGetUserByIdResponse unpackedResult = unpackedResultOptional.get();
+//
+//        return Optional.of(GetUserByIdResponse.builder()
+//                .userId(unpackedResult.getUser().getUserId())
+//                .name(unpackedResult.getUser().getName())
+//                .avatar(unpackedResult.getUser().getAvatar())
+//                .bio(unpackedResult.getUser().getBio())
+//                .email(unpackedResult.getUser().getEmail())
+//                .password(unpackedResult.getUser().getPassword())
+//                .build());
+//    }
 
 }

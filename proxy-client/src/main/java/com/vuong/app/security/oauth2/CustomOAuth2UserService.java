@@ -98,6 +98,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
                 .userId(existingUser.getUserId())
                 .name(oAuth2UserInfo.getName())
                 .avatar(oAuth2UserInfo.getImageUrl())
+                .bio(existingUser.getBio())
                 .build());
 
         UserDto userDto = this.authClientService.getUserByUserId(GetUserByUserIdRequest.builder().userId(updateUserByUserIdResponse.getUserId()).build())

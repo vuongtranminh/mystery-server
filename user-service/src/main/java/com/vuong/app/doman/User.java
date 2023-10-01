@@ -4,6 +4,8 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.*;
 import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
+import org.hibernate.annotations.LazyToOne;
+import org.hibernate.annotations.LazyToOneOption;
 
 import javax.persistence.*;
 import java.io.Serializable;
@@ -13,8 +15,8 @@ import java.util.Set;
 @Table(name = "users")
 @NoArgsConstructor
 @AllArgsConstructor
-@EqualsAndHashCode(callSuper = true, exclude = {"refreshTokens"})
-@ToString(exclude = {"refreshTokens"})
+@EqualsAndHashCode(callSuper = true, exclude = { "refreshTokens", "verificationCredential" })
+@ToString(exclude = { "refreshTokens", "verificationCredential" })
 @Data
 @Builder
 @DynamicInsert
@@ -66,7 +68,10 @@ public final class User extends AbstractMappedEntity implements Serializable {
 
     // use mappedBy để khi xoá VerificationCredential không xoá user
     // khi xoá user sẽ xoá cả VerificationCredential
-    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+
+    // https://vladmihalcea.com/the-best-way-to-map-a-onetoone-relationship-with-jpa-and-hibernate/
+    @JsonIgnore
+    @OneToOne(mappedBy = "user", fetch = FetchType.LAZY, cascade = CascadeType.REMOVE)
     private VerificationCredential verificationCredential;
 
     public void addRefreshToken(RefreshToken refreshToken) {
