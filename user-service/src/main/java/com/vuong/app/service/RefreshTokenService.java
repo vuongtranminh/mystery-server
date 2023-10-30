@@ -1,37 +1,62 @@
 package com.vuong.app.service;
 
-import com.vuong.app.doman.AuthProvider;
+import com.vuong.app.common.ServiceHelper;
+import com.vuong.app.config.MysteryJdbc;
 import com.vuong.app.doman.RefreshToken;
 import com.vuong.app.doman.RefreshTokenStatus;
 import com.vuong.app.doman.User;
-import com.vuong.app.jpa.query.ServiceHelper;
 import com.vuong.app.repository.RefreshTokenRepository;
 import com.vuong.app.repository.UserRepository;
-import com.vuong.app.v1.*;
-import com.vuong.app.v1.message.GrpcErrorCode;
-import com.vuong.app.v1.message.GrpcRequest;
-import com.vuong.app.v1.message.GrpcResponse;
+import com.vuong.app.v1.GrpcRequest;
+import com.vuong.app.v1.GrpcResponse;
+import com.vuong.app.v1.user.GrpcCreateRefreshTokenRequest;
+import com.vuong.app.v1.user.RefreshTokenServiceGrpc;
 import io.grpc.stub.StreamObserver;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.devh.boot.grpc.server.service.GrpcService;
 
-import javax.transaction.Transactional;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.time.Instant;
 import java.util.Optional;
 
 @GrpcService
-@Transactional
 @Slf4j
 @RequiredArgsConstructor
 public class RefreshTokenService extends RefreshTokenServiceGrpc.RefreshTokenServiceImplBase {
 
-    private final RefreshTokenRepository refreshTokenRepository;
-    private final UserRepository userRepository;
+    private final MysteryJdbc mysteryJdbc;
 
     @Override
     public void createRefreshToken(GrpcRequest request, StreamObserver<GrpcResponse> responseObserver) {
         GrpcCreateRefreshTokenRequest req = ServiceHelper.unpackedRequest(request, GrpcCreateRefreshTokenRequest.class);
+
+        String existsUserQuery = "select 1 from tbl_user where tbl_user.id = ?";
+
+        String insertRefreshTokenQuery = "insert into tbl_refresh_token(id, refresh_token, expires_at, user_id, status) values (?, ?, ?, ?, ?)";
+
+        Connection con = null;
+        PreparedStatement pst1 = null;
+        PreparedStatement pst2 = null;
+        ResultSet rs1 = null;
+        ResultSet rs2 = null;
+
+        try {
+            con = mysteryJdbc.getConnection();
+            pst1 = con.prepareStatement(existsUserQuery);
+            pst1.setString();
+
+        } catch (SQLException ex) {
+            mysteryJdbc.doRollback();
+        } finally {
+            mysteryJdbc.closeResultSet(rs);
+            mysteryJdbc.closePreparedStatement(pst);
+        }
+
+
         Optional<User> userOptional = this.userRepository.findById(req.getUserId());
 
         if (!userOptional.isPresent()) {

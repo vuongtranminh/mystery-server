@@ -1,25 +1,12 @@
-package com.vuong.app.jpa.query;
+package com.vuong.app.common;
 
 import com.google.protobuf.Any;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.Message;
-import com.vuong.app.v1.message.*;
+import com.vuong.app.v1.*;
 import io.grpc.stub.StreamObserver;
 
 public class ServiceHelper {
-
-    private static final int DEFAULT_CURRENT_PAGE = 0;
-    private static final int DEFAULT_PAGE_SIZE = 30;
-
-    public static PageInfo getListOptions(int currentPage, int pageSize) {
-        if (currentPage <= 0) {
-            currentPage = DEFAULT_CURRENT_PAGE;
-        }
-        if (pageSize <= 0) {
-            pageSize = DEFAULT_PAGE_SIZE;
-        }
-        return PageInfo.builder().current(currentPage).size(pageSize).build();
-    }
 
     public static <T extends Message> T unpackedRequest(GrpcRequest grpcRequest, Class<T> requestType) {
 
@@ -57,9 +44,9 @@ public class ServiceHelper {
         GrpcResponse.Builder builderResponse = GrpcResponse.newBuilder();
 
         builderResponse.setErrorResponse(GrpcErrorResponse.newBuilder()
-                    .setErrorCode(errorCode)
-                    .setMessage(message)
-                    .build());
+                .setErrorCode(errorCode)
+                .setMessage(message)
+                .build());
 
         GrpcResponse response = builderResponse.build();
 
@@ -72,3 +59,4 @@ public class ServiceHelper {
     }
 
 }
+

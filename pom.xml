@@ -42,7 +42,6 @@
 
 	<modules>
 		<module>common-core</module>
-		<module>common-jpa</module>
 		<module>user-service</module>
 		<module>discord-service</module>
 		<module>notification-service</module>

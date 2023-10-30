@@ -1,14 +1,11 @@
 syntax = "proto3";
 
-package vuong.app.v1;
-option java_package = "com.vuong.app.v1";
+package vuong.app.v1.discord;
+option java_package = "com.vuong.app.v1.discord";
 option java_multiple_files = true;
 option java_outer_classname = "ConversationProto";
 
-import "google/protobuf/timestamp.proto";
-import "google/protobuf/field_mask.proto";
 import "common.proto";
-import "operator.proto";
 
 message GrpcConversation {
   int32 conversation_id = 1;

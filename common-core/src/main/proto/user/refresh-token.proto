@@ -1,14 +1,11 @@
 syntax = "proto3";
 
-package vuong.app.v1;
-option java_package = "com.vuong.app.v1";
+package vuong.app.v1.user;
+option java_package = "com.vuong.app.v1.user";
 option java_multiple_files = true;
 option java_outer_classname = "RefreshTokenProto";
 
-import "google/protobuf/timestamp.proto";
-import "google/protobuf/field_mask.proto";
 import "common.proto";
-import "operator.proto";
 
 enum GrpcRefreshTokenStatus {
   REFRESH_TOKEN_UNSPECIFIED = 0;
@@ -17,10 +14,10 @@ enum GrpcRefreshTokenStatus {
 }
 
 message GrpcRefreshToken {
-  int32 refresh_token_id = 1;
+  string refresh_token_id = 1;
   string refresh_token = 2;
   string expires_at = 3;
-  int32 user_id = 4;
+  string user_id = 4;
   GrpcRefreshTokenStatus status = 5;
   string created_at = 6;
   string updated_at = 7;
@@ -29,11 +26,11 @@ message GrpcRefreshToken {
 message GrpcCreateRefreshTokenRequest {
   string refresh_token = 1;
   string expires_at = 2;
-  int32 user_id = 3;
+  string user_id = 3;
 }
 
 message GrpcCreateRefreshTokenResponse {
-  int32 refresh_token_id = 1;
+  string refresh_token_id = 1;
 }
 
 message GrpcGetRefreshTokenByRefreshTokenRequest {
@@ -45,12 +42,12 @@ message GrpcGetRefreshTokenByRefreshTokenResponse {
 }
 
 message GrpcUpdateRefreshTokenByRefreshTokenIdRequest {
-  int32 refresh_token_id = 1;
+  string refresh_token_id = 1;
   GrpcRefreshTokenStatus status = 2;
 }
 
 message GrpcUpdateRefreshTokenByRefreshTokenIdResponse {
-  int32 refresh_token_id = 1;
+  string refresh_token_id = 1;
 }
 
 message GrpcDeleteRefreshTokenByRefreshTokenRequest {
@@ -62,7 +59,7 @@ message GrpcDeleteRefreshTokenByRefreshTokenResponse {
 }
 
 message GrpcDeleteAllRefreshTokenByUserIdRequest {
-  int32 user_id = 1;
+  string user_id = 1;
 }
 
 message GrpcDeleteAllRefreshTokenByUserIdResponse {
@@ -70,9 +67,9 @@ message GrpcDeleteAllRefreshTokenByUserIdResponse {
 }
 
 service RefreshTokenService {
-  rpc createRefreshToken(vuong.app.v1.message.GrpcRequest) returns (vuong.app.v1.message.GrpcResponse);
-  rpc getRefreshTokenByRefreshToken(vuong.app.v1.message.GrpcRequest) returns (vuong.app.v1.message.GrpcResponse);
-  rpc updateRefreshTokenByRefreshTokenId(vuong.app.v1.message.GrpcRequest) returns (vuong.app.v1.message.GrpcResponse);
-  rpc deleteRefreshTokenByRefreshToken(vuong.app.v1.message.GrpcRequest) returns (vuong.app.v1.message.GrpcResponse);
-  rpc deleteAllRefreshTokenByUserId(vuong.app.v1.message.GrpcRequest) returns (vuong.app.v1.message.GrpcResponse);
+  rpc createRefreshToken(vuong.app.v1.GrpcRequest) returns (vuong.app.v1.GrpcResponse);
+  rpc getRefreshTokenByRefreshToken(vuong.app.v1.GrpcRequest) returns (vuong.app.v1.GrpcResponse);
+  rpc updateRefreshTokenByRefreshTokenId(vuong.app.v1.GrpcRequest) returns (vuong.app.v1.GrpcResponse);
+  rpc deleteRefreshTokenByRefreshToken(vuong.app.v1.GrpcRequest) returns (vuong.app.v1.GrpcResponse);
+  rpc deleteAllRefreshTokenByUserId(vuong.app.v1.GrpcRequest) returns (vuong.app.v1.GrpcResponse);
 }

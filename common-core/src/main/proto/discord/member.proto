@@ -1,15 +1,18 @@
 syntax = "proto3";
 
-package vuong.app.v1;
-option java_package = "com.vuong.app.v1";
+package vuong.app.v1.discord;
+option java_package = "com.vuong.app.v1.discord";
 option java_multiple_files = true;
 option java_outer_classname = "MemberProto";
 
-import "google/protobuf/timestamp.proto";
-import "google/protobuf/field_mask.proto";
 import "common.proto";
-import "operator.proto";
-import "discord/doman.proto";
+
+enum GrpcMemberRole {
+  MEMBER_ROLE_UNSPECIFIED = 0;
+  MEMBER_ROLE_ADMIN = 1;
+  MEMBER_ROLE_MODERATOR = 2;
+  MEMBER_ROLE_GUEST = 3;
+}
 
 message GrpcMemberProfile {
   string member_id = 1;

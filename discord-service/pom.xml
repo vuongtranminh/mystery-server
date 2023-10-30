@@ -47,11 +47,6 @@
 		</dependency>
 
 		<dependency>
-			<groupId>com.vuong</groupId>
-			<artifactId>common-jpa</artifactId>
-			<version>0.0.1</version>
-		</dependency>
-		<dependency>
 			<groupId>com.fasterxml.jackson.datatype</groupId>
 			<artifactId>jackson-datatype-jsr310</artifactId>
 		</dependency>

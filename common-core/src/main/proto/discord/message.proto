@@ -5,21 +5,8 @@ option java_package = "com.vuong.app.v1.discord";
 option java_multiple_files = true;
 option java_outer_classname = "MessageProto";
 
-import "google/protobuf/timestamp.proto";
-import "google/protobuf/field_mask.proto";
 import "common.proto";
-import "operator.proto";
-import "discord/doman.proto";
-
-message GrpcMemberProfile {
-  string member_id = 1;
-  GrpcMemberRole role = 2;
-  string server_id = 3;
-  string join_at = 4;
-  string profile_id = 5;
-  string name = 6;
-  string avt_url = 7;
-}
+import "discord/member.proto";
 
 message GrpcMessage {
   string message_id = 1;
@@ -39,16 +26,6 @@ message GrpcCreateMessageRequest {
   string channel_id = 3;
   string server_id = 4;
   string profile_id = 5;
-
-  int32 message_id = 1;
-  string content = 2;
-  string file_url = 3;
-  int32 member_id = 4;
-  int32 channel_id = 5;
-  bool deleted = 6;
-  string created_at = 7;
-  string updated_at = 8;
-  string deleted_at = 9;
 }
 
 message GrpcCreateMessageResponse {

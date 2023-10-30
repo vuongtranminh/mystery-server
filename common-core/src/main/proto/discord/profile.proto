@@ -5,10 +5,7 @@ option java_package = "com.vuong.app.v1.discord";
 option java_multiple_files = true;
 option java_outer_classname = "ProfileProto";
 
-import "google/protobuf/timestamp.proto";
-import "google/protobuf/field_mask.proto";
 import "common.proto";
-import "operator.proto";
 
 message GrpcCreateProfileRequest {
   string profile_id = 1;
