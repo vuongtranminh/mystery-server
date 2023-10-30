@@ -1,7 +1,7 @@
 syntax = "proto3";
 
-package vuong.app.v1;
-option java_package = "com.vuong.app.v1";
+package vuong.app.v1.discord;
+option java_package = "com.vuong.app.v1.discord";
 option java_multiple_files = true;
 option java_outer_classname = "MessageProto";
 
@@ -9,8 +9,37 @@ import "google/protobuf/timestamp.proto";
 import "google/protobuf/field_mask.proto";
 import "common.proto";
 import "operator.proto";
+import "discord/doman.proto";
+
+message GrpcMemberProfile {
+  string member_id = 1;
+  GrpcMemberRole role = 2;
+  string server_id = 3;
+  string join_at = 4;
+  string profile_id = 5;
+  string name = 6;
+  string avt_url = 7;
+}
 
 message GrpcMessage {
+  string message_id = 1;
+  string content = 2;
+  string file_url = 3;
+  string channel_id = 4;
+  string created_at = 5;
+  string updated_at = 6;
+  string deleted_at = 7;
+  string deleted_by = 8;
+  GrpcMemberProfile author = 9;
+}
+
+message GrpcCreateMessageRequest {
+  string content = 1;
+  string file_url = 2;
+  string channel_id = 3;
+  string server_id = 4;
+  string profile_id = 5;
+
   int32 message_id = 1;
   string content = 2;
   string file_url = 3;
@@ -22,6 +51,47 @@ message GrpcMessage {
   string deleted_at = 9;
 }
 
-service MessageService {
+message GrpcCreateMessageResponse {
+  int32 result = 1;
+}
 
+message GrpcUpdateMessageRequest {
+  string message_id = 1;
+  string content = 2;
+  string profile_id = 3;
+  string server_id = 4;
+}
+
+message GrpcUpdateMessageResponse {
+  int32 result = 1;
+}
+
+message GrpcDeleteMessageRequest {
+  string message_id = 1;
+  string profile_id = 2;
+  string server_id = 3;
+}
+
+message GrpcDeleteMessageResponse {
+  int32 result = 1;
+}
+
+message GrpcGetMessagesByChannelIdRequest {
+  string channel_id = 1;
+  string server_id = 2;
+  string profile_id = 3;
+  int32 page_number = 4;
+  int32 page_size = 5;
+}
+
+message GrpcGetMessagesByChannelIdResponse {
+  GrpcMeta meta = 1;
+  repeated GrpcMessage content = 2;
+}
+
+service MessageService {
+  rpc createMessage(vuong.app.v1.GrpcRequest) returns (vuong.app.v1.GrpcResponse);
+  rpc updateMessage(vuong.app.v1.GrpcRequest) returns (vuong.app.v1.GrpcResponse);
+  rpc deleteMessage(vuong.app.v1.GrpcRequest) returns (vuong.app.v1.GrpcResponse);
+  rpc getMessagesByChannelId(vuong.app.v1.GrpcRequest) returns (vuong.app.v1.GrpcResponse);
 }

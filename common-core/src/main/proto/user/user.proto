@@ -10,14 +10,6 @@ import "google/protobuf/field_mask.proto";
 import "common.proto";
 import "operator.proto";
 
-enum GrpcAuthProvider {
-  AUTH_PROVIDER_UNSPECIFIED = 0;
-  AUTH_PROVIDER_LOCAL = 1;
-  AUTH_PROVIDER_FACEBOOK = 2;
-  AUTH_PROVIDER_GOOGLE = 3;
-  AUTH_PROVIDER_GITHUB = 4;
-}
-
 message GrpcUser {
   int32 user_id = 1;
   string name = 2;

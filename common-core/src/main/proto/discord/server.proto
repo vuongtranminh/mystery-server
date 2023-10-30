@@ -1,7 +1,7 @@
 syntax = "proto3";
 
-package vuong.app.v1;
-option java_package = "com.vuong.app.v1";
+package vuong.app.v1.discord;
+option java_package = "com.vuong.app.v1.discord";
 option java_multiple_files = true;
 option java_outer_classname = "ServerProto";
 
@@ -11,11 +11,11 @@ import "common.proto";
 import "operator.proto";
 
 message GrpcServer {
-  int32 server_id = 1;
+  string server_id = 1;
   string name = 2;
   string img_url = 3;
   string invite_code = 4;
-  int32 profile_id = 5;
+  string author_id = 5;
   string created_at = 6;
   string updated_at = 7;
 }
@@ -23,65 +23,44 @@ message GrpcServer {
 message GrpcCreateServerRequest {
   string name = 1;
   string img_url = 2;
-  int32 profile_id = 3;
+  string author_id = 3;
 }
 
 message GrpcCreateServerResponse {
-  int32 server_id = 1;
+  int32 result = 1;
 }
 
-message GrpcGetServerByInviteCodeRequest {
-  string invite_code = 1;
+message GrpcGetServersJoinRequest {
+  string profile_id = 1;
+  int32 page_number = 4;
+  int32 page_size = 5;
 }
 
-message GrpcGetServerByInviteCodeResponse {
-  GrpcServer server = 1;
+message GrpcGetServersJoinResponse {
+  GrpcMeta meta = 1;
+  repeated GrpcServer content = 2;
 }
 
-message GrpcGetServerByServerIdRequest {
-  int32 server_id = 1;
+message GrpcGetFirstServerJoinRequest {
+  string profile_id = 1;
 }
 
-message GrpcGetServerByServerIdResponse {
-  GrpcServer server = 1;
+message GrpcGetServersJoinResponse {
+  GrpcServer result = 1;
 }
 
-message GrpcDeleteServerByServerIdRequest {
-  int32 profile_id = 1; // delete when profile owner server
-  int32 server_id = 2;
+message GrpcGetServerJoinByServerIdRequest {
+  string profile_id = 1;
+  string server_id = 2;
 }
 
-message GrpcDeleteServerByServerIdResponse {
-  bool deleted = 1;
-}
-
-message GrpcUpdateServerByServerIdRequest {
-  int32 profile_id = 1; // update when profile owner server
-  int32 server_id = 2;
-  string name = 3;
-  string img_url = 4;
-}
-
-message GrpcUpdateServerByServerIdResponse {
-  int32 server_id = 1;
-}
-
-message GrpcGetServersByProfileIdRequest {
-  int32 profile_id = 1;
-  int32 page = 2;
-  int32 size = 3;
-}
-
-message GrpcGetServersByProfileIdResponse {
-  repeated GrpcServer items = 1;
-  int32 total_items = 2;
+message GrpcGetServerJoinByServerIdResponse {
+  GrpcServer result = 1;
 }
 
 service ServerService {
-  rpc createServer(vuong.app.v1.message.GrpcRequest) returns (vuong.app.v1.message.GrpcResponse);
-  rpc getServerByInviteCode(vuong.app.v1.message.GrpcRequest) returns (vuong.app.v1.message.GrpcResponse);
-  rpc getServerByServerId(vuong.app.v1.message.GrpcRequest) returns (vuong.app.v1.message.GrpcResponse);
-  rpc deleteServerByServerId(vuong.app.v1.message.GrpcRequest) returns (vuong.app.v1.message.GrpcResponse);
-  rpc updateServerByServerId(vuong.app.v1.message.GrpcRequest) returns (vuong.app.v1.message.GrpcResponse);
-  rpc getServersByProfileId(vuong.app.v1.message.GrpcRequest) returns (vuong.app.v1.message.GrpcResponse);
+  rpc createServer(vuong.app.v1.GrpcRequest) returns (vuong.app.v1.GrpcResponse);
+  rpc getServersJoin(vuong.app.v1.GrpcRequest) returns (vuong.app.v1.GrpcResponse);
+  rpc getFirstServerJoin(vuong.app.v1.GrpcRequest) returns (vuong.app.v1.GrpcResponse);
+  rpc getServerJoinByServerId(vuong.app.v1.GrpcRequest) returns (vuong.app.v1.GrpcResponse);
 }
