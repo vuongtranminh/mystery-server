@@ -1,7 +1,5 @@
 package com.vuong.app.business.discord.service.impl;
 
-import com.vuong.app.business.auth.model.AuthProvider;
-import com.vuong.app.business.auth.model.payload.SignUpResponse;
 import com.vuong.app.business.discord.model.payload.CreateServerRequest;
 import com.vuong.app.business.discord.model.payload.DeleteServerRequest;
 import com.vuong.app.business.discord.model.payload.GetServerResponse;
@@ -16,8 +14,6 @@ import com.vuong.app.security.UserPrincipal;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-
-import java.time.Instant;
 
 @Service
 @RequiredArgsConstructor
@@ -72,12 +68,33 @@ public class ServerServiceImpl implements ServerService {
 
     @Override
     public ResponseObject deleteServerByServerId(DeleteServerRequest request, UserPrincipal currentUser) {
-        return null;
+        MessageDeleteServerByServerIdResponse messageDeleteServerByServerIdResponse = this.serverClientService.deleteServerByServerId(MessageDeleteServerByServerIdRequest.builder()
+                .profileId(currentUser.getUserId())
+                .serverId(request.getServerId())
+                .build());
+        return new ResponseMsg("deleteServerByServerId", HttpStatus.OK, messageDeleteServerByServerIdResponse.isDeleted());
     }
 
     @Override
     public ResponseObject updateServerByServerId(UpdateServerRequest request, UserPrincipal currentUser) {
-        return null;
+        MessageUpdateServerByServerIdResponse messageUpdateServerByServerIdResponse = this.serverClientService.updateServerByServerId(MessageUpdateServerByServerIdRequest.builder()
+                .profileId(currentUser.getUserId())
+                .serverId(request.getServerId())
+                .name(request.getName())
+                .imgUrl(request.getImgUrl())
+                .build());
+        return new ResponseMsg("deleteServerByServerId", HttpStatus.OK, messageUpdateServerByServerIdResponse.getServerId());
+    }
+
+    @Override
+    public ResponseObject getFirstServer(UserPrincipal currentUser) {
+        MessageGetServersByProfileIdResponse messageGetServersByProfileIdResponse = this.serverClientService.getServersByProfileId(MessageGetServersByProfileIdRequest.builder()
+                .profileId(currentUser.getUserId())
+                .page(0)
+                .size(1)
+                .build());
+
+        return new ResponseMsg("getFirstServer", HttpStatus.OK, messageGetServersByProfileIdResponse);
     }
 
 }

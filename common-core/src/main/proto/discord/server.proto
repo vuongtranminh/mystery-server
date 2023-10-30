@@ -66,10 +66,22 @@ message GrpcUpdateServerByServerIdResponse {
   int32 server_id = 1;
 }
 
+message GrpcGetServersByProfileIdRequest {
+  int32 profile_id = 1;
+  int32 page = 2;
+  int32 size = 3;
+}
+
+message GrpcGetServersByProfileIdResponse {
+  repeated GrpcServer items = 1;
+  int32 total_items = 2;
+}
+
 service ServerService {
   rpc createServer(vuong.app.v1.message.GrpcRequest) returns (vuong.app.v1.message.GrpcResponse);
   rpc getServerByInviteCode(vuong.app.v1.message.GrpcRequest) returns (vuong.app.v1.message.GrpcResponse);
   rpc getServerByServerId(vuong.app.v1.message.GrpcRequest) returns (vuong.app.v1.message.GrpcResponse);
   rpc deleteServerByServerId(vuong.app.v1.message.GrpcRequest) returns (vuong.app.v1.message.GrpcResponse);
   rpc updateServerByServerId(vuong.app.v1.message.GrpcRequest) returns (vuong.app.v1.message.GrpcResponse);
+  rpc getServersByProfileId(vuong.app.v1.message.GrpcRequest) returns (vuong.app.v1.message.GrpcResponse);
 }

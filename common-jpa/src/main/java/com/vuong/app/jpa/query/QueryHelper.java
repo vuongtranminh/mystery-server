@@ -27,6 +27,12 @@ public class QueryHelper {
             queryBuilder.query((root, query, criteriaBuilder) -> criteriaBuilder.like(
                     criteriaBuilder.upper(root.get(fieldName)),
                     "%" + stringOperators.getContains().toUpperCase() + "%"));
+        } else if (!StringUtils.isEmpty(stringOperators.getNotEq())) {
+            queryBuilder.query((root, query, criteriaBuilder) -> criteriaBuilder.notEqual(criteriaBuilder.upper(root.get(fieldName)), stringOperators.getEq().toUpperCase()));
+        } else if (!StringUtils.isEmpty(stringOperators.getNotContains())) {
+            queryBuilder.query((root, query, criteriaBuilder) -> criteriaBuilder.notLike(
+                    criteriaBuilder.upper(root.get(fieldName)),
+                    "%" + stringOperators.getContains().toUpperCase() + "%"));
         }
     }
 
@@ -60,6 +66,8 @@ public class QueryHelper {
         if (numberOperators == null) return;
         if (numberOperators.getEq() != null) {
             queryBuilder.query((root, query, criteriaBuilder) -> criteriaBuilder.equal(root.get(fieldName), numberOperators.getEq()));
+        } else if (numberOperators.getNotEq() != null) {
+            queryBuilder.query((root, query, criteriaBuilder) -> criteriaBuilder.notEqual(root.get(fieldName), numberOperators.getGt()));
         } else if (numberOperators.getGt() != null) {
             queryBuilder.query((root, query, criteriaBuilder) -> criteriaBuilder.gt(root.get(fieldName), numberOperators.getGt()));
         } else if (numberOperators.getGte() != null) {

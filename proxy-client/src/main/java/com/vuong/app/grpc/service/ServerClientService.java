@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class ServerClientService extends BaseClientService {
@@ -117,6 +118,32 @@ public class ServerClientService extends BaseClientService {
 
         return MessageUpdateServerByServerIdResponse.builder()
                 .serverId(unpackedResult.getServerId())
+                .build();
+    }
+
+    public MessageGetServersByProfileIdResponse getServersByProfileId(MessageGetServersByProfileIdRequest request) {
+        GrpcRequest req = packRequest(GrpcGetServersByProfileIdRequest.newBuilder()
+                .setProfileId(request.getProfileId())
+                .setPage(request.getPage())
+                .setSize(request.getSize())
+                .build());
+
+        GrpcResponse response = this.serverServiceBlockingStub.getServersByProfileId(req);
+
+        GrpcGetServersByProfileIdResponse unpackedResult = unpackedResultCommand(response, GrpcGetServersByProfileIdResponse.class);
+
+        return MessageGetServersByProfileIdResponse.builder()
+                .items(unpackedResult.getItemsList().stream().map(grpcServer -> MessageGetServersByProfileIdResponse.MessageServerItem.builder()
+                        .serverId(grpcServer.getServerId())
+                        .name(grpcServer.getName())
+                        .imgUrl(grpcServer.getImgUrl())
+                        .inviteCode(grpcServer.getInviteCode())
+                        .profileId(grpcServer.getProfileId())
+                        .createdAt(Instant.parse(grpcServer.getCreatedAt()))
+                        .updatedAt(Instant.parse(grpcServer.getUpdatedAt()))
+                        .build()
+                ).collect(Collectors.toUnmodifiableList()))
+                .totalItems(unpackedResult.getTotalItems())
                 .build();
     }
 }

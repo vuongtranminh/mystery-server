@@ -12,4 +12,6 @@ import lombok.NoArgsConstructor;
 public class StringOperators {
     private String eq;
     private String contains;
+    private String notEq;
+    private String notContains;
 }

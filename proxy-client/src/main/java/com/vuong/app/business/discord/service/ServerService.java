@@ -12,4 +12,5 @@ public interface ServerService {
     ResponseObject getServerByServerId(Integer serverId);
     ResponseObject deleteServerByServerId(DeleteServerRequest request, UserPrincipal currentUser);
     ResponseObject updateServerByServerId(UpdateServerRequest request, UserPrincipal currentUser);
+    ResponseObject getFirstServer(UserPrincipal currentUser);
 }

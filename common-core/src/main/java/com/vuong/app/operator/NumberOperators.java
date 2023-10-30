@@ -11,6 +11,7 @@ import lombok.NoArgsConstructor;
 @Builder
 public class NumberOperators {
     private Float eq;
+    private Float notEq;
     private Float lt;
     private Float lte;
     private Float gt;

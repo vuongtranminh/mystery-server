@@ -7,6 +7,9 @@ grpc:
     grpc-user-service:
       address: static://localhost:8700
       negotiationType: plaintext
+    grpc-discord-service:
+      address: static://localhost:8800
+      negotiationType: plaintext
 
 spring:
   security:
