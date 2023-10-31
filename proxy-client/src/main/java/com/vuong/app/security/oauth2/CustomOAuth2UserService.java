@@ -79,7 +79,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
     private UserDto registerNewUser(OAuth2UserRequest oAuth2UserRequest, OAuth2UserInfo oAuth2UserInfo) {
         CreateUserResponse createUserResponse = this.authClientService.createUser(CreateUserRequest.builder()
                 .name(oAuth2UserInfo.getName())
-                .avatar(oAuth2UserInfo.getImageUrl())
+                .avtUrl(oAuth2UserInfo.getImageUrl())
                 .email(oAuth2UserInfo.getEmail())
                 .password("")
                 .emailVerified(true)
@@ -97,7 +97,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         UpdateUserByUserIdResponse updateUserByUserIdResponse = this.authClientService.updateUserByUserIdRequest(UpdateUserByUserIdRequest.builder()
                 .userId(existingUser.getUserId())
                 .name(oAuth2UserInfo.getName())
-                .avatar(oAuth2UserInfo.getImageUrl())
+                .avtUrl(oAuth2UserInfo.getImageUrl())
                 .bio(existingUser.getBio())
                 .build());
 

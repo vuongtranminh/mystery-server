@@ -8,5 +8,5 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Data
 public class SignUpResponse {
-    private Integer userId;
+    private String userId;
 }

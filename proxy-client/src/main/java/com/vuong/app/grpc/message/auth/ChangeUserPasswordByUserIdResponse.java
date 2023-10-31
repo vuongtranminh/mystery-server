@@ -10,5 +10,5 @@ import lombok.NoArgsConstructor;
 @Data
 @Builder
 public class ChangeUserPasswordByUserIdResponse {
-    private Integer userId;
+    private String userId;
 }

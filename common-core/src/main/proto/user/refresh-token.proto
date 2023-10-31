@@ -19,8 +19,6 @@ message GrpcRefreshToken {
   string expires_at = 3;
   string user_id = 4;
   GrpcRefreshTokenStatus status = 5;
-  string created_at = 6;
-  string updated_at = 7;
 }
 
 message GrpcCreateRefreshTokenRequest {
@@ -38,15 +36,15 @@ message GrpcGetRefreshTokenByRefreshTokenRequest {
 }
 
 message GrpcGetRefreshTokenByRefreshTokenResponse {
-    GrpcRefreshToken refresh_token = 1;
+    GrpcRefreshToken result = 1;
 }
 
-message GrpcUpdateRefreshTokenByRefreshTokenIdRequest {
+message GrpcUpdateRefreshTokenStatusByRefreshTokenIdRequest {
   string refresh_token_id = 1;
   GrpcRefreshTokenStatus status = 2;
 }
 
-message GrpcUpdateRefreshTokenByRefreshTokenIdResponse {
+message GrpcUpdateRefreshTokenStatusByRefreshTokenIdResponse {
   string refresh_token_id = 1;
 }
 
@@ -69,7 +67,7 @@ message GrpcDeleteAllRefreshTokenByUserIdResponse {
 service RefreshTokenService {
   rpc createRefreshToken(vuong.app.v1.GrpcRequest) returns (vuong.app.v1.GrpcResponse);
   rpc getRefreshTokenByRefreshToken(vuong.app.v1.GrpcRequest) returns (vuong.app.v1.GrpcResponse);
-  rpc updateRefreshTokenByRefreshTokenId(vuong.app.v1.GrpcRequest) returns (vuong.app.v1.GrpcResponse);
+  rpc updateRefreshTokenStatusByRefreshTokenId(vuong.app.v1.GrpcRequest) returns (vuong.app.v1.GrpcResponse);
   rpc deleteRefreshTokenByRefreshToken(vuong.app.v1.GrpcRequest) returns (vuong.app.v1.GrpcResponse);
   rpc deleteAllRefreshTokenByUserId(vuong.app.v1.GrpcRequest) returns (vuong.app.v1.GrpcResponse);
 }

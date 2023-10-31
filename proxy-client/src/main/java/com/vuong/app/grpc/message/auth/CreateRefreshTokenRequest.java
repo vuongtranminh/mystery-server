@@ -14,6 +14,6 @@ import java.time.Instant;
 @Builder
 public class CreateRefreshTokenRequest {
     private String refreshToken;
-    private Instant expiresAt;
-    private Integer userId;
+    private String expiresAt;
+    private String userId;
 }

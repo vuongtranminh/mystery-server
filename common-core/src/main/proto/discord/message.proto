@@ -29,7 +29,7 @@ message GrpcCreateMessageRequest {
 }
 
 message GrpcCreateMessageResponse {
-  int32 result = 1;
+  string message_id = 1;
 }
 
 message GrpcUpdateMessageRequest {
@@ -40,7 +40,7 @@ message GrpcUpdateMessageRequest {
 }
 
 message GrpcUpdateMessageResponse {
-  int32 result = 1;
+  string message_id = 1;
 }
 
 message GrpcDeleteMessageRequest {
@@ -50,7 +50,7 @@ message GrpcDeleteMessageRequest {
 }
 
 message GrpcDeleteMessageResponse {
-  int32 result = 1;
+  bool deleted = 1;
 }
 
 message GrpcGetMessagesByChannelIdRequest {

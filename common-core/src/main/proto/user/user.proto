@@ -16,9 +16,9 @@ enum GrpcAuthProvider {
 }
 
 message GrpcUser {
-  int32 user_id = 1;
+  string user_id = 1;
   string name = 2;
-  string avatar = 3;
+  string avt_url = 3;
   string bio = 4;
   string email = 5;
   string password = 6;
@@ -31,7 +31,7 @@ message GrpcUser {
 
 message GrpcCreateUserRequest {
   string name = 1;
-  string avatar = 2;
+  string avt_url = 2;
   string email = 4;
   string password = 5;
   GrpcAuthProvider provider = 6;
@@ -39,28 +39,28 @@ message GrpcCreateUserRequest {
 }
 
 message GrpcCreateUserResponse {
-  int32 user_id = 1;
+  string user_id = 1;
 }
 
 message GrpcUpdateUserByUserIdRequest {
-  int32 user_id = 1;
+  string user_id = 1;
   string name = 2;
-  string avatar = 3;
+  string avt_url = 3;
   string bio = 4;
 }
 
 message GrpcUpdateUserByUserIdResponse {
-  int32 user_id = 1;
+  string user_id = 1;
 }
 
 message GrpcChangeUserPasswordByUserIdRequest {
-  int32 user_id = 1;
+  string user_id = 1;
   string old_password = 2;
   string new_password = 3;
 }
 
 message GrpcChangeUserPasswordByUserIdResponse {
-  int32 user_id = 1;
+  string user_id = 1;
 }
 
 message GrpcExistsUserByEmailRequest {
@@ -72,7 +72,7 @@ message GrpcExistsUserByEmailResponse {
 }
 
 message GrpcCheckUserVerifiedByUserIdRequest {
-  int32 user_id = 1;
+  string user_id = 1;
 }
 
 message GrpcCheckUserVerifiedByUserIdResponse {
@@ -80,11 +80,11 @@ message GrpcCheckUserVerifiedByUserIdResponse {
 }
 
 message GrpcGetUserByUserIdRequest {
-  int32 user_id = 1;
+  string user_id = 1;
 }
 
 message GrpcGetUserByUserIdResponse {
-  GrpcUser user = 1;
+  GrpcUser result = 1;
 }
 
 message GrpcGetUserByEmailRequest {
@@ -92,7 +92,7 @@ message GrpcGetUserByEmailRequest {
 }
 
 message GrpcGetUserByEmailResponse {
-  GrpcUser user = 1;
+  GrpcUser result = 1;
 }
 
 service UserService {

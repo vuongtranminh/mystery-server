@@ -17,7 +17,7 @@ public class CreateUserRequest implements Serializable {
     private static final long serialVersionUID = 1L;
 
     private String name;
-    private String avatar;
+    private String avtUrl;
     private String email;
     private String password;
     private boolean emailVerified;
@@ -29,7 +29,7 @@ public class CreateUserRequest implements Serializable {
     }
 
     public String getAvatar() {
-        return avatar != null ? avatar : "";
+        return avtUrl != null ? avtUrl : "";
     }
 
     public String getEmail() {

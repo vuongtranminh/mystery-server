@@ -70,7 +70,7 @@ public class AuthServiceImpl implements AuthService {
         // save refresh to db
         this.authClientService.createRefreshToken(CreateRefreshTokenRequest.builder()
                 .refreshToken(refreshToken.getRefreshToken())
-                .expiresAt(refreshToken.getExpiresAt())
+                .expiresAt(refreshToken.getExpiresAt().toString())
                 .userId(refreshToken.getUserId())
                 .build());
 
@@ -162,7 +162,7 @@ public class AuthServiceImpl implements AuthService {
 
         this.authClientService.createRefreshToken(CreateRefreshTokenRequest.builder()
                 .refreshToken(refreshToken.getRefreshToken())
-                .expiresAt(refreshToken.getExpiresAt())
+                .expiresAt(refreshToken.getExpiresAt().toString())
                 .userId(refreshToken.getUserId())
                 .build());
         // insert refresh token to DB

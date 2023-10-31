@@ -24,7 +24,7 @@ message GrpcCreateServerRequest {
 }
 
 message GrpcCreateServerResponse {
-  int32 result = 1;
+  string server_id = 1;
 }
 
 message GrpcGetServersJoinRequest {

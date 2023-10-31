@@ -14,7 +14,7 @@ message GrpcCreateProfileRequest {
 }
 
 message GrpcCreateProfileResponse {
-  int32 result = 1;
+  string profile_id = 1;
 }
 
 service ProfileService {

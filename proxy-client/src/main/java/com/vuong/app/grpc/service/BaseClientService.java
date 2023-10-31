@@ -6,9 +6,9 @@ import com.google.protobuf.Message;
 import com.vuong.app.exception.wrapper.CommandException;
 import com.vuong.app.exception.wrapper.ConvertResponseTypeException;
 import com.vuong.app.exception.wrapper.ResourceNotFoundException;
-import com.vuong.app.v1.message.GrpcErrorCode;
-import com.vuong.app.v1.message.GrpcRequest;
-import com.vuong.app.v1.message.GrpcResponse;
+import com.vuong.app.v1.GrpcErrorCode;
+import com.vuong.app.v1.GrpcRequest;
+import com.vuong.app.v1.GrpcResponse;
 
 import java.util.Optional;
 

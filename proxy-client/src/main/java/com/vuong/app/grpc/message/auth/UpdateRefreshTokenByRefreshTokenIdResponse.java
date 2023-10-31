@@ -10,5 +10,5 @@ import lombok.NoArgsConstructor;
 @Data
 @Builder
 public class UpdateRefreshTokenByRefreshTokenIdResponse {
-    private Integer refreshTokenId;
+    private String refreshTokenId;
 }

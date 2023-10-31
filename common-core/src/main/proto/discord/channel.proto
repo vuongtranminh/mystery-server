@@ -31,7 +31,7 @@ message GrpcCreateChannelRequest {
 }
 
 message GrpcCreateChannelResponse {
-  int32 result = 1;
+  string channel_id = 1;
 }
 
 message GrpcUpdateChannelRequest {
@@ -41,7 +41,7 @@ message GrpcUpdateChannelRequest {
 }
 
 message GrpcUpdateChannelResponse {
-  int32 result = 1;
+  string channel_id = 1;
 }
 
 message GrpcDeleteChannelRequest {
@@ -50,7 +50,7 @@ message GrpcDeleteChannelRequest {
 }
 
 message GrpcDeleteChannelResponse {
-  int32 result = 1;
+  bool deleted = 1;
 }
 
 message GrpcGetChannelGeneralByServerIdRequest {

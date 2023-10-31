@@ -4,17 +4,17 @@ import com.vuong.app.business.auth.model.AuthProvider;
 
 public interface UserDto {
 
-    Integer getUserId();
+    String getUserId();
 
-    void setUserId(Integer userId);
+    void setUserId(String userId);
 
     String getName();
 
     void setName(String name);
 
-    String getAvatar();
+    String getAvtUrl();
 
-   void setAvatar(String avatar);
+   void setAvtUrl(String avtUrl);
 
     String getBio();
 

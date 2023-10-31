@@ -14,9 +14,9 @@ import java.io.Serializable;
 public class UpdateUserByUserIdRequest implements Serializable {
     private static final long serialVersionUID = 1L;
 
-    private Integer userId;
+    private String userId;
     private String name;
-    private String avatar;
+    private String avtUrl;
     private String bio;
 
 }

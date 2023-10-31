@@ -10,5 +10,5 @@ import lombok.NoArgsConstructor;
 @Data
 @Builder
 public class MessageUpdateServerByServerIdResponse {
-    private Integer serverId;
+    private String serverId;
 }

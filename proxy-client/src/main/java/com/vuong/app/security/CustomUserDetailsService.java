@@ -25,7 +25,7 @@ public class CustomUserDetailsService implements UserDetailsService {
         return UserPrincipal.create(userDto);
     }
 
-    public UserDetails loadUserById(Integer userId) {
+    public UserDetails loadUserById(String userId) {
         UserDto userDto = this.authClientService.getUserByUserId(GetUserByUserIdRequest.builder().userId(userId).build())
                 .orElseThrow(() -> new ResourceNotFoundException("User", "id", userId));
 

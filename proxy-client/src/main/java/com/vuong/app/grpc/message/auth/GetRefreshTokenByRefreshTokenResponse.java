@@ -13,9 +13,9 @@ import java.util.Date;
 @Data
 @Builder
 public class GetRefreshTokenByRefreshTokenResponse {
-    private Integer refreshTokenId;
+    private String refreshTokenId;
     private String refreshToken;
     private Date expiresAt;
-    private Integer userId;
+    private String userId;
     private RefreshTokenStatus status;
 }

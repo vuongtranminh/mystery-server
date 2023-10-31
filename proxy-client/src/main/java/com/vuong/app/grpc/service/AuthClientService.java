@@ -3,8 +3,7 @@ package com.vuong.app.grpc.service;
 import com.vuong.app.business.auth.model.*;
 import com.vuong.app.grpc.message.auth.*;
 import com.vuong.app.v1.*;
-import com.vuong.app.v1.message.GrpcRequest;
-import com.vuong.app.v1.message.GrpcResponse;
+import com.vuong.app.v1.user.*;
 import net.devh.boot.grpc.client.inject.GrpcClient;
 import org.springframework.stereotype.Service;
 
@@ -39,12 +38,12 @@ public class AuthClientService extends BaseClientService {
 
         GrpcGetUserByEmailResponse unpackedResult = unpackedResultOptional.get();
 
-        GrpcUser grpcUser = unpackedResult.getUser();
+        GrpcUser grpcUser = unpackedResult.getResult();
 
         return Optional.of(GetUserByEmailResponse.builder()
                 .userId(grpcUser.getUserId())
                 .name(grpcUser.getName())
-                .avatar(grpcUser.getAvatar())
+                .avtUrl(grpcUser.getAvtUrl())
                 .bio(grpcUser.getBio())
                 .email(grpcUser.getEmail())
                 .password(grpcUser.getPassword())
@@ -69,12 +68,12 @@ public class AuthClientService extends BaseClientService {
 
         GrpcGetUserByUserIdResponse unpackedResult = unpackedResultOptional.get();
 
-        GrpcUser grpcUser = unpackedResult.getUser();
+        GrpcUser grpcUser = unpackedResult.getResult();
 
         return Optional.of(GetUserByUserIdResponse.builder()
                 .userId(grpcUser.getUserId())
                 .name(grpcUser.getName())
-                .avatar(grpcUser.getAvatar())
+                .avtUrl(grpcUser.getAvtUrl())
                 .bio(grpcUser.getBio())
                 .email(grpcUser.getEmail())
                 .password(grpcUser.getPassword())
@@ -87,7 +86,7 @@ public class AuthClientService extends BaseClientService {
     public CreateUserResponse createUser(CreateUserRequest request) {
         GrpcRequest req = packRequest(GrpcCreateUserRequest.newBuilder()
                 .setName(request.getName())
-                .setAvatar(request.getAvatar())
+                .setAvtUrl(request.getAvtUrl())
                 .setEmail(request.getEmail())
                 .setPassword(request.getPassword())
                 .setProvider(GrpcAuthProvider.forNumber(request.getProvider().getNumber()))
@@ -107,7 +106,7 @@ public class AuthClientService extends BaseClientService {
         GrpcRequest req = packRequest(GrpcUpdateUserByUserIdRequest.newBuilder()
                 .setUserId(request.getUserId())
                 .setName(request.getName())
-                .setAvatar(request.getAvatar())
+                .setAvtUrl(request.getAvtUrl())
                 .setBio(request.getBio())
                 .build());
 
@@ -188,7 +187,7 @@ public class AuthClientService extends BaseClientService {
 
         GrpcGetRefreshTokenByRefreshTokenResponse unpackedResult = unpackedResultOptional.get();
 
-        GrpcRefreshToken grpcRefreshToken = unpackedResult.getRefreshToken();
+        GrpcRefreshToken grpcRefreshToken = unpackedResult.getResult();
 
         return Optional.of(GetRefreshTokenByRefreshTokenResponse.builder()
                 .refreshTokenId(grpcRefreshToken.getRefreshTokenId())
@@ -214,14 +213,14 @@ public class AuthClientService extends BaseClientService {
     }
 
     public UpdateRefreshTokenByRefreshTokenIdResponse updateRefreshTokenByRefreshTokenId(UpdateRefreshTokenByRefreshTokenIdRequest request) {
-        GrpcRequest req = packRequest(GrpcUpdateRefreshTokenByRefreshTokenIdRequest.newBuilder()
+        GrpcRequest req = packRequest(GrpcUpdateRefreshTokenStatusByRefreshTokenIdRequest.newBuilder()
                 .setRefreshTokenId(request.getRefreshTokenId())
                 .setStatus(GrpcRefreshTokenStatus.forNumber(request.getStatus().getNumber()))
                 .build());
 
-        GrpcResponse response = this.refreshTokenServiceBlockingStub.updateRefreshTokenByRefreshTokenId(req);
+        GrpcResponse response = this.refreshTokenServiceBlockingStub.updateRefreshTokenStatusByRefreshTokenId(req);
 
-        GrpcUpdateRefreshTokenByRefreshTokenIdResponse unpackedResult = unpackedResultCommand(response, GrpcUpdateRefreshTokenByRefreshTokenIdResponse.class);
+        GrpcUpdateRefreshTokenStatusByRefreshTokenIdResponse unpackedResult = unpackedResultCommand(response, GrpcUpdateRefreshTokenStatusByRefreshTokenIdResponse.class);
 
         return UpdateRefreshTokenByRefreshTokenIdResponse.builder()
                 .refreshTokenId(unpackedResult.getRefreshTokenId())
