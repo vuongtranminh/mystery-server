@@ -16,9 +16,9 @@ import java.io.Serializable;
 public class GetUserByUserIdResponse implements UserDto, Serializable {
     private static final long serialVersionUID = 1L;
 
-    private Integer userId;
+    private String userId;
     private String name;
-    private String avatar;
+    private String avtUrl;
     private String bio;
     private String email;
     private String password;

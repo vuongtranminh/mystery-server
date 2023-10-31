@@ -36,7 +36,7 @@ public class UserServiceImpl implements UserService {
         UserSummary userSummary = UserSummary.builder()
                 .userId(getUserByUserIdResponse.getUserId())
                 .name(getUserByUserIdResponse.getName())
-                .avatar(getUserByUserIdResponse.getAvatar())
+                .avtUrl(getUserByUserIdResponse.getAvtUrl())
                 .build();
 
         return new ResponseMsg("success", HttpStatus.OK, userSummary);

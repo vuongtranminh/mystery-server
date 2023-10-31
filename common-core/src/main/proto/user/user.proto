@@ -24,7 +24,7 @@ message GrpcUser {
   string password = 6;
   bool verified = 7;
   GrpcAuthProvider provider = 8;
-  string provider_id = 9;
+  optional string provider_id = 9;
   string created_at = 10;
   string updated_at = 11;
 }

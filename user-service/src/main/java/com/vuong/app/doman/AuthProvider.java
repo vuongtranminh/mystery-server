@@ -1,7 +1,5 @@
 package com.vuong.app.doman;
 
-import com.vuong.app.v1.GrpcAuthProvider;
-
 public enum AuthProvider {
     local(1),
     facebook(2),

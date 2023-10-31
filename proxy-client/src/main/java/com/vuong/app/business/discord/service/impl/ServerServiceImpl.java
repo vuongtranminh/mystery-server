@@ -1,26 +1,49 @@
-//package com.vuong.app.business.discord.service.impl;
-//
-//import com.vuong.app.business.discord.model.payload.CreateServerRequest;
-//import com.vuong.app.business.discord.model.payload.DeleteServerRequest;
-//import com.vuong.app.business.discord.model.payload.GetServerResponse;
-//import com.vuong.app.business.discord.model.payload.UpdateServerRequest;
-//import com.vuong.app.business.discord.service.ServerService;
-//import com.vuong.app.common.api.ResponseMsg;
-//import com.vuong.app.common.api.ResponseObject;
-//import com.vuong.app.exception.wrapper.ResourceNotFoundException;
-//import com.vuong.app.grpc.message.discord.*;
-//import com.vuong.app.grpc.service.ServerClientService;
-//import com.vuong.app.security.UserPrincipal;
-//import lombok.RequiredArgsConstructor;
-//import org.springframework.http.HttpStatus;
-//import org.springframework.stereotype.Service;
-//
-//@Service
-//@RequiredArgsConstructor
-//public class ServerServiceImpl implements ServerService {
-//
+package com.vuong.app.business.discord.service.impl;
+
+import com.vuong.app.business.discord.model.payload.CreateServerRequest;
+import com.vuong.app.business.discord.model.payload.DeleteServerRequest;
+import com.vuong.app.business.discord.model.payload.UpdateServerRequest;
+import com.vuong.app.business.discord.service.ServerService;
+import com.vuong.app.common.api.ResponseObject;
+import com.vuong.app.security.UserPrincipal;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+
+@Service
+@RequiredArgsConstructor
+public class ServerServiceImpl implements ServerService {
+    @Override
+    public ResponseObject createServer(CreateServerRequest request, UserPrincipal currentUser) {
+        return null;
+    }
+
+    @Override
+    public ResponseObject getServerByInviteCode(String inviteCode) {
+        return null;
+    }
+
+    @Override
+    public ResponseObject getServerByServerId(Integer serverId) {
+        return null;
+    }
+
+    @Override
+    public ResponseObject deleteServerByServerId(DeleteServerRequest request, UserPrincipal currentUser) {
+        return null;
+    }
+
+    @Override
+    public ResponseObject updateServerByServerId(UpdateServerRequest request, UserPrincipal currentUser) {
+        return null;
+    }
+
+    @Override
+    public ResponseObject getFirstServer(UserPrincipal currentUser) {
+        return null;
+    }
+
 //    private final ServerClientService serverClientService;
-//
+
 //    @Override
 //    public ResponseObject createServer(CreateServerRequest request, UserPrincipal currentUser) {
 //        MessageCreateServerResponse messageCreateServerResponse = this.serverClientService.createServer(MessageCreateServerRequest.builder()
@@ -96,5 +119,5 @@
 //
 //        return new ResponseMsg("getFirstServer", HttpStatus.OK, messageGetServersByProfileIdResponse);
 //    }
-//
-//}
+
+}

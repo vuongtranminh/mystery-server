@@ -2,12 +2,14 @@ package com.vuong.app.config;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
+@Component
 @Slf4j
 @RequiredArgsConstructor
 public class MysteryJdbcImpl implements MysteryJdbc {

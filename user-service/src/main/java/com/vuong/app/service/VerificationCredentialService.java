@@ -61,7 +61,7 @@ public class VerificationCredentialService extends VerificationCredentialService
         GrpcVerificationCredentialByVerificationTokenRequest req = ServiceHelper.unpackedRequest(request, GrpcVerificationCredentialByVerificationTokenRequest.class);
 
         String verificationCredentialQuery = "select " +
-                "tbl_verification_credential.id, tbl_verification_credential.verification_token, tbl_verification_credential.verification_otp, tbl_verification_credential.expire_date, tbl_verification_credential.user_id " +
+                "tbl_verification_credential.id, tbl_verification_credential.verification_token, tbl_verification_credential.verification_otp, tbl_verification_credential.expire_date " +
                 "where tbl_verification_credential.verification_token = ?";
 
         String verifiedUserQuery = "update tbl_user set verified = ? where tbl_user.id = ?";
@@ -87,7 +87,6 @@ public class VerificationCredentialService extends VerificationCredentialService
                         .verificationToken(rs.getString(2))
                         .verificationOtp(rs.getString(3))
                         .expireDate(rs.getString(4))
-                        .userId(rs.getString(5))
                         .build();
             }
 
@@ -106,7 +105,7 @@ public class VerificationCredentialService extends VerificationCredentialService
 
             pst2 = con.prepareStatement(verifiedUserQuery);
             pst2.setBoolean(1, true);
-            pst2.setString(2, verificationCredential.getUserId());
+            pst2.setString(2, verificationCredential.getVerificationCredentialId());
 
             int result = pst2.executeUpdate();
 
@@ -125,7 +124,7 @@ public class VerificationCredentialService extends VerificationCredentialService
         GrpcVerificationCredentialByVerificationOtpRequest req = ServiceHelper.unpackedRequest(request, GrpcVerificationCredentialByVerificationOtpRequest.class);
 
         String verificationCredentialQuery = "select " +
-                "tbl_verification_credential.id, tbl_verification_credential.verification_token, tbl_verification_credential.verification_otp, tbl_verification_credential.expire_date, tbl_verification_credential.user_id " +
+                "tbl_verification_credential.id, tbl_verification_credential.verification_token, tbl_verification_credential.verification_otp, tbl_verification_credential.expire_date " +
                 "where tbl_verification_credential.verification_token = ?";
 
         String verifiedUserQuery = "update tbl_user set verified = ? where tbl_user.id = ?";
@@ -151,7 +150,6 @@ public class VerificationCredentialService extends VerificationCredentialService
                         .verificationToken(rs.getString(2))
                         .verificationOtp(rs.getString(3))
                         .expireDate(rs.getString(4))
-                        .userId(rs.getString(5))
                         .build();
             }
 
@@ -170,7 +168,7 @@ public class VerificationCredentialService extends VerificationCredentialService
 
             pst2 = con.prepareStatement(verifiedUserQuery);
             pst2.setBoolean(1, true);
-            pst2.setString(2, verificationCredential.getUserId());
+            pst2.setString(2, verificationCredential.getVerificationCredentialId());
 
             int result = pst2.executeUpdate();
 
@@ -189,10 +187,10 @@ public class VerificationCredentialService extends VerificationCredentialService
         GrpcReissueVerificationCredentialByUserIdRequest req = ServiceHelper.unpackedRequest(request, GrpcReissueVerificationCredentialByUserIdRequest.class);
 
         String userVerificationCredentialQuery = "select " +
-                "tbl_user.id, tbl_user.email, tbl_verification_credential.id " +
+                "tbl_user.email, tbl_verification_credential.id " +
                 "from tbl_user" +
                 "inner join tbl_verification_credential " +
-                "ont tbl_user.id = tbl_verification_credential.user_id " +
+                "ont tbl_user.id = tbl_verification_credential.id " +
                 "where tbl_user.id = ?";
 
         String updateVerificationCredentialQuery = "update tbl_verification_credential set verification_token = ?, verification_otp = ?, expire_date = ? where tbl_verification_credential.id = ?";
@@ -211,14 +209,12 @@ public class VerificationCredentialService extends VerificationCredentialService
 
             rs = pst1.executeQuery();
 
-            String userId = null;
             String email = null;
             String verificationCredentialId = null;
 
             while (rs.next()) {
-                userId = rs.getString(1);
-                email = rs.getString(2);
-                verificationCredentialId = rs.getString(3);
+                email = rs.getString(1);
+                verificationCredentialId = rs.getString(2);
             }
 
             if (verificationCredentialId == null) {
@@ -248,7 +244,6 @@ public class VerificationCredentialService extends VerificationCredentialService
                     .verificationToken(verificationToken)
                     .verificationOtp(verificationOtp)
                     .expireDate(expireDate)
-                    .userId(userId)
                     .build();
 
             this.sendMailVerify(email, verificationCredential);

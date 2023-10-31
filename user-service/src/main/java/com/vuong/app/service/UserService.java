@@ -64,16 +64,17 @@ public class UserService extends UserServiceGrpc.UserServiceImplBase {
             int result1 = pst1.executeUpdate();
 
             if (!isLocal) {
+                mysteryJdbc.doCommit();
                 GrpcCreateUserResponse response = GrpcCreateUserResponse.newBuilder().setUserId(userId).build();
                 ServiceHelper.next(responseObserver, ServiceHelper.packedSuccessResponse(response));
                 return;
             }
 
             Instant now = Instant.now();
-            String insertVerificationCredentialQuery = "insert into tbl_verification_credential(id, verification_token, verification_otp, expire_date, user_id) " +
-                    "values (?, ?, ?, ?, ?)";
+            String insertVerificationCredentialQuery = "insert into tbl_verification_credential(id, verification_token, verification_otp, expire_date) " +
+                    "values (?, ?, ?, ?)";
 
-            String verificationCredentialId = UUID.randomUUID().toString();
+            String verificationCredentialId = userId;
             String verificationToken = this.verificationCredentialService.generateVerificationToken();
             String verificationOtp = this.verificationCredentialService.generateVerificationOtp();
             String expireDate = now.plus(1, ChronoUnit.DAYS).toString();
@@ -83,7 +84,6 @@ public class UserService extends UserServiceGrpc.UserServiceImplBase {
             pst2.setString(2, verificationToken);
             pst2.setString(3, verificationOtp);
             pst2.setString(4, expireDate);
-            pst2.setString(5, userId);
 
             int result2 = pst2.executeUpdate();
 
@@ -92,7 +92,6 @@ public class UserService extends UserServiceGrpc.UserServiceImplBase {
                     .verificationToken(verificationToken)
                     .verificationOtp(verificationOtp)
                     .expireDate(expireDate)
-                    .userId(userId)
                     .build();
 
             mysteryJdbc.doCommit();
@@ -100,6 +99,7 @@ public class UserService extends UserServiceGrpc.UserServiceImplBase {
             this.verificationCredentialService.sendMailVerify(req.getEmail(), verificationCredential);
 
         } catch (SQLException ex) {
+            log.error(ex.getMessage());
             mysteryJdbc.doRollback();
         } finally {
             mysteryJdbc.closePreparedStatement(pst1, pst2);
@@ -135,6 +135,7 @@ public class UserService extends UserServiceGrpc.UserServiceImplBase {
 
             ServiceHelper.next(responseObserver, ServiceHelper.packedSuccessResponse(response));
         } catch (SQLException ex) {
+            log.error(ex.getMessage());
             mysteryJdbc.doRollback();
         } finally {
             mysteryJdbc.closePreparedStatement(pst);
@@ -169,6 +170,7 @@ public class UserService extends UserServiceGrpc.UserServiceImplBase {
 
             ServiceHelper.next(responseObserver, ServiceHelper.packedSuccessResponse(response));
         } catch (SQLException ex) {
+            log.error(ex.getMessage());
             mysteryJdbc.doRollback();
         } finally {
             mysteryJdbc.closePreparedStatement(pst);
@@ -198,6 +200,7 @@ public class UserService extends UserServiceGrpc.UserServiceImplBase {
 
             ServiceHelper.next(responseObserver, ServiceHelper.packedSuccessResponse(response));
         } catch (SQLException ex) {
+            log.error(ex.getMessage());
 //            mysteryJdbc.doRollback();
         } finally {
             mysteryJdbc.closeResultSet(rs);
@@ -232,6 +235,7 @@ public class UserService extends UserServiceGrpc.UserServiceImplBase {
 
             ServiceHelper.next(responseObserver, ServiceHelper.packedSuccessResponse(response));
         } catch (SQLException ex) {
+            log.error(ex.getMessage());
 //            mysteryJdbc.doRollback();
         } finally {
             mysteryJdbc.closeResultSet(rs);
@@ -287,6 +291,7 @@ public class UserService extends UserServiceGrpc.UserServiceImplBase {
 
             ServiceHelper.next(responseObserver, ServiceHelper.packedSuccessResponse(response));
         } catch (SQLException ex) {
+            log.error(ex.getMessage());
 //            mysteryJdbc.doRollback();
         } finally {
             mysteryJdbc.closeResultSet(rs);
@@ -299,7 +304,7 @@ public class UserService extends UserServiceGrpc.UserServiceImplBase {
         GrpcGetUserByEmailRequest req = ServiceHelper.unpackedRequest(request, GrpcGetUserByEmailRequest.class);
 
         String userQuery = "select " +
-                "tbl_user.id, tbl_user.name, tbl_user.avt_url, tbl_user.email, tbl_user.password, tbl_user.verified, tbl_user.provider, tbl_user.provider_id, tbl_user.created_at, tbl_user.updated_at " +
+                "tbl_user.id, tbl_user.name, tbl_user.avt_url, tbl_user.bio, tbl_user.email, tbl_user.password, tbl_user.verified, tbl_user.provider, tbl_user.provider_id, tbl_user.created_at, tbl_user.updated_at " +
                 "from tbl_user " +
                 "where tbl_user.email = ?";
 
@@ -342,6 +347,7 @@ public class UserService extends UserServiceGrpc.UserServiceImplBase {
 
             ServiceHelper.next(responseObserver, ServiceHelper.packedSuccessResponse(response));
         } catch (SQLException ex) {
+            log.error(ex.getMessage());
 //            mysteryJdbc.doRollback();
         } finally {
             mysteryJdbc.closeResultSet(rs);

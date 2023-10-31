@@ -12,6 +12,5 @@ public class VerificationCredential {
     private String verificationToken;
     private String verificationOtp;
     private String expireDate;
-    private String userId;
 
 }

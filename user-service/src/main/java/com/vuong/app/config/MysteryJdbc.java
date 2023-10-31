@@ -20,4 +20,5 @@ public interface MysteryJdbc {
     void doCommit();
 
     void setAutoCommit(boolean autoCommit);
+
 }
