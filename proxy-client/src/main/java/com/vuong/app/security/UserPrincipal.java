@@ -1,5 +1,7 @@
 package com.vuong.app.security;
 
+import com.vuong.app.grpc.message.auth.GetUserPrincipalByEmailResponse;
+import com.vuong.app.grpc.message.auth.GetUserPrincipalByUserIdResponse;
 import com.vuong.app.grpc.message.auth.UserDto;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -41,6 +43,36 @@ public class UserPrincipal implements OAuth2User, UserDetails {
         UserPrincipal userPrincipal = UserPrincipal.create(user);
         userPrincipal.setAttributes(attributes);
         return userPrincipal;
+    }
+
+    public static UserPrincipal create(GetUserPrincipalByUserIdResponse user, Map<String, Object> attributes) {
+        UserPrincipal userPrincipal = UserPrincipal.create(user);
+        userPrincipal.setAttributes(attributes);
+        return userPrincipal;
+    }
+
+    public static UserPrincipal create(GetUserPrincipalByUserIdResponse user) {
+        List<GrantedAuthority> authorities = Collections.
+                singletonList(new SimpleGrantedAuthority("ROLE_USER"));
+
+        return new UserPrincipal(
+                user.getUserId(),
+                user.getEmail(),
+                user.getPassword(),
+                authorities
+        );
+    }
+
+    public static UserPrincipal create(GetUserPrincipalByEmailResponse user) {
+        List<GrantedAuthority> authorities = Collections.
+                singletonList(new SimpleGrantedAuthority("ROLE_USER"));
+
+        return new UserPrincipal(
+                user.getUserId(),
+                user.getEmail(),
+                user.getPassword(),
+                authorities
+        );
     }
 
     public String getUserId() {

@@ -1,0 +1,66 @@
+syntax = "proto3";
+
+package vuong.app.v1.auth;
+option java_package = "com.vuong.app.v1.auth";
+option java_multiple_files = true;
+option java_outer_classname = "AuthProto";
+
+import "common.proto";
+
+enum GrpcAuthProviderSocial {
+  AUTH_PROVIDER_SOCIAL_UNSPECIFIED = 0;
+  AUTH_PROVIDER_SOCIAL_FACEBOOK = 2;
+  AUTH_PROVIDER_SOCIAL_GOOGLE = 3;
+  AUTH_PROVIDER_SOCIAL_GITHUB = 4;
+}
+
+message GrpcUserPrincipal {
+  string user_id = 1;
+  string email = 2;
+  string password = 3;
+}
+
+message GrpcCreateUserSocialRequest {
+  string name = 1;
+  string avt_url = 2;
+  string email = 3;
+  GrpcAuthProviderSocial provider = 4;
+  string provider_id = 5;
+}
+
+message GrpcCreateUserSocialResponse {
+  string user_id = 1;
+}
+
+message GrpcCreateUserLocalRequest {
+  string name = 1;
+  string email = 2;
+  string password = 3;
+}
+
+message GrpcCreateUserLocalResponse {
+  string user_id = 1;
+}
+
+message GrpcGetUserPrincipalByUserIdRequest {
+  string user_id = 1;
+}
+
+message GrpcGetUserPrincipalByUserIdResponse {
+  GrpcUserPrincipal result = 1;
+}
+
+message GrpcGetUserPrincipalByEmailRequest {
+  string email = 1;
+}
+
+message GrpcGetUserPrincipalByEmailResponse {
+  GrpcUserPrincipal result = 1;
+}
+
+service AuthService {
+  rpc createUserSocial(vuong.app.v1.GrpcRequest) returns (vuong.app.v1.GrpcResponse);
+  rpc createUserLocal(vuong.app.v1.GrpcRequest) returns (vuong.app.v1.GrpcResponse);
+  rpc getUserPrincipalByUserId(vuong.app.v1.GrpcRequest) returns (vuong.app.v1.GrpcResponse);
+  rpc getUserPrincipalByEmail(vuong.app.v1.GrpcRequest) returns (vuong.app.v1.GrpcResponse);
+}

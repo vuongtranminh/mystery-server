@@ -4,7 +4,9 @@ import com.vuong.app.common.ServiceHelper;
 import com.vuong.app.config.MysteryJdbc;
 import com.vuong.app.doman.AuthProvider;
 import com.vuong.app.doman.VerificationCredential;
+import com.vuong.app.redis.repository.UserRepository;
 import com.vuong.app.v1.*;
+import com.vuong.app.v1.auth.GrpcUserPrincipal;
 import com.vuong.app.v1.user.*;
 import io.grpc.stub.StreamObserver;
 import lombok.RequiredArgsConstructor;
@@ -26,6 +28,7 @@ public class UserService extends UserServiceGrpc.UserServiceImplBase {
 
     private final MysteryJdbc mysteryJdbc;
     private final VerificationCredentialService verificationCredentialService;
+    private final UserRepository userRepository;
 
     @Override
     public void createUser(GrpcRequest request, StreamObserver<GrpcResponse> responseObserver) {
@@ -47,16 +50,19 @@ public class UserService extends UserServiceGrpc.UserServiceImplBase {
             String userId = UUID.randomUUID().toString();
             String createdAt = Instant.now().toString();
             String updatedAt = createdAt;
+            String password = isLocal ? req.getPassword() : null;
+            boolean verified = !isLocal;
+            String providerId = isLocal ? null : req.getProviderId();
 
             pst1 = con.prepareStatement(insertUserQuery);
             pst1.setString(1, userId);
             pst1.setString(2, req.getName());
             pst1.setString(3, req.getAvtUrl());
             pst1.setString(4, req.getEmail());
-            pst1.setString(5, isLocal ? req.getPassword() : null);
-            pst1.setBoolean(6, isLocal ? false : true);
+            pst1.setString(5, password);
+            pst1.setBoolean(6, verified);
             pst1.setInt(7, authProvider.getNumber());
-            pst1.setString(8, isLocal ? null : req.getProviderId());
+            pst1.setString(8, providerId);
             pst1.setString(9, createdAt);
             pst1.setString(10, updatedAt);
 
@@ -65,6 +71,12 @@ public class UserService extends UserServiceGrpc.UserServiceImplBase {
 
             if (!isLocal) {
                 mysteryJdbc.doCommit();
+
+                this.userRepository.saveUser(GrpcUserPrincipal.newBuilder()
+                        .setUserId(userId)
+                        .setEmail(req.getEmail())
+                        .build());
+
                 GrpcCreateUserResponse response = GrpcCreateUserResponse.newBuilder().setUserId(userId).build();
                 ServiceHelper.next(responseObserver, ServiceHelper.packedSuccessResponse(response));
                 return;
@@ -264,30 +276,37 @@ public class UserService extends UserServiceGrpc.UserServiceImplBase {
 
             rs = pst.executeQuery();
 
-            GrpcGetUserByUserIdResponse response = null;
+            GrpcUser user = null;
 
             while (rs.next()) {
-                response = GrpcGetUserByUserIdResponse.newBuilder()
-                        .setResult(GrpcUser.newBuilder()
-                                .setUserId(rs.getString(1))
-                                .setName(rs.getString(2))
-                                .setAvtUrl(rs.getString(3))
-                                .setBio(rs.getString(4))
-                                .setEmail(rs.getString(5))
-                                .setPassword(rs.getString(6))
-                                .setVerified(rs.getBoolean(7))
-                                .setProvider(GrpcAuthProvider.forNumber(rs.getInt(8)))
-                                .setProviderId(rs.getString(9))
-                                .setCreatedAt(rs.getString(10))
-                                .setUpdatedAt(rs.getString(11))
-                                .build())
+                user = GrpcUser.newBuilder()
+                        .setUserId(rs.getString(1))
+                        .setName(rs.getString(2))
+                        .setAvtUrl(rs.getString(3))
+                        .setBio(rs.getString(4))
+                        .setEmail(rs.getString(5))
+                        .setPassword(rs.getString(6))
+                        .setVerified(rs.getBoolean(7))
+                        .setProvider(GrpcAuthProvider.forNumber(rs.getInt(8)))
+                        .setProviderId(rs.getString(9))
+                        .setCreatedAt(rs.getString(10))
+                        .setUpdatedAt(rs.getString(11))
                         .build();
             }
 
-            if (response == null) {
+            if (user == null) {
                 ServiceHelper.next(responseObserver, ServiceHelper.packedErrorResponse(GrpcErrorCode.ERROR_CODE_NOT_FOUND, "user not found with id"));
                 return;
             }
+
+            this.userRepository.saveUser(GrpcUserPrincipal.newBuilder()
+                    .setUserId(user.getUserId())
+                    .setEmail(user.getEmail())
+                    .build());
+
+            GrpcGetUserByUserIdResponse  response = GrpcGetUserByUserIdResponse.newBuilder()
+                    .setResult(user)
+                    .build();
 
             ServiceHelper.next(responseObserver, ServiceHelper.packedSuccessResponse(response));
         } catch (SQLException ex) {
@@ -320,30 +339,37 @@ public class UserService extends UserServiceGrpc.UserServiceImplBase {
 
             rs = pst.executeQuery();
 
-            GrpcGetUserByEmailResponse response = null;
+            GrpcUser user = null;
 
             while (rs.next()) {
-                response = GrpcGetUserByEmailResponse.newBuilder()
-                        .setResult(GrpcUser.newBuilder()
-                                .setUserId(rs.getString(1))
-                                .setName(rs.getString(2))
-                                .setAvtUrl(rs.getString(3))
-                                .setBio(rs.getString(4))
-                                .setEmail(rs.getString(5))
-                                .setPassword(rs.getString(6))
-                                .setVerified(rs.getBoolean(7))
-                                .setProvider(GrpcAuthProvider.forNumber(rs.getInt(8)))
-                                .setProviderId(rs.getString(9))
-                                .setCreatedAt(rs.getString(10))
-                                .setUpdatedAt(rs.getString(11))
-                                .build())
+                user = GrpcUser.newBuilder()
+                        .setUserId(rs.getString(1))
+                        .setName(rs.getString(2))
+                        .setAvtUrl(rs.getString(3))
+                        .setBio(rs.getString(4))
+                        .setEmail(rs.getString(5))
+                        .setPassword(rs.getString(6))
+                        .setVerified(rs.getBoolean(7))
+                        .setProvider(GrpcAuthProvider.forNumber(rs.getInt(8)))
+                        .setProviderId(rs.getString(9))
+                        .setCreatedAt(rs.getString(10))
+                        .setUpdatedAt(rs.getString(11))
                         .build();
             }
 
-            if (response == null) {
+            if (user == null) {
                 ServiceHelper.next(responseObserver, ServiceHelper.packedErrorResponse(GrpcErrorCode.ERROR_CODE_NOT_FOUND, "user not found with id"));
                 return;
             }
+
+            this.userRepository.saveUser(GrpcUserPrincipal.newBuilder()
+                    .setUserId(user.getUserId())
+                    .setEmail(user.getEmail())
+                    .build());
+
+            GrpcGetUserByEmailResponse response = GrpcGetUserByEmailResponse.newBuilder()
+                    .setResult(user)
+                    .build();
 
             ServiceHelper.next(responseObserver, ServiceHelper.packedSuccessResponse(response));
         } catch (SQLException ex) {

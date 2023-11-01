@@ -3,6 +3,7 @@ package com.vuong.app.grpc.service;
 import com.vuong.app.business.auth.model.*;
 import com.vuong.app.grpc.message.auth.*;
 import com.vuong.app.v1.*;
+import com.vuong.app.v1.auth.*;
 import com.vuong.app.v1.user.*;
 import net.devh.boot.grpc.client.inject.GrpcClient;
 import org.springframework.stereotype.Service;
@@ -16,6 +17,9 @@ public class AuthClientService extends BaseClientService {
 
     @GrpcClient("grpc-user-service")
     UserServiceGrpc.UserServiceBlockingStub userServiceBlockingStub;
+
+    @GrpcClient("grpc-user-service")
+    AuthServiceGrpc.AuthServiceBlockingStub authServiceBlockingStub;
 
     @GrpcClient("grpc-user-service")
     RefreshTokenServiceGrpc.RefreshTokenServiceBlockingStub refreshTokenServiceBlockingStub;
@@ -83,6 +87,54 @@ public class AuthClientService extends BaseClientService {
                 .build());
     }
 
+    public Optional<GetUserPrincipalByEmailResponse> getUserPrincipalByEmail(GetUserPrincipalByEmailRequest request) {
+        GrpcRequest req = packRequest(GrpcGetUserPrincipalByEmailRequest.newBuilder()
+                .setEmail(request.getEmail())
+                .build());
+
+        GrpcResponse response = this.authServiceBlockingStub.getUserPrincipalByEmail(req);
+
+        Optional<GrpcGetUserPrincipalByEmailResponse> unpackedResultOptional = unpackedResultQuery(response, GrpcGetUserPrincipalByEmailResponse.class);
+
+        if (!unpackedResultOptional.isPresent()) {
+            return Optional.empty();
+        }
+
+        GrpcGetUserPrincipalByEmailResponse unpackedResult = unpackedResultOptional.get();
+
+        GrpcUserPrincipal grpcUserPrincipal = unpackedResult.getResult();
+
+        return Optional.of(GetUserPrincipalByEmailResponse.builder()
+                .userId(grpcUserPrincipal.getUserId())
+                .email(grpcUserPrincipal.getEmail())
+                .password(grpcUserPrincipal.getPassword())
+                .build());
+    }
+
+    public Optional<GetUserPrincipalByUserIdResponse> getUserPrincipalByUserId(GetUserPrincipalByUserIdRequest request) {
+        GrpcRequest req = packRequest(GrpcGetUserPrincipalByUserIdRequest.newBuilder()
+                .setUserId(request.getUserId())
+                .build());
+
+        GrpcResponse response = this.authServiceBlockingStub.getUserPrincipalByUserId(req);
+
+        Optional<GrpcGetUserPrincipalByUserIdResponse> unpackedResultOptional = unpackedResultQuery(response, GrpcGetUserPrincipalByUserIdResponse.class);
+
+        if (!unpackedResultOptional.isPresent()) {
+            return Optional.empty();
+        }
+
+        GrpcGetUserPrincipalByUserIdResponse unpackedResult = unpackedResultOptional.get();
+
+        GrpcUserPrincipal grpcUserPrincipal = unpackedResult.getResult();
+
+        return Optional.of(GetUserPrincipalByUserIdResponse.builder()
+                .userId(grpcUserPrincipal.getUserId())
+                .email(grpcUserPrincipal.getEmail())
+                .password(grpcUserPrincipal.getPassword())
+                .build());
+    }
+
     public CreateUserResponse createUser(CreateUserRequest request) {
         GrpcRequest req = packRequest(GrpcCreateUserRequest.newBuilder()
                 .setName(request.getName())
@@ -98,6 +150,40 @@ public class AuthClientService extends BaseClientService {
         GrpcCreateUserResponse unpackedResult = unpackedResultCommand(response, GrpcCreateUserResponse.class);
 
         return CreateUserResponse.builder()
+                .userId(unpackedResult.getUserId())
+                .build();
+    }
+
+    public CreateUserSocialResponse createUserSocial(CreateUserSocialRequest request) {
+        GrpcRequest req = packRequest(GrpcCreateUserSocialRequest.newBuilder()
+                .setName(request.getName())
+                .setAvtUrl(request.getAvtUrl())
+                .setEmail(request.getEmail())
+                .setProvider(GrpcAuthProviderSocial.forNumber(request.getProvider().getNumber()))
+                .setProviderId(request.getProviderId())
+                .build());
+
+        GrpcResponse response = this.authServiceBlockingStub.createUserSocial(req);
+
+        GrpcCreateUserSocialResponse unpackedResult = unpackedResultCommand(response, GrpcCreateUserSocialResponse.class);
+
+        return CreateUserSocialResponse.builder()
+                .userId(unpackedResult.getUserId())
+                .build();
+    }
+
+    public CreateUserLocalResponse createUserLocal(CreateUserLocalRequest request) {
+        GrpcRequest req = packRequest(GrpcCreateUserLocalRequest.newBuilder()
+                .setName(request.getName())
+                .setEmail(request.getEmail())
+                .setPassword(request.getPassword())
+                .build());
+
+        GrpcResponse response = this.authServiceBlockingStub.createUserLocal(req);
+
+        GrpcCreateUserLocalResponse unpackedResult = unpackedResultCommand(response, GrpcCreateUserLocalResponse.class);
+
+        return CreateUserLocalResponse.builder()
                 .userId(unpackedResult.getUserId())
                 .build();
     }
