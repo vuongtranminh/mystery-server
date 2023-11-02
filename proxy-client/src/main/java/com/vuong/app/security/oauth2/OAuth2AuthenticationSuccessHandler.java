@@ -5,9 +5,13 @@ import com.vuong.app.exception.wrapper.BadRequestException;
 import com.vuong.app.grpc.message.auth.CreateRefreshTokenRequest;
 import com.vuong.app.grpc.message.auth.CreateRefreshTokenResponse;
 import com.vuong.app.grpc.service.AuthClientService;
+import com.vuong.app.redis.doman.AuthMetadata;
+import com.vuong.app.redis.doman.TokenStore;
+import com.vuong.app.redis.repository.ManagerAuthSessionRepository;
 import com.vuong.app.security.TokenProvider;
 import com.vuong.app.security.UserPrincipal;
 import com.vuong.app.util.CookieUtils;
+import com.vuong.app.util.ServletHelper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
@@ -19,6 +23,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.net.URI;
+import java.time.Instant;
 import java.util.Optional;
 
 import static com.vuong.app.security.oauth2.HttpCookieOAuth2AuthorizationRequestRepository.REDIRECT_URI_PARAM_COOKIE_NAME;
@@ -33,7 +38,7 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
 
     private final HttpCookieOAuth2AuthorizationRequestRepository httpCookieOAuth2AuthorizationRequestRepository;
 
-    private final AuthClientService authClientService;
+    private final ManagerAuthSessionRepository managerAuthSessionRepository;
 
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException, ServletException {
@@ -63,11 +68,21 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
         TokenProvider.AccessToken accessToken = tokenProvider.generateAccessToken(userPrincipal.getUserId());
         TokenProvider.RefreshToken refreshToken = tokenProvider.generateRefreshToken(userPrincipal.getUserId());
 
-        this.authClientService.createRefreshToken(CreateRefreshTokenRequest.builder()
+        String remoteAddr = ServletHelper.extractIp(request);
+        String userAgent = ServletHelper.getUserAgent(request);
+
+        TokenStore tokenStore = TokenStore.builder()
+                .accessToken(accessToken.getAccessToken())
                 .refreshToken(refreshToken.getRefreshToken())
-                .expiresAt(refreshToken.getExpiresAt().toString())
-                .userId(refreshToken.getUserId())
-                .build());
+                .build();
+
+        AuthMetadata authMetadata = AuthMetadata.builder()
+                .userId(userPrincipal.getUserId())
+                .userAgent(userAgent)
+                .remoteAddr(remoteAddr)
+                .lastLoggedIn(Instant.now())
+                .build();
+        managerAuthSessionRepository.storeToken(tokenStore, authMetadata);
 
         CookieUtils.addCookie(response, appProperties.getAuth().getAccessTokenCookieName(), CookieUtils.serialize(accessToken.getAccessToken()), (int) appProperties.getAuth().getAccessTokenExpirationMsec());
         CookieUtils.addCookie(response, appProperties.getAuth().getRefreshTokenCookieName(), CookieUtils.serialize(refreshToken.getRefreshToken()), (int) appProperties.getAuth().getRefreshTokenExpirationMsec());

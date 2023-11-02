@@ -1,7 +1,11 @@
 package com.vuong.app.redis.repository;
 
+import com.vuong.app.redis.doman.AuthMetadata;
+import com.vuong.app.redis.doman.TokenStore;
+
 public interface ManagerAuthSessionRepository {
-    void addAccessToken(String userId, String accessToken);
-    void removeAllAccessToken(String userId);
-    void removeAccessToken(String userId, String accessToken);
+    void storeToken(TokenStore input, AuthMetadata authMetadata);
+    void removeTokenByAuthMetadata(AuthMetadata authMetadata);
+    boolean hasAccessToken(String accessToken);
+    boolean hasRefreshToken(String refreshToken);
 }

@@ -22,7 +22,7 @@ public class RedisConfig {
         config.setHostName(redisProperties.getHost());
         config.setPort(redisProperties.getPort());
         config.setPassword(redisProperties.getPassword());
-        return new JedisConnectionFactory(config);
+        return new LettuceConnectionFactory(config);
     }
 
     @Bean

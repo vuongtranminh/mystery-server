@@ -5,13 +5,11 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.List;
-
 @NoArgsConstructor
 @AllArgsConstructor
 @Data
 @Builder
 public class TokenStore {
-    private List<String> accessTokens;
-    private List<String> refreshTokens;
+    private String accessToken;
+    private String refreshToken;
 }
