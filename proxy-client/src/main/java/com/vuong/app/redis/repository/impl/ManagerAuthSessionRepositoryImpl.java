@@ -20,12 +20,12 @@ public class ManagerAuthSessionRepositoryImpl implements ManagerAuthSessionRepos
 
     private final RedisTemplate template;
 
-    private static final String MANAGER_AUTH_SESSION_KEY_PREFIX = "MANAGER_AUTH_SESSION:";
-    private static final String ACCESS_TOKEN_KEY_PREFIX = "ACCESS_TOKEN:";
-    private static final String REFRESH_TOKEN_KEY_PREFIX = "REFRESH_TOKEN:";
+    private static final String MANAGER_AUTH_SESSION_KEY_PREFIX = "manage_auth_session:";
+    private static final String ACCESS_TOKEN_KEY_PREFIX = "access_token:";
+    private static final String REFRESH_TOKEN_KEY_PREFIX = "refresh_token:";
 
     @Override
-    public void addAccessToken(String accessToken, AuthMetadata authMetadata) {
+    public void storeAccessToken(String accessToken, AuthMetadata authMetadata) {
         String key = MANAGER_AUTH_SESSION_KEY_PREFIX + authMetadata.getUserId();
 
         if (template.opsForHash().size(key) == 5) {
@@ -53,13 +53,13 @@ public class ManagerAuthSessionRepositoryImpl implements ManagerAuthSessionRepos
     }
 
     @Override
-    public void removeAllAccessToken(String userId) {
+    public void removeAllAccessTokenByUserId(String userId) {
         String key = MANAGER_AUTH_SESSION_KEY_PREFIX + userId;
         template.opsForHash().delete(key);
     }
 
     @Override
-    public void removeAllAccessTokenByUserAgent(String userId, AuthMetadata authMetadata) {
+    public void removeAllAccessTokenByUserIdAndUserAgent(String userId, AuthMetadata authMetadata) {
         String key = MANAGER_AUTH_SESSION_KEY_PREFIX + userId;
         template.opsForHash().delete(key, authMetadata.getUserAgent());
     }
@@ -105,6 +105,14 @@ public class ManagerAuthSessionRepositoryImpl implements ManagerAuthSessionRepos
         }
 
         return false;
+    }
+
+    public void readRefreshToken() {
+
+    }
+
+    public void storeRefreshToken() {
+
     }
 
 
