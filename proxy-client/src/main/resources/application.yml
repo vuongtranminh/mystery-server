@@ -26,3 +26,7 @@ logging:
   logback:
     rollingpolicy:
       clean-history-on-start: true
+  level:
+    root: INFO
+    org.springframework.web: DEBUG
+    io.lettuce: DEBUG
