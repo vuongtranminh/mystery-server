@@ -1,0 +1,27 @@
+
+spring:
+  application:
+    name: WEBSOCKET
+  profiles:
+    active:
+      - dev
+  kafka:
+    bootstrap-servers: localhost:9092
+    template:
+      default-topic: userTopic
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+  redis:
+    password: test
+    data:
+      redis:
+        host: ${REDIS_HOST:localhost}
+        port: ${REDIS_PORT:6379}
+
+logging:
+  file:
+    name: src/main/resources/script/stage_log.log
+  logback:
+    rollingpolicy:
+      clean-history-on-start: true

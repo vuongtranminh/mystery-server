@@ -10,7 +10,7 @@ import "common.proto";
 message GrpcCreateProfileRequest {
   string profile_id = 1;
   string name = 2;
-  string avt_url = 3;
+  optional string avt_url = 3;
 }
 
 message GrpcCreateProfileResponse {

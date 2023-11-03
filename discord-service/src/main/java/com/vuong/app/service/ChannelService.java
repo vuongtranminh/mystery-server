@@ -1,24 +1,16 @@
 package com.vuong.app.service;
 
 import com.vuong.app.doman.*;
-import com.vuong.app.jpa.query.ServiceHelper;
 import com.vuong.app.repository.ChannelRepository;
 import com.vuong.app.repository.MemberRepository;
 import com.vuong.app.repository.ServerRepository;
-import com.vuong.app.v1.*;
-import com.vuong.app.v1.message.GrpcErrorCode;
-import com.vuong.app.v1.message.GrpcRequest;
-import com.vuong.app.v1.message.GrpcResponse;
-import io.grpc.stub.StreamObserver;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.devh.boot.grpc.server.service.GrpcService;
 
-import javax.transaction.Transactional;
 import java.util.Optional;
 
 @GrpcService
-@Transactional
 @Slf4j
 @RequiredArgsConstructor
 public class ChannelService extends ChannelServiceGrpc.ChannelServiceImplBase {

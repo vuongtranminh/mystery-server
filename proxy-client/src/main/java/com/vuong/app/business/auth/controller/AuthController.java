@@ -4,7 +4,9 @@ import com.vuong.app.business.auth.model.payload.*;
 import com.vuong.app.business.auth.service.AuthService;
 import com.vuong.app.common.api.ResponseMsg;
 import com.vuong.app.config.AppProperties;
+import com.vuong.app.security.CurrentUser;
 import com.vuong.app.security.TokenProvider;
+import com.vuong.app.security.UserPrincipal;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -26,8 +28,8 @@ public class AuthController {
     private final AuthService authService;
 
     @PostMapping("/signin")
-    public ResponseEntity<?> authenticateUser(@Valid @RequestBody SignInRequest signInRequest, HttpServletResponse response) {
-        return ResponseEntity.ok(this.authService.signIn(signInRequest, response));
+    public ResponseEntity<?> authenticateUser(HttpServletRequest request, HttpServletResponse response, @Valid @RequestBody SignInRequest signInRequest) {
+        return ResponseEntity.ok(this.authService.signIn(request, response, signInRequest));
     }
 
     @PostMapping("/signup")
@@ -46,8 +48,8 @@ public class AuthController {
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<?> logout(HttpServletRequest request, HttpServletResponse response) {
-        return ResponseEntity.ok(this.authService.logout(request, response));
+    public ResponseEntity<?> logout(HttpServletRequest request, HttpServletResponse response, @CurrentUser UserPrincipal currentUser) {
+        return ResponseEntity.ok(this.authService.logout(request, response, currentUser));
     }
 
     @PostMapping("/refeshToken")

@@ -11,9 +11,13 @@ import com.vuong.app.config.AppProperties;
 import com.vuong.app.exception.wrapper.BadRequestException;
 import com.vuong.app.grpc.message.auth.*;
 import com.vuong.app.grpc.service.AuthClientService;
+import com.vuong.app.redis.doman.AuthMetadata;
+import com.vuong.app.redis.doman.TokenStore;
+import com.vuong.app.redis.repository.ManagerAuthSessionRepository;
 import com.vuong.app.security.TokenProvider;
 import com.vuong.app.security.UserPrincipal;
 import com.vuong.app.util.CookieUtils;
+import com.vuong.app.util.ServletHelper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -43,6 +47,8 @@ public class AuthServiceImpl implements AuthService {
 
     private final AppProperties appProperties;
 
+    private final ManagerAuthSessionRepository managerAuthSessionRepository;
+
 //    @Override
 //    public boolean existsByEmail(String email) {
 //        ExistsUserByEmailResponse existsUserByEmailResponse = this.authClientService.existsUserByEmail(ExistsUserByEmailRequest.builder()
@@ -52,7 +58,7 @@ public class AuthServiceImpl implements AuthService {
 //    }
 
     @Override
-    public ResponseObject signIn(SignInRequest signInRequest, HttpServletResponse response) {
+    public ResponseObject signIn(HttpServletRequest request, HttpServletResponse response, SignInRequest signInRequest) {
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
                         signInRequest.getEmail(),
@@ -67,12 +73,21 @@ public class AuthServiceImpl implements AuthService {
         TokenProvider.AccessToken accessToken = tokenProvider.generateAccessToken(userPrincipal.getUserId());
         TokenProvider.RefreshToken refreshToken = tokenProvider.generateRefreshToken(userPrincipal.getUserId());
 
-        // save refresh to db
-        this.authClientService.createRefreshToken(CreateRefreshTokenRequest.builder()
+        String remoteAddr = ServletHelper.extractIp(request);
+        String userAgent = ServletHelper.getUserAgent(request);
+
+        TokenStore tokenStore = TokenStore.builder()
+                .accessToken(accessToken.getAccessToken())
                 .refreshToken(refreshToken.getRefreshToken())
-                .expiresAt(refreshToken.getExpiresAt().toString())
-                .userId(refreshToken.getUserId())
-                .build());
+                .build();
+
+        AuthMetadata authMetadata = AuthMetadata.builder()
+                .userId(userPrincipal.getUserId())
+                .userAgent(userAgent)
+                .remoteAddr(remoteAddr)
+                .lastLoggedIn(Instant.now())
+                .build();
+        managerAuthSessionRepository.storeToken(tokenStore, authMetadata);
 
         CookieUtils.addCookie(response, appProperties.getAuth().getAccessTokenCookieName(), CookieUtils.serialize(accessToken.getAccessToken()), (int) appProperties.getAuth().getAccessTokenExpirationMsec());
         CookieUtils.addCookie(response, appProperties.getAuth().getRefreshTokenCookieName(), CookieUtils.serialize(refreshToken.getRefreshToken()), (int) appProperties.getAuth().getRefreshTokenExpirationMsec());
@@ -104,16 +119,17 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public ResponseObject logout(HttpServletRequest request, HttpServletResponse response) {
-        Optional<Cookie> refreshTokenOptional = CookieUtils.getCookie(request, appProperties.getAuth().getRefreshTokenCookieName());
-        if (refreshTokenOptional.isPresent()) {
-            this.authClientService.deleteRefreshTokenByRefreshToken(DeleteRefreshTokenByRefreshTokenRequest.builder()
-                    .refreshToken(refreshTokenOptional.get().getValue())
-                    .build());
+    public ResponseObject logout(HttpServletRequest request, HttpServletResponse response, UserPrincipal currentUser) {
+        String userAgent = ServletHelper.getUserAgent(request);
 
-            CookieUtils.deleteCookie(request, response, appProperties.getAuth().getAccessTokenCookieName());
-            CookieUtils.deleteCookie(request, response, appProperties.getAuth().getRefreshTokenCookieName());
-        }
+        AuthMetadata authMetadata = AuthMetadata.builder()
+                .userId(currentUser.getUserId())
+                .userAgent(userAgent)
+                .build();
+        managerAuthSessionRepository.removeTokenByAuthMetadata(authMetadata);
+
+        CookieUtils.deleteCookie(request, response, appProperties.getAuth().getAccessTokenCookieName());
+        CookieUtils.deleteCookie(request, response, appProperties.getAuth().getRefreshTokenCookieName());
 
         return new ResponseMsg("Log out successfully!", HttpStatus.OK);
     }
@@ -127,46 +143,29 @@ public class AuthServiceImpl implements AuthService {
 
         String oldRefreshToken = oldRefreshTokenOptional.get().getValue();
 
-        if (!tokenProvider.validateToken(oldRefreshToken)) { // pass is expiresAt before now
+        if (managerAuthSessionRepository.hasRefreshToken(oldRefreshToken) || !tokenProvider.validateToken(oldRefreshToken)) { // pass is expiresAt before now
             return new ExceptionMsg("Invalid refresh token", HttpStatus.BAD_REQUEST);
-        }
-
-        // extract oldRefreshToken get userId and status in db
-        // if status != ready => delete all cookie and return to /login
-        // maybe add notification to user hacked refresh token
-        Optional<GetRefreshTokenByRefreshTokenResponse> getRefreshTokenByRefreshTokenResponseOptional = this.authClientService.getRefreshTokenByRefreshToken(GetRefreshTokenByRefreshTokenRequest.builder()
-                .refreshToken(oldRefreshToken)
-                .build());
-
-        if (!getRefreshTokenByRefreshTokenResponseOptional.isPresent()) {
-            return new ExceptionMsg("Refresh token not found", HttpStatus.NOT_FOUND);
-        }
-
-        GetRefreshTokenByRefreshTokenResponse getRefreshTokenByRefreshTokenResponse = getRefreshTokenByRefreshTokenResponseOptional.get();
-
-        if (!getRefreshTokenByRefreshTokenResponse.getStatus().equals(RefreshTokenStatus.READY)) {
-            this.authClientService.deleteAllRefreshTokenByUserId(DeleteAllRefreshTokenByUserIdRequest.builder()
-                    .userId(getRefreshTokenByRefreshTokenResponse.getUserId())
-                    .build());
-
-            // maybe add notification to user hacked refresh token
-            return new ExceptionMsg("Refresh token not found", HttpStatus.NOT_FOUND);
         }
 
         TokenProvider.RefreshToken refreshToken = tokenProvider.generateRefreshToken(oldRefreshToken);
         // update refresh token to status used
-        this.authClientService.updateRefreshTokenByRefreshTokenId(UpdateRefreshTokenByRefreshTokenIdRequest.builder()
-                .refreshTokenId(getRefreshTokenByRefreshTokenResponse.getRefreshTokenId())
-                .status(RefreshTokenStatus.USED)
-                .build());
-
-        this.authClientService.createRefreshToken(CreateRefreshTokenRequest.builder()
-                .refreshToken(refreshToken.getRefreshToken())
-                .expiresAt(refreshToken.getExpiresAt().toString())
-                .userId(refreshToken.getUserId())
-                .build());
-        // insert refresh token to DB
         TokenProvider.AccessToken accessToken = tokenProvider.generateAccessToken(refreshToken.getUserId());
+
+        String remoteAddr = ServletHelper.extractIp(request);
+        String userAgent = ServletHelper.getUserAgent(request);
+
+        TokenStore tokenStore = TokenStore.builder()
+                .accessToken(accessToken.getAccessToken())
+                .refreshToken(refreshToken.getRefreshToken())
+                .build();
+
+        AuthMetadata authMetadata = AuthMetadata.builder()
+                .userId(refreshToken.getUserId())
+                .userAgent(userAgent)
+                .remoteAddr(remoteAddr)
+                .lastLoggedIn(Instant.now())
+                .build();
+        managerAuthSessionRepository.storeToken(tokenStore, authMetadata);
 
         CookieUtils.addCookie(response, appProperties.getAuth().getAccessTokenCookieName(), CookieUtils.serialize(accessToken.getAccessToken()), (int) appProperties.getAuth().getAccessTokenExpirationMsec());
         CookieUtils.addCookie(response, appProperties.getAuth().getRefreshTokenCookieName(), CookieUtils.serialize(refreshToken.getRefreshToken()), (int) appProperties.getAuth().getRefreshTokenExpirationMsec());

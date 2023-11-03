@@ -8,21 +8,32 @@ option java_outer_classname = "MessageProto";
 import "common.proto";
 import "discord/member.proto";
 
+enum GrpcMessageEventType {
+  MESSAGE_EVENT_TYPE_UNSPECIFIED = 0;
+  MESSAGE_EVENT_TYPE_ADD = 1;
+  MESSAGE_EVENT_TYPE_EDIT = 2;
+}
+
+message GrpcMessageEvent {
+  GrpcMessageEventType type = 1;
+  GrpcMessage message = 2;
+}
+
 message GrpcMessage {
   string message_id = 1;
-  string content = 2;
-  string file_url = 3;
+  optional string content = 2;
+  optional string file_url = 3;
   string channel_id = 4;
   string created_at = 5;
   string updated_at = 6;
-  string deleted_at = 7;
-  string deleted_by = 8;
+  optional string deleted_at = 7;
+  optional string deleted_by = 8;
   GrpcMemberProfile author = 9;
 }
 
 message GrpcCreateMessageRequest {
-  string content = 1;
-  string file_url = 2;
+  optional string content = 1;
+  optional string file_url = 2;
   string channel_id = 3;
   string server_id = 4;
   string profile_id = 5;
