@@ -84,11 +84,11 @@ message GrpcGetChannelsByServerIdResponse {
 }
 
 service ChannelService {
-  rpc createChannel(vuong.app.v1.GrpcRequest) returns (vuong.app.v1.GrpcResponse);
-  rpc updateChannel(vuong.app.v1.GrpcRequest) returns (vuong.app.v1.GrpcResponse);
-  rpc deleteChannel(vuong.app.v1.GrpcRequest) returns (vuong.app.v1.GrpcResponse);
-  rpc getChannelGeneralByServerId(vuong.app.v1.GrpcRequest) returns (vuong.app.v1.GrpcResponse);
-  rpc getChannelByChannelId(vuong.app.v1.GrpcRequest) returns (vuong.app.v1.GrpcResponse);
-  rpc getChannelsByServerId(vuong.app.v1.GrpcRequest) returns (vuong.app.v1.GrpcResponse);
+  rpc createChannel(GrpcCreateChannelRequest) returns (GrpcCreateChannelResponse);
+  rpc updateChannel(GrpcUpdateChannelRequest) returns (GrpcUpdateChannelResponse);
+  rpc deleteChannel(GrpcDeleteChannelRequest) returns (GrpcDeleteChannelResponse);
+  rpc getChannelGeneralByServerId(GrpcGetChannelGeneralByServerIdRequest) returns (GrpcGetChannelGeneralByServerIdResponse);
+  rpc getChannelByChannelId(GrpcGetChannelByChannelIdRequest) returns (GrpcGetChannelByChannelIdResponse);
+  rpc getChannelsByServerId(GrpcGetChannelsByServerIdRequest) returns (GrpcGetChannelsByServerIdResponse);
 }
 

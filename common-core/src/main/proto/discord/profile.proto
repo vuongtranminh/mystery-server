@@ -18,5 +18,5 @@ message GrpcCreateProfileResponse {
 }
 
 service ProfileService {
-  rpc createProfile(vuong.app.v1.GrpcRequest) returns (vuong.app.v1.GrpcResponse);
+  rpc createProfile(GrpcCreateProfileRequest) returns (GrpcCreateProfileResponse);
 }

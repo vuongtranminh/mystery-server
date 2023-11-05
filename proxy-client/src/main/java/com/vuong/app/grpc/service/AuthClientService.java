@@ -1,10 +1,15 @@
 package com.vuong.app.grpc.service;
 
 import com.vuong.app.business.auth.model.*;
+import com.vuong.app.exception.wrapper.WTuxException;
 import com.vuong.app.grpc.message.auth.*;
 import com.vuong.app.v1.*;
 import com.vuong.app.v1.auth.*;
 import com.vuong.app.v1.user.*;
+import io.grpc.Metadata;
+import io.grpc.Status;
+import io.grpc.protobuf.ProtoUtils;
+import lombok.extern.slf4j.Slf4j;
 import net.devh.boot.grpc.client.inject.GrpcClient;
 import org.springframework.stereotype.Service;
 
@@ -13,7 +18,8 @@ import java.util.Date;
 import java.util.Optional;
 
 @Service
-public class AuthClientService extends BaseClientService {
+@Slf4j
+public class AuthClientService {
 
     @GrpcClient("grpc-user-service")
     UserServiceGrpc.UserServiceBlockingStub userServiceBlockingStub;
@@ -22,352 +28,181 @@ public class AuthClientService extends BaseClientService {
     AuthServiceGrpc.AuthServiceBlockingStub authServiceBlockingStub;
 
     @GrpcClient("grpc-user-service")
-    RefreshTokenServiceGrpc.RefreshTokenServiceBlockingStub refreshTokenServiceBlockingStub;
-
-    @GrpcClient("grpc-user-service")
     VerificationCredentialServiceGrpc.VerificationCredentialServiceBlockingStub verificationCredentialServiceBlockingStub;
 
-    public Optional<GetUserByEmailResponse> getUserByEmail(GetUserByEmailRequest request) {
-        GrpcRequest req = packRequest(GrpcGetUserByEmailRequest.newBuilder()
-                .setEmail(request.getEmail())
-                .build());
-
-        GrpcResponse response = this.userServiceBlockingStub.getUserByEmail(req);
-
-        Optional<GrpcGetUserByEmailResponse> unpackedResultOptional = unpackedResultQuery(response, GrpcGetUserByEmailResponse.class);
-
-        if (!unpackedResultOptional.isPresent()) {
-            return Optional.empty();
-        }
-
-        GrpcGetUserByEmailResponse unpackedResult = unpackedResultOptional.get();
-
-        GrpcUser grpcUser = unpackedResult.getResult();
-
-        return Optional.of(GetUserByEmailResponse.builder()
-                .userId(grpcUser.getUserId())
-                .name(grpcUser.getName())
-                .avtUrl(grpcUser.getAvtUrl())
-                .bio(grpcUser.getBio())
-                .email(grpcUser.getEmail())
-                .password(grpcUser.getPassword())
-                .verified(grpcUser.getVerified())
-                .provider(AuthProvider.forNumber(grpcUser.getProvider().getNumber()))
-                .providerId(grpcUser.getProviderId())
-                .build());
-    }
-
-    public Optional<GetUserByUserIdResponse> getUserByUserId(GetUserByUserIdRequest request) {
-        GrpcRequest req = packRequest(GrpcGetUserByUserIdRequest.newBuilder()
-                .setUserId(request.getUserId())
-                .build());
-
-        GrpcResponse response = this.userServiceBlockingStub.getUserByUserId(req);
-
-        Optional<GrpcGetUserByUserIdResponse> unpackedResultOptional = unpackedResultQuery(response, GrpcGetUserByUserIdResponse.class);
-
-        if (!unpackedResultOptional.isPresent()) {
-            return Optional.empty();
-        }
-
-        GrpcGetUserByUserIdResponse unpackedResult = unpackedResultOptional.get();
-
-        GrpcUser grpcUser = unpackedResult.getResult();
-
-        return Optional.of(GetUserByUserIdResponse.builder()
-                .userId(grpcUser.getUserId())
-                .name(grpcUser.getName())
-                .avtUrl(grpcUser.getAvtUrl())
-                .bio(grpcUser.getBio())
-                .email(grpcUser.getEmail())
-                .password(grpcUser.getPassword())
-                .verified(grpcUser.getVerified())
-                .provider(AuthProvider.forNumber(grpcUser.getProvider().getNumber()))
-                .providerId(grpcUser.getProviderId())
-                .build());
-    }
-
     public Optional<GetUserPrincipalByEmailResponse> getUserPrincipalByEmail(GetUserPrincipalByEmailRequest request) {
-        GrpcRequest req = packRequest(GrpcGetUserPrincipalByEmailRequest.newBuilder()
-                .setEmail(request.getEmail())
-                .build());
+        try {
+            GrpcGetUserPrincipalByEmailResponse response = this.authServiceBlockingStub.getUserPrincipalByEmail(GrpcGetUserPrincipalByEmailRequest.newBuilder()
+                    .setEmail(request.getEmail())
+                    .build());
 
-        GrpcResponse response = this.authServiceBlockingStub.getUserPrincipalByEmail(req);
+            GrpcUserPrincipal grpcUserPrincipal = response.getResult();
 
-        Optional<GrpcGetUserPrincipalByEmailResponse> unpackedResultOptional = unpackedResultQuery(response, GrpcGetUserPrincipalByEmailResponse.class);
+            return Optional.of(GetUserPrincipalByEmailResponse.builder()
+                    .userId(grpcUserPrincipal.getUserId())
+                    .email(grpcUserPrincipal.getEmail())
+                    .password(grpcUserPrincipal.getPassword())
+                    .build());
 
-        if (!unpackedResultOptional.isPresent()) {
-            return Optional.empty();
+        } catch (Exception ex) {
+            Metadata metadata = Status.trailersFromThrowable(ex);
+            GrpcErrorResponse errorResponse = metadata.get(ProtoUtils.keyForProto(GrpcErrorResponse.getDefaultInstance()));
+            log.error(errorResponse.getErrorCode() + " : " + errorResponse.getMessage());
+
+            if (errorResponse.getErrorCode().getNumber() == GrpcErrorCode.ERROR_CODE_NOT_FOUND_VALUE) {
+                return Optional.empty();
+            }
+
+            throw new WTuxException(errorResponse);
         }
-
-        GrpcGetUserPrincipalByEmailResponse unpackedResult = unpackedResultOptional.get();
-
-        GrpcUserPrincipal grpcUserPrincipal = unpackedResult.getResult();
-
-        return Optional.of(GetUserPrincipalByEmailResponse.builder()
-                .userId(grpcUserPrincipal.getUserId())
-                .email(grpcUserPrincipal.getEmail())
-                .password(grpcUserPrincipal.getPassword())
-                .build());
     }
 
     public Optional<GetUserPrincipalByUserIdResponse> getUserPrincipalByUserId(GetUserPrincipalByUserIdRequest request) {
-        GrpcRequest req = packRequest(GrpcGetUserPrincipalByUserIdRequest.newBuilder()
-                .setUserId(request.getUserId())
-                .build());
+        try {
+            GrpcGetUserPrincipalByUserIdResponse response = this.authServiceBlockingStub.getUserPrincipalByUserId(GrpcGetUserPrincipalByUserIdRequest.newBuilder()
+                    .setUserId(request.getUserId())
+                    .build());
 
-        GrpcResponse response = this.authServiceBlockingStub.getUserPrincipalByUserId(req);
+            GrpcUserPrincipal grpcUserPrincipal = response.getResult();
 
-        Optional<GrpcGetUserPrincipalByUserIdResponse> unpackedResultOptional = unpackedResultQuery(response, GrpcGetUserPrincipalByUserIdResponse.class);
+            return Optional.of(GetUserPrincipalByUserIdResponse.builder()
+                    .userId(grpcUserPrincipal.getUserId())
+                    .email(grpcUserPrincipal.getEmail())
+                    .password(grpcUserPrincipal.getPassword())
+                    .build());
 
-        if (!unpackedResultOptional.isPresent()) {
-            return Optional.empty();
+        } catch (Exception ex) {
+            Metadata metadata = Status.trailersFromThrowable(ex);
+            GrpcErrorResponse errorResponse = metadata.get(ProtoUtils.keyForProto(GrpcErrorResponse.getDefaultInstance()));
+            log.error(errorResponse.getErrorCode() + " : " + errorResponse.getMessage());
+
+            if (errorResponse.getErrorCode().getNumber() == GrpcErrorCode.ERROR_CODE_NOT_FOUND_VALUE) {
+                return Optional.empty();
+            }
+
+            throw new WTuxException(errorResponse);
         }
-
-        GrpcGetUserPrincipalByUserIdResponse unpackedResult = unpackedResultOptional.get();
-
-        GrpcUserPrincipal grpcUserPrincipal = unpackedResult.getResult();
-
-        return Optional.of(GetUserPrincipalByUserIdResponse.builder()
-                .userId(grpcUserPrincipal.getUserId())
-                .email(grpcUserPrincipal.getEmail())
-                .password(grpcUserPrincipal.getPassword())
-                .build());
-    }
-
-    public CreateUserResponse createUser(CreateUserRequest request) {
-        GrpcRequest req = packRequest(GrpcCreateUserRequest.newBuilder()
-                .setName(request.getName())
-                .setAvtUrl(request.getAvtUrl())
-                .setEmail(request.getEmail())
-                .setPassword(request.getPassword())
-                .setProvider(GrpcAuthProvider.forNumber(request.getProvider().getNumber()))
-                .setProviderId(request.getProviderId())
-                .build());
-
-        GrpcResponse response = this.userServiceBlockingStub.createUser(req);
-
-        GrpcCreateUserResponse unpackedResult = unpackedResultCommand(response, GrpcCreateUserResponse.class);
-
-        return CreateUserResponse.builder()
-                .userId(unpackedResult.getUserId())
-                .build();
     }
 
     public CreateUserSocialResponse createUserSocial(CreateUserSocialRequest request) {
-        GrpcRequest req = packRequest(GrpcCreateUserSocialRequest.newBuilder()
-                .setName(request.getName())
-                .setAvtUrl(request.getAvtUrl())
-                .setEmail(request.getEmail())
-                .setProvider(GrpcAuthProviderSocial.forNumber(request.getProvider().getNumber()))
-                .setProviderId(request.getProviderId())
-                .build());
+        try {
+            GrpcCreateUserSocialResponse response = this.authServiceBlockingStub.createUserSocial(GrpcCreateUserSocialRequest.newBuilder()
+                    .setName(request.getName())
+                    .setAvtUrl(request.getAvtUrl())
+                    .setEmail(request.getEmail())
+                    .setProvider(GrpcAuthProviderSocial.forNumber(request.getProvider().getNumber()))
+                    .setProviderId(request.getProviderId())
+                    .build());
 
-        GrpcResponse response = this.authServiceBlockingStub.createUserSocial(req);
+            return CreateUserSocialResponse.builder()
+                    .userId(response.getUserId())
+                    .build();
 
-        GrpcCreateUserSocialResponse unpackedResult = unpackedResultCommand(response, GrpcCreateUserSocialResponse.class);
+        } catch (Exception ex) {
+            Metadata metadata = Status.trailersFromThrowable(ex);
+            GrpcErrorResponse errorResponse = metadata.get(ProtoUtils.keyForProto(GrpcErrorResponse.getDefaultInstance()));
+            log.error(errorResponse.getErrorCode() + " : " + errorResponse.getMessage());
 
-        return CreateUserSocialResponse.builder()
-                .userId(unpackedResult.getUserId())
-                .build();
+            throw new WTuxException(errorResponse);
+        }
     }
 
     public CreateUserLocalResponse createUserLocal(CreateUserLocalRequest request) {
-        GrpcRequest req = packRequest(GrpcCreateUserLocalRequest.newBuilder()
-                .setName(request.getName())
-                .setEmail(request.getEmail())
-                .setPassword(request.getPassword())
-                .build());
+        try {
+            GrpcCreateUserLocalResponse response = this.authServiceBlockingStub.createUserLocal(GrpcCreateUserLocalRequest.newBuilder()
+                    .setName(request.getName())
+                    .setEmail(request.getEmail())
+                    .setPassword(request.getPassword())
+                    .build());
 
-        GrpcResponse response = this.authServiceBlockingStub.createUserLocal(req);
+            return CreateUserLocalResponse.builder()
+                    .userId(response.getUserId())
+                    .build();
 
-        GrpcCreateUserLocalResponse unpackedResult = unpackedResultCommand(response, GrpcCreateUserLocalResponse.class);
+        } catch (Exception ex) {
+            Metadata metadata = Status.trailersFromThrowable(ex);
+            GrpcErrorResponse errorResponse = metadata.get(ProtoUtils.keyForProto(GrpcErrorResponse.getDefaultInstance()));
+            log.error(errorResponse.getErrorCode() + " : " + errorResponse.getMessage());
 
-        return CreateUserLocalResponse.builder()
-                .userId(unpackedResult.getUserId())
-                .build();
-    }
-
-    public UpdateUserByUserIdResponse updateUserByUserIdRequest(UpdateUserByUserIdRequest request) {
-        GrpcRequest req = packRequest(GrpcUpdateUserByUserIdRequest.newBuilder()
-                .setUserId(request.getUserId())
-                .setName(request.getName())
-                .setAvtUrl(request.getAvtUrl())
-                .setBio(request.getBio())
-                .build());
-
-        GrpcResponse response = this.userServiceBlockingStub.updateUserByUserId(req);
-
-        GrpcUpdateUserByUserIdResponse unpackedResult = unpackedResultCommand(response, GrpcUpdateUserByUserIdResponse.class);
-
-        return UpdateUserByUserIdResponse.builder()
-                .userId(unpackedResult.getUserId())
-                .build();
-    }
-
-    public ExistsUserByEmailResponse existsUserByEmail(ExistsUserByEmailRequest request) {
-        GrpcRequest req = packRequest(GrpcExistsUserByEmailRequest.newBuilder()
-                .setEmail(request.getEmail())
-                .build());
-
-        GrpcResponse response = this.userServiceBlockingStub.existsUserByEmail(req);
-
-        Optional<GrpcExistsUserByEmailResponse> unpackedResultOptional = unpackedResultQuery(response, GrpcExistsUserByEmailResponse.class);
-
-        ExistsUserByEmailResponse existsUserByEmailResponse = new ExistsUserByEmailResponse();
-
-        if (!unpackedResultOptional.isPresent()) {
-            existsUserByEmailResponse.setExists(false);
-            return existsUserByEmailResponse;
+            throw new WTuxException(errorResponse);
         }
-
-        GrpcExistsUserByEmailResponse unpackedResult = unpackedResultOptional.get();
-
-        existsUserByEmailResponse.setExists(unpackedResult.getExists());
-
-        return existsUserByEmailResponse;
-    }
-
-    public CreateRefreshTokenResponse createRefreshToken(CreateRefreshTokenRequest request) {
-        GrpcRequest req = packRequest(GrpcCreateRefreshTokenRequest.newBuilder()
-                .setRefreshToken(request.getRefreshToken())
-                .setExpiresAt(request.getExpiresAt().toString())
-                .setUserId(request.getUserId())
-                .build());
-
-        GrpcResponse response = this.refreshTokenServiceBlockingStub.createRefreshToken(req);
-
-        GrpcCreateRefreshTokenResponse unpackedResult = unpackedResultCommand(response, GrpcCreateRefreshTokenResponse.class);
-
-        return CreateRefreshTokenResponse.builder()
-                .refreshTokenId(unpackedResult.getRefreshTokenId())
-                .build();
-    }
-
-    public DeleteRefreshTokenByRefreshTokenResponse deleteRefreshTokenByRefreshToken(DeleteRefreshTokenByRefreshTokenRequest request) {
-        GrpcRequest req = packRequest(GrpcDeleteRefreshTokenByRefreshTokenRequest.newBuilder()
-                .setRefreshToken(request.getRefreshToken())
-                .build());
-
-        GrpcResponse response = this.refreshTokenServiceBlockingStub.deleteRefreshTokenByRefreshToken(req);
-
-        GrpcDeleteRefreshTokenByRefreshTokenResponse unpackedResult = unpackedResultCommand(response, GrpcDeleteRefreshTokenByRefreshTokenResponse.class);
-
-        return DeleteRefreshTokenByRefreshTokenResponse.builder()
-                .deleted(unpackedResult.getDeleted())
-                .build();
-    }
-
-    public Optional<GetRefreshTokenByRefreshTokenResponse> getRefreshTokenByRefreshToken(GetRefreshTokenByRefreshTokenRequest request) {
-        GrpcRequest req = packRequest(GrpcGetRefreshTokenByRefreshTokenRequest.newBuilder()
-                .setRefreshToken(request.getRefreshToken())
-                .build());
-
-        GrpcResponse response = this.refreshTokenServiceBlockingStub.getRefreshTokenByRefreshToken(req);
-
-        Optional<GrpcGetRefreshTokenByRefreshTokenResponse> unpackedResultOptional = unpackedResultQuery(response, GrpcGetRefreshTokenByRefreshTokenResponse.class);
-
-        if (!unpackedResultOptional.isPresent()) {
-            return Optional.empty();
-        }
-
-        GrpcGetRefreshTokenByRefreshTokenResponse unpackedResult = unpackedResultOptional.get();
-
-        GrpcRefreshToken grpcRefreshToken = unpackedResult.getResult();
-
-        return Optional.of(GetRefreshTokenByRefreshTokenResponse.builder()
-                .refreshTokenId(grpcRefreshToken.getRefreshTokenId())
-                .refreshToken(grpcRefreshToken.getRefreshToken())
-                .expiresAt(Date.from(Instant.parse(grpcRefreshToken.getExpiresAt())))
-                .status(RefreshTokenStatus.forNumber(grpcRefreshToken.getStatus().getNumber()))
-                .userId(grpcRefreshToken.getUserId())
-                .build());
-    }
-
-    public DeleteAllRefreshTokenByUserIdResponse deleteAllRefreshTokenByUserId(DeleteAllRefreshTokenByUserIdRequest request) {
-        GrpcRequest req = packRequest(GrpcDeleteAllRefreshTokenByUserIdRequest.newBuilder()
-                .setUserId(request.getUserId())
-                .build());
-
-        GrpcResponse response = this.refreshTokenServiceBlockingStub.deleteAllRefreshTokenByUserId(req);
-
-        GrpcDeleteAllRefreshTokenByUserIdResponse unpackedResult = unpackedResultCommand(response, GrpcDeleteAllRefreshTokenByUserIdResponse.class);
-
-        return DeleteAllRefreshTokenByUserIdResponse.builder()
-                .deleted(unpackedResult.getDeleted())
-                .build();
-    }
-
-    public UpdateRefreshTokenByRefreshTokenIdResponse updateRefreshTokenByRefreshTokenId(UpdateRefreshTokenByRefreshTokenIdRequest request) {
-        GrpcRequest req = packRequest(GrpcUpdateRefreshTokenStatusByRefreshTokenIdRequest.newBuilder()
-                .setRefreshTokenId(request.getRefreshTokenId())
-                .setStatus(GrpcRefreshTokenStatus.forNumber(request.getStatus().getNumber()))
-                .build());
-
-        GrpcResponse response = this.refreshTokenServiceBlockingStub.updateRefreshTokenStatusByRefreshTokenId(req);
-
-        GrpcUpdateRefreshTokenStatusByRefreshTokenIdResponse unpackedResult = unpackedResultCommand(response, GrpcUpdateRefreshTokenStatusByRefreshTokenIdResponse.class);
-
-        return UpdateRefreshTokenByRefreshTokenIdResponse.builder()
-                .refreshTokenId(unpackedResult.getRefreshTokenId())
-                .build();
     }
 
     public VerificationCredentialByVerificationTokenResponse verificationCredentialByVerificationToken(VerificationCredentialByVerificationTokenRequest request) {
-        GrpcRequest req = packRequest(GrpcVerificationCredentialByVerificationTokenRequest.newBuilder()
-                .setVerificationToken(request.getVerificationToken())
-                .build());
+        try {
+            GrpcVerificationCredentialByVerificationTokenResponse response = this.verificationCredentialServiceBlockingStub.verificationCredentialByVerificationToken(GrpcVerificationCredentialByVerificationTokenRequest.newBuilder()
+                    .setVerificationToken(request.getVerificationToken())
+                    .build());
 
-        GrpcResponse response = this.verificationCredentialServiceBlockingStub.verificationCredentialByVerificationToken(req);
+            return VerificationCredentialByVerificationTokenResponse.builder()
+                    .verified(response.getVerified())
+                    .build();
 
-        GrpcVerificationCredentialByVerificationTokenResponse unpackedResult = unpackedResultCommand(response, GrpcVerificationCredentialByVerificationTokenResponse.class);
+        } catch (Exception ex) {
+            Metadata metadata = Status.trailersFromThrowable(ex);
+            GrpcErrorResponse errorResponse = metadata.get(ProtoUtils.keyForProto(GrpcErrorResponse.getDefaultInstance()));
+            log.error(errorResponse.getErrorCode() + " : " + errorResponse.getMessage());
 
-        return VerificationCredentialByVerificationTokenResponse.builder()
-                .verified(unpackedResult.getVerified())
-                .build();
+            throw new WTuxException(errorResponse);
+        }
     }
 
     public VerificationCredentialByVerificationOtpResponse verificationCredentialByVerificationOtp(VerificationCredentialByVerificationOtpRequest request) {
-        GrpcRequest req = packRequest(GrpcVerificationCredentialByVerificationOtpRequest.newBuilder()
-                .setVerificationOtp(request.getVerificationOtp())
-                .build());
+        try {
+            GrpcVerificationCredentialByVerificationOtpResponse response = this.verificationCredentialServiceBlockingStub.verificationCredentialByVerificationOtp(GrpcVerificationCredentialByVerificationOtpRequest.newBuilder()
+                    .setVerificationOtp(request.getVerificationOtp())
+                    .build());
 
-        GrpcResponse response = this.verificationCredentialServiceBlockingStub.verificationCredentialByVerificationOtp(req);
+            return VerificationCredentialByVerificationOtpResponse.builder()
+                    .verified(response.getVerified())
+                    .build();
 
-        GrpcVerificationCredentialByVerificationOtpResponse unpackedResult = unpackedResultCommand(response, GrpcVerificationCredentialByVerificationOtpResponse.class);
+        } catch (Exception ex) {
+            Metadata metadata = Status.trailersFromThrowable(ex);
+            GrpcErrorResponse errorResponse = metadata.get(ProtoUtils.keyForProto(GrpcErrorResponse.getDefaultInstance()));
+            log.error(errorResponse.getErrorCode() + " : " + errorResponse.getMessage());
 
-        return VerificationCredentialByVerificationOtpResponse.builder()
-                .verified(unpackedResult.getVerified())
-                .build();
+            throw new WTuxException(errorResponse);
+        }
     }
 
     public ReissueVerificationCredentialByUserIdResponse reissueVerificationCredentialByUserId(ReissueVerificationCredentialByUserIdRequest request) {
-        GrpcRequest req = packRequest(GrpcReissueVerificationCredentialByUserIdRequest.newBuilder()
-                .setUserId(request.getUserId())
-                .build());
+        try {
+            GrpcReissueVerificationCredentialByUserIdResponse response = this.verificationCredentialServiceBlockingStub.reissueVerificationCredentialByUserId(GrpcReissueVerificationCredentialByUserIdRequest.newBuilder()
+                    .setUserId(request.getUserId())
+                    .build());
 
-        GrpcResponse response = this.verificationCredentialServiceBlockingStub.reissueVerificationCredentialByUserId(req);
+            return ReissueVerificationCredentialByUserIdResponse.builder()
+                    .reissue(response.getReissue())
+                    .build();
 
-        GrpcReissueVerificationCredentialByUserIdResponse unpackedResult = unpackedResultCommand(response, GrpcReissueVerificationCredentialByUserIdResponse.class);
+        } catch (Exception ex) {
+            Metadata metadata = Status.trailersFromThrowable(ex);
+            GrpcErrorResponse errorResponse = metadata.get(ProtoUtils.keyForProto(GrpcErrorResponse.getDefaultInstance()));
+            log.error(errorResponse.getErrorCode() + " : " + errorResponse.getMessage());
 
-        return ReissueVerificationCredentialByUserIdResponse.builder()
-                .reissue(unpackedResult.getReissue())
-                .build();
+            throw new WTuxException(errorResponse);
+        }
     }
 
     public ChangeUserPasswordByUserIdResponse changeUserPasswordByUserId(ChangeUserPasswordByUserIdRequest request) {
-        GrpcRequest req = packRequest(GrpcChangeUserPasswordByUserIdRequest.newBuilder()
-                .setUserId(request.getUserId())
-                .setOldPassword(request.getOldPassword())
-                .setNewPassword(request.getNewPassword())
-                .build());
+        try {
+            GrpcChangeUserPasswordByUserIdResponse response = this.authServiceBlockingStub.changeUserPasswordByUserId(GrpcChangeUserPasswordByUserIdRequest.newBuilder()
+                    .setUserId(request.getUserId())
+                    .setOldPassword(request.getOldPassword())
+                    .setNewPassword(request.getNewPassword())
+                    .build());
 
-        GrpcResponse response = this.userServiceBlockingStub.changeUserPasswordByUserId(req);
+            return ChangeUserPasswordByUserIdResponse.builder()
+                    .userId(response.getUserId())
+                    .build();
 
-        GrpcChangeUserPasswordByUserIdResponse unpackedResult = unpackedResultCommand(response, GrpcChangeUserPasswordByUserIdResponse.class);
+        } catch (Exception ex) {
+            Metadata metadata = Status.trailersFromThrowable(ex);
+            GrpcErrorResponse errorResponse = metadata.get(ProtoUtils.keyForProto(GrpcErrorResponse.getDefaultInstance()));
+            log.error(errorResponse.getErrorCode() + " : " + errorResponse.getMessage());
 
-        return ChangeUserPasswordByUserIdResponse.builder()
-                .userId(unpackedResult.getUserId())
-                .build();
+            throw new WTuxException(errorResponse);
+        }
     }
 }

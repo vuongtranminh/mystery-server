@@ -1,252 +1,336 @@
 package com.vuong.app.service;
 
-import com.vuong.app.doman.*;
-import com.vuong.app.dto.member.MemberFilterParameter;
-import com.vuong.app.dto.member.MemberSortParameter;
-import com.vuong.app.dto.server.ServerFilterParameter;
-import com.vuong.app.dto.server.ServerSortParameter;
-import com.vuong.app.jpa.query.QueryBuilder;
-import com.vuong.app.jpa.query.QueryHelper;
-import com.vuong.app.jpa.query.ServiceHelper;
-import com.vuong.app.operator.DateOperators;
-import com.vuong.app.operator.NumberOperators;
-import com.vuong.app.operator.StringOperators;
-import com.vuong.app.repository.MemberRepository;
-import com.vuong.app.repository.ServerRepository;
-import com.vuong.app.v1.*;
-import com.vuong.app.v1.message.GrpcErrorCode;
-import com.vuong.app.v1.message.GrpcRequest;
-import com.vuong.app.v1.message.GrpcResponse;
+import com.vuong.app.config.MysteryJdbc;
+import com.vuong.app.v1.GrpcErrorCode;
+import com.vuong.app.v1.GrpcErrorResponse;
+import com.vuong.app.v1.GrpcMeta;
+import com.vuong.app.v1.discord.*;
+import io.grpc.Metadata;
+import io.grpc.Status;
+import io.grpc.protobuf.ProtoUtils;
 import io.grpc.stub.StreamObserver;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.devh.boot.grpc.server.service.GrpcService;
-import org.springframework.data.domain.Page;
-import org.springframework.data.jpa.domain.Specification;
 
-import javax.persistence.criteria.Fetch;
-import javax.persistence.criteria.Join;
-import javax.persistence.criteria.JoinType;
-import javax.transaction.Transactional;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @GrpcService
-@Transactional
 @Slf4j
 @RequiredArgsConstructor
 public class ServerService extends ServerServiceGrpc.ServerServiceImplBase {
 
-    private final ServerRepository serverRepository;
-    private final MemberService memberService;
+    private final MysteryJdbc mysteryJdbc;
 
     @Override
-    public void createServer(GrpcRequest request, StreamObserver<GrpcResponse> responseObserver) {
-        GrpcCreateServerRequest req = ServiceHelper.unpackedRequest(request, GrpcCreateServerRequest.class);
+    public void createServer(GrpcCreateServerRequest request, StreamObserver<GrpcCreateServerResponse> responseObserver) {
+        String existsProfileQuery = "select 1 from tbl_profile as p where p.id = ?";
+        String insertServerQuery = "insert into tbl_server(id, name, img_url, invite_code, created_by, created_at, updated_at) values(?, ?, ?, ?, ?, ?, ?)";
+        String insertChannelQuery = "insert into tbl_channel(id, name, type, server_id, created_at, updated_at, updated_by) values(?, ?, ?, ?, ?, ?, ?)";
+        String insertMemberQuery = "insert into tbl_member(id, role, profile_id, server_id, join_at) values (?, ?, ?, ?, ?)";
 
-        Channel channel = Channel.builder()
-                .name("general")
-                .profileId(req.getProfileId())
-                .type(ChannelType.TEXT)
-                .build();
+        Connection con = null;
+        PreparedStatement pst1 = null;
+        PreparedStatement pst2 = null;
+        PreparedStatement pst3 = null;
+        PreparedStatement pst4 = null;
+        ResultSet rs = null;
 
-        Member member = Member.builder()
-                .profileId(req.getProfileId())
-                .memberRole(MemberRole.ADMIN)
-                .build();
+        try {
+            con = mysteryJdbc.getConnection();
 
-        Server server = Server.builder()
-                .name(req.getName())
-                .imgUrl(req.getImgUrl())
-                .profileId(req.getProfileId())
-                .inviteCode(UUID.randomUUID().toString())
-                .build();
+            pst1 = con.prepareStatement(existsProfileQuery);
+            pst1.setString(1, request.getAuthorId());
+            rs = pst1.executeQuery();
+            boolean existsProfile = rs.next();
 
-        server.addChanel(channel);
-        server.addMember(member);
+            if (!existsProfile) {
+                Metadata metadata = new Metadata();
+                Metadata.Key<GrpcErrorResponse> responseKey = ProtoUtils.keyForProto(GrpcErrorResponse.getDefaultInstance());
+                GrpcErrorCode errorCode = GrpcErrorCode.ERROR_CODE_PERMISSION_DENIED;
+                GrpcErrorResponse errorResponse = GrpcErrorResponse.newBuilder()
+                        .setErrorCode(errorCode)
+                        .setMessage("not permistion")
+                        .build();
+                // pass the error object via metadata
+                metadata.put(responseKey, errorResponse);
+                responseObserver.onError(Status.NOT_FOUND.asRuntimeException(metadata));
+                return;
+            }
 
-        server = this.serverRepository.save(server);
+            pst2 = con.prepareStatement(insertServerQuery);
+            String serverId = UUID.randomUUID().toString();
 
-        GrpcCreateServerResponse response = GrpcCreateServerResponse.newBuilder().setServerId(server.getServerId()).build();
+            pst2.setString(1, serverId);
+            pst2.setString(2, request.getName());
+            pst2.setString(3, request.getImgUrl());
+            pst2.setString(4, serverId);
+            pst2.setString(5, request.getAuthorId());
+            pst2.setString(6, Instant.now().toString());
+            pst2.setString(7, Instant.now().toString());
 
-        ServiceHelper.next(responseObserver, ServiceHelper.packedSuccessResponse(response));
-    }
+            pst3 = con.prepareStatement(insertChannelQuery);
+            String channelId = UUID.randomUUID().toString();
 
-    @Override
-    public void getServerByInviteCode(GrpcRequest request, StreamObserver<GrpcResponse> responseObserver) {
-        GrpcGetServerByInviteCodeRequest req = ServiceHelper.unpackedRequest(request, GrpcGetServerByInviteCodeRequest.class);
+            pst3.setString(1, channelId);
+            pst3.setString(2, "general");
+            pst3.setInt(3, GrpcChannelType.CHANNEL_TYPE_TEXT_VALUE);
+            pst3.setString(4, serverId);
+            pst3.setString(5, Instant.now().toString());
+            pst3.setString(6, Instant.now().toString());
+            pst3.setString(7, request.getAuthorId());
 
-        Optional<Server> serverOptional = this.serverRepository.findByInviteCode(req.getInviteCode());
+            pst4 = con.prepareStatement(insertMemberQuery);
+            String memberId = UUID.randomUUID().toString();
 
-        if (!serverOptional.isPresent()) {
-            ServiceHelper.next(responseObserver, ServiceHelper.packedErrorResponse(GrpcErrorCode.ERROR_CODE_NOT_FOUND, "server not found with id"));
-            return;
+            pst4.setString(1, memberId);
+            pst4.setInt(2, GrpcMemberRole.MEMBER_ROLE_ADMIN_VALUE);
+            pst4.setString(3, request.getAuthorId());
+            pst4.setString(4, serverId);
+            pst4.setString(5, Instant.now().toString());
+
+            mysteryJdbc.setAutoCommit(false);
+            pst2.executeUpdate();
+            pst3.executeUpdate();
+            pst4.executeUpdate();
+
+            mysteryJdbc.doCommit();
+
+            GrpcCreateServerResponse response = GrpcCreateServerResponse.newBuilder()
+                    .setServerId(serverId)
+                    .build();
+
+            responseObserver.onNext(response);
+            responseObserver.onCompleted();
+        } catch (SQLException ex) {
+            mysteryJdbc.doRollback();
+        } finally {
+            mysteryJdbc.closeResultSet(rs);
+            mysteryJdbc.closePreparedStatement(pst1, pst2, pst3, pst4);
+            mysteryJdbc.setAutoCommit(true);
         }
-
-        Server server = serverOptional.get();
-
-        GrpcGetServerByInviteCodeResponse response = GrpcGetServerByInviteCodeResponse.newBuilder()
-                .setServer(GrpcServer.newBuilder()
-                        .setServerId(server.getServerId())
-                        .setName(server.getName())
-                        .setImgUrl(server.getImgUrl())
-                        .setInviteCode(server.getInviteCode())
-                        .setProfileId(server.getProfileId())
-                        .setCreatedAt(server.getCreatedAt().toString())
-                        .setUpdatedAt(server.getUpdatedAt().toString())
-                        .build())
-                .build();
-
-        ServiceHelper.next(responseObserver, ServiceHelper.packedSuccessResponse(response));
-    }
-
-    @Override
-    public void getServerByServerId(GrpcRequest request, StreamObserver<GrpcResponse> responseObserver) {
-        GrpcGetServerByServerIdRequest req = ServiceHelper.unpackedRequest(request, GrpcGetServerByServerIdRequest.class);
-
-        Optional<Server> serverOptional = this.serverRepository.findById(req.getServerId());
-
-        if (!serverOptional.isPresent()) {
-            ServiceHelper.next(responseObserver, ServiceHelper.packedErrorResponse(GrpcErrorCode.ERROR_CODE_NOT_FOUND, "server not found with id"));
-            return;
-        }
-
-        Server server = serverOptional.get();
-
-        GrpcGetServerByServerIdResponse response = GrpcGetServerByServerIdResponse.newBuilder()
-                .setServer(GrpcServer.newBuilder()
-                        .setServerId(server.getServerId())
-                        .setName(server.getName())
-                        .setImgUrl(server.getImgUrl())
-                        .setInviteCode(server.getInviteCode())
-                        .setProfileId(server.getProfileId())
-                        .setCreatedAt(server.getCreatedAt().toString())
-                        .setUpdatedAt(server.getUpdatedAt().toString())
-                        .build())
-                .build();
-
-        ServiceHelper.next(responseObserver, ServiceHelper.packedSuccessResponse(response));
-    }
-
-    @Override
-    public void deleteServerByServerId(GrpcRequest request, StreamObserver<GrpcResponse> responseObserver) {
-        GrpcDeleteServerByServerIdRequest req = ServiceHelper.unpackedRequest(request, GrpcDeleteServerByServerIdRequest.class);
-
-        Optional<Server> serverDeleteOptional = this.serverRepository.findById(req.getServerId());
-
-        GrpcDeleteServerByServerIdResponse.Builder builderResponse = GrpcDeleteServerByServerIdResponse.newBuilder();
-
-        if (!serverDeleteOptional.isPresent()) {
-            builderResponse.setDeleted(true);
-            ServiceHelper.next(responseObserver, ServiceHelper.packedSuccessResponse(builderResponse.build()));
-            return;
-        }
-
-        Server serverDelete = serverDeleteOptional.get();
-        if (serverDelete.getProfileId() != req.getProfileId()) {
-            // permisstion Không có quyền
-            ServiceHelper.next(responseObserver, ServiceHelper.packedErrorResponse(GrpcErrorCode.ERROR_CODE_NOT_FOUND, "user not found with id"));
-            return;
-        }
-
-        this.serverRepository.deleteById(serverDelete.getServerId());
-
-        builderResponse.setDeleted(true);
-        ServiceHelper.next(responseObserver, ServiceHelper.packedSuccessResponse(builderResponse.build()));
     }
 
     @Override
-    public void updateServerByServerId(GrpcRequest request, StreamObserver<GrpcResponse> responseObserver) {
-        GrpcUpdateServerByServerIdRequest req = ServiceHelper.unpackedRequest(request, GrpcUpdateServerByServerIdRequest.class);
+    public void getServersJoin(GrpcGetServersJoinRequest request, StreamObserver<GrpcGetServersJoinResponse> responseObserver) {
+        String countQuery = "select count(m.server_id) from tbl_member as m where m.profile_id = ?";
 
-        Optional<Server> serverUpdateOptional = this.serverRepository.findById(req.getServerId());
+        String serverIdJoinQuery = "select m.server_id as member_server_id from tbl_member as m where m.profile_id = ? order by m.join_at asc limit ? offset ?";
+        String serverQuery = "select " +
+                "s.id as server_id, s.name as server_name, s.img_url as server_img_url, " +
+                "s.invite_code as server_invite_code, s.created_by as server_created_by, " +
+                "s.created_at as server_created_at, s.updated_at as server_updated_at " +
+                "from tbl_server as s inner join (" + serverIdJoinQuery + ") as sm " +
+                "on s.id = sm.member_server_id";
 
-        if (!serverUpdateOptional.isPresent()) {
-            ServiceHelper.next(responseObserver, ServiceHelper.packedErrorResponse(GrpcErrorCode.ERROR_CODE_NOT_FOUND, "user not found with id"));
-            return;
+//        limit not work on subquery "in"
+
+        Connection con = null;
+        PreparedStatement pst1 = null;
+        PreparedStatement pst2 = null;
+        ResultSet rs1 = null;
+        ResultSet rs2 = null;
+
+        GrpcGetServersJoinResponse.Builder builder = GrpcGetServersJoinResponse.newBuilder();
+
+        try {
+            con = mysteryJdbc.getConnection();
+
+            pst1 = con.prepareStatement(countQuery);
+            pst1.setString(1, request.getProfileId());
+            rs1 = pst1.executeQuery();
+
+            long totalElements = 0;
+
+            while (rs1.next()) {
+                totalElements = rs1.getLong(1);
+            }
+
+            if (totalElements == 0) {
+                GrpcMeta meta = GrpcMeta.newBuilder()
+                        .setTotalElements(0)
+                        .setTotalPages(0)
+                        .setPageNumber(request.getPageNumber())
+                        .setPageSize(request.getPageSize())
+                        .build();
+                builder.setMeta(meta);
+
+                responseObserver.onNext(builder.build());
+                responseObserver.onCompleted();
+                return;
+            }
+
+            GrpcMeta meta = GrpcMeta.newBuilder()
+                    .setTotalElements(totalElements)
+                    .setTotalPages(totalElements == 0 ? 1 : (int)Math.ceil((double)totalElements / (double)request.getPageSize()))
+                    .setPageNumber(request.getPageNumber())
+                    .setPageSize(request.getPageSize())
+                    .build();
+
+            builder.setMeta(meta);
+
+            pst2 = con.prepareStatement(serverQuery);
+            pst2.setString(1, request.getProfileId());
+            pst2.setInt(2, request.getPageSize());
+            pst2.setInt(3, request.getPageNumber() * request.getPageSize());
+
+            rs2 = pst2.executeQuery();
+
+            while (rs2.next()) {
+                builder.addContent(GrpcServer.newBuilder()
+                        .setServerId(rs2.getString(1))
+                        .setName(rs2.getString(2))
+                        .setImgUrl(rs2.getString(3))
+                        .setInviteCode(rs2.getString(4))
+                        .setAuthorId(rs2.getString(5))
+                        .setCreatedAt(rs2.getString(6))
+                        .setUpdatedAt(rs2.getString(7))
+                        .build());
+            }
+
+            responseObserver.onNext(builder.build());
+            responseObserver.onCompleted();
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+        } finally {
+            mysteryJdbc.closeResultSet(rs1, rs2);
+            mysteryJdbc.closePreparedStatement(pst1, pst2);
         }
-
-        Server serverUpdate = serverUpdateOptional.get();
-        if (serverUpdate.getProfileId() != req.getProfileId()) {
-            // permisstion Không có quyền
-            ServiceHelper.next(responseObserver, ServiceHelper.packedErrorResponse(GrpcErrorCode.ERROR_CODE_NOT_FOUND, "user not found with id"));
-            return;
-        }
-        serverUpdate.setName(req.getName());
-        serverUpdate.setImgUrl(req.getImgUrl());
-
-        Server server = this.serverRepository.save(serverUpdate);
-
-        GrpcUpdateServerByServerIdResponse response = GrpcUpdateServerByServerIdResponse.newBuilder().setServerId(server.getServerId()).build();
-
-        ServiceHelper.next(responseObserver, ServiceHelper.packedSuccessResponse(response));
     }
 
     @Override
-    public void getServersByProfileId(GrpcRequest request, StreamObserver<GrpcResponse> responseObserver) {
-        GrpcGetServersByProfileIdRequest req = ServiceHelper.unpackedRequest(request, GrpcGetServersByProfileIdRequest.class);
+    public void getFirstServerJoin(GrpcGetFirstServerJoinRequest request, StreamObserver<GrpcGetFirstServerJoinResponse> responseObserver) {
+        String firstServerIdJoinQuery = "select m.server_id from tbl_member as m where m.profile_id = ? order by m.join_at limit 1";
+        String serverQuery = "select " +
+                "s.id as server_id, s.name as server_name, s.img_url as server_img_url, " +
+                "s.invite_code as server_invite_code, s.created_by as server_created_by, " +
+                "s.created_at as server_created_at, s.updated_at as server_updated_at " +
+                "from tbl_server as s where s.id = (" + firstServerIdJoinQuery + ")";
 
-        Page<MemberRepository.MemberWithServer> memberPage = this.memberService.getMembersByProfileId(req.getProfileId(), req.getPage(), req.getSize());
+        Connection con = null;
+        PreparedStatement pst = null;
+        ResultSet rs = null;
 
-        GrpcGetServersByProfileIdResponse response = GrpcGetServersByProfileIdResponse.newBuilder()
-                .addAllItems(memberPage.getContent().stream().map(member -> {
-                    Server server = member.getServer();
-                    return GrpcServer.newBuilder()
-                            .setServerId(server.getServerId())
-                            .setName(server.getName())
-                            .setImgUrl(server.getImgUrl())
-                            .setInviteCode(server.getInviteCode())
-                            .setProfileId(server.getProfileId())
-                            .setCreatedAt(server.getCreatedAt().toString())
-                            .setUpdatedAt(server.getUpdatedAt().toString())
-                            .build();
-                }).collect(Collectors.toUnmodifiableList()))
-                .setTotalItems(memberPage.getTotalPages())
-                .build();
+        try {
+            con = mysteryJdbc.getConnection();
 
-        ServiceHelper.next(responseObserver, ServiceHelper.packedSuccessResponse(response));
+            pst = con.prepareStatement(serverQuery);
+            pst.setString(1, request.getProfileId());
+
+            rs = pst.executeQuery();
+
+            GrpcServer grpcServer = null;
+
+            while (rs.next()) {
+                grpcServer = GrpcServer.newBuilder()
+                        .setServerId(rs.getString(1))
+                        .setName(rs.getString(2))
+                        .setImgUrl(rs.getString(3))
+                        .setInviteCode(rs.getString(4))
+                        .setAuthorId(rs.getString(5))
+                        .setCreatedAt(rs.getString(6))
+                        .setUpdatedAt(rs.getString(7))
+                        .build();
+            }
+
+            if (grpcServer == null) {
+                Metadata metadata = new Metadata();
+                Metadata.Key<GrpcErrorResponse> responseKey = ProtoUtils.keyForProto(GrpcErrorResponse.getDefaultInstance());
+                GrpcErrorCode errorCode = GrpcErrorCode.ERROR_CODE_NOT_FOUND;
+                GrpcErrorResponse errorResponse = GrpcErrorResponse.newBuilder()
+                        .setErrorCode(errorCode)
+                        .setMessage("not has first server join")
+                        .build();
+                // pass the error object via metadata
+                metadata.put(responseKey, errorResponse);
+                responseObserver.onError(Status.NOT_FOUND.asRuntimeException(metadata));
+                return;
+            }
+
+            GrpcGetFirstServerJoinResponse response = GrpcGetFirstServerJoinResponse.newBuilder()
+                    .setResult(grpcServer)
+                    .build();
+
+            responseObserver.onNext(response);
+            responseObserver.onCompleted();
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+        } finally {
+            mysteryJdbc.closeResultSet(rs);
+            mysteryJdbc.closePreparedStatement(pst);
+        }
     }
 
-    private void buildSortOrder(QueryBuilder queryBuilder, MemberSortParameter memberSortParameter, ServerSortParameter serverSortParameter) {
-        if (memberSortParameter != null) {
-            QueryHelper.buildOneSortOrder(queryBuilder, memberSortParameter.getCreatedAt(), Member_.CREATED_AT);
-            QueryHelper.buildOneSortOrder(queryBuilder, memberSortParameter.getUpdatedAt(), Member_.UPDATED_AT);
-        }
+    @Override
+    public void getServerJoinByServerId(GrpcGetServerJoinByServerIdRequest request, StreamObserver<GrpcGetServerJoinByServerIdResponse> responseObserver) {
+        String isMemberQuery = "exists (select 1 from tbl_member as m where m.profile_id = ? and m.server_id = ?)";
+        String serverQuery = "select " +
+                "s.id as server_id, s.name as server_name, s.img_url as server_img_url, " +
+                "s.invite_code as server_invite_code, s.created_by as server_created_by, " +
+                "s.created_at as server_created_at, s.updated_at as server_updated_at " +
+                "from tbl_server as s where s.id = ? and " + isMemberQuery;
 
-        if (serverSortParameter != null) {
-            QueryHelper.buildOneSortOrder(queryBuilder, serverSortParameter.getCreatedAt(), Server_.CREATED_AT);
-            QueryHelper.buildOneSortOrder(queryBuilder, serverSortParameter.getUpdatedAt(), Server_.UPDATED_AT);
-        }
-    }
+        Connection con = null;
+        PreparedStatement pst = null;
+        ResultSet rs = null;
 
-    private void buildFilter(QueryBuilder queryBuilder, MemberFilterParameter memberFilterParameter, ServerFilterParameter serverFilterParameter) {
-        if (memberFilterParameter != null) {
-            QueryHelper.buildOneNumberOperatorFilter(queryBuilder, memberFilterParameter.getMemberId(), Member_.MEMBER_ID);
-            QueryHelper.buildOneNumberOperatorFilter(queryBuilder, memberFilterParameter.getProfileId(), Member_.PROFILE_ID);
-            QueryHelper.buildOneNumberOperatorFilter(queryBuilder, memberFilterParameter.getServerId(), Server_.SERVER_ID);
-            QueryHelper.buildOneListOperatorFilter(queryBuilder, memberFilterParameter.getMemberRoles(), Member_.MEMBER_ROLE);
-            QueryHelper.buildOneDateOperatorFilter(queryBuilder, memberFilterParameter.getCreatedAt(), Member_.CREATED_AT);
-            QueryHelper.buildOneDateOperatorFilter(queryBuilder, memberFilterParameter.getUpdatedAt(), Member_.UPDATED_AT);
-        }
+        try {
+            con = mysteryJdbc.getConnection();
 
-        if (serverFilterParameter != null) {
-            QueryHelper.buildOneNumberOperatorFilter(queryBuilder, serverFilterParameter.getServerId(), Server_.SERVER_ID);
-            QueryHelper.buildOneStringOperatorFilter(queryBuilder, serverFilterParameter.getName(), Server_.NAME);
-            QueryHelper.buildOneStringOperatorFilter(queryBuilder, serverFilterParameter.getInviteCode(), Server_.INVITE_CODE);
-            QueryHelper.buildOneNumberOperatorFilter(queryBuilder, serverFilterParameter.getProfileId(), Server_.PROFILE_ID);
-            QueryHelper.buildOneDateOperatorFilter(queryBuilder, serverFilterParameter.getCreatedAt(), Server_.CREATED_AT);
-            QueryHelper.buildOneDateOperatorFilter(queryBuilder, serverFilterParameter.getUpdatedAt(), Server_.UPDATED_AT);
-        }
-    }
+            pst = con.prepareStatement(serverQuery);
+            pst.setString(1, request.getServerId());
+            pst.setString(2, request.getProfileId());
+            pst.setString(3, request.getServerId());
 
-    private Specification<Member> fetchServer() {
-        return (root, query, criteriaBuilder) -> {
-//            Fetch<Member, Server> f = root.fetch(Member_.SERVER, JoinType.INNER);
-//            Join<Member, Server> join = (Join<Member, Server>) f;
-            Fetch<Member, Server> f = root.fetch(Member_.SERVER, JoinType.INNER);
-            Join<Member, Server> join = (Join<Member, Server>) f;
-            return join.getOn();
-        };
+            rs = pst.executeQuery();
+
+            GrpcServer grpcServer = null;
+
+            while (rs.next()) {
+                grpcServer = GrpcServer.newBuilder()
+                        .setServerId(rs.getString(1))
+                        .setName(rs.getString(2))
+                        .setImgUrl(rs.getString(3))
+                        .setInviteCode(rs.getString(4))
+                        .setAuthorId(rs.getString(5))
+                        .setCreatedAt(rs.getString(6))
+                        .setUpdatedAt(rs.getString(7))
+                        .build();
+            }
+
+            if (grpcServer == null) {
+                Metadata metadata = new Metadata();
+                Metadata.Key<GrpcErrorResponse> responseKey = ProtoUtils.keyForProto(GrpcErrorResponse.getDefaultInstance());
+                GrpcErrorCode errorCode = GrpcErrorCode.ERROR_CODE_NOT_FOUND;
+                GrpcErrorResponse errorResponse = GrpcErrorResponse.newBuilder()
+                        .setErrorCode(errorCode)
+                        .setMessage("not has first server join")
+                        .build();
+                // pass the error object via metadata
+                metadata.put(responseKey, errorResponse);
+                responseObserver.onError(Status.NOT_FOUND.asRuntimeException(metadata));
+                return;
+            }
+
+            GrpcGetServerJoinByServerIdResponse response = GrpcGetServerJoinByServerIdResponse.newBuilder()
+                    .setResult(grpcServer)
+                    .build();
+
+            responseObserver.onNext(response);
+            responseObserver.onCompleted();
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+        } finally {
+            mysteryJdbc.closeResultSet(rs);
+            mysteryJdbc.closePreparedStatement(pst);
+        }
     }
 }

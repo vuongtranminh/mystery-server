@@ -5,18 +5,15 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.Instant;
-
 @NoArgsConstructor
 @AllArgsConstructor
 @Data
 @Builder
-public class MessageGetServerByInviteCodeResponse {
-    private Integer serverId;
+public class MessageServer {
+    private String serverId;
     private String name;
     private String imgUrl;
-    private String inviteCode;
-    private Integer profileId;
-    private Instant createdAt;
-    private Instant updatedAt;
+    private String authorId;
+    private String createdAt;
+    private String updatedAt;
 }

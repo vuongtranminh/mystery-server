@@ -9,6 +9,7 @@ import com.vuong.app.exception.wrapper.ResourceNotFoundException;
 import com.vuong.app.grpc.service.AuthClientService;
 import com.vuong.app.exception.wrapper.OAuth2AuthenticationProcessingException;
 import com.vuong.app.grpc.message.auth.*;
+import com.vuong.app.grpc.service.UserClientService;
 import com.vuong.app.security.UserPrincipal;
 import com.vuong.app.security.oauth2.user.OAuth2UserInfo;
 import com.vuong.app.security.oauth2.user.OAuth2UserInfoFactory;
@@ -32,6 +33,7 @@ import java.util.Optional;
 public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
     private final AuthClientService authClientService;
+    private final UserClientService userClientService;
 
     @Override
     public OAuth2User loadUser(OAuth2UserRequest oAuth2UserRequest) throws OAuth2AuthenticationException {
@@ -57,7 +59,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
             }
         }
 
-        Optional<GetUserByEmailResponse> userOptional = this.authClientService.getUserByEmail(GetUserByEmailRequest.builder()
+        Optional<GetUserByEmailResponse> userOptional = this.userClientService.getUserByEmail(GetUserByEmailRequest.builder()
                 .email(oAuth2UserInfo.getEmail())
                 .build());
         UserDto user;
@@ -93,7 +95,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
     }
 
     private GetUserPrincipalByUserIdResponse updateExistingUser(UserDto existingUser, OAuth2UserInfo oAuth2UserInfo) {
-        UpdateUserByUserIdResponse updateUserByUserIdResponse = this.authClientService.updateUserByUserIdRequest(UpdateUserByUserIdRequest.builder()
+        UpdateUserByUserIdResponse updateUserByUserIdResponse = this.userClientService.updateUserByUserIdRequest(UpdateUserByUserIdRequest.builder()
                 .userId(existingUser.getUserId())
                 .name(oAuth2UserInfo.getName())
                 .avtUrl(oAuth2UserInfo.getImageUrl())

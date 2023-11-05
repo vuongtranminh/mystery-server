@@ -9,6 +9,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Data
 @Builder
-public class MessageDeleteServerByServerIdResponse {
-    private boolean deleted;
+public class MessageUpdateMessageResponse {
+    private String messageId;
 }

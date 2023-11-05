@@ -1,103 +1,181 @@
 package com.vuong.app.service;
 
-import com.vuong.app.doman.*;
-import com.vuong.app.dto.member.MemberFilterParameter;
-import com.vuong.app.dto.member.MemberOptions;
-import com.vuong.app.dto.member.MemberSortParameter;
-import com.vuong.app.jpa.query.QueryBuilder;
-import com.vuong.app.jpa.query.QueryHelper;
-import com.vuong.app.operator.ListOperators;
-import com.vuong.app.operator.NumberOperators;
-import com.vuong.app.operator.SortOrder;
-import com.vuong.app.repository.MemberRepository;
+import com.vuong.app.config.MysteryJdbc;
+import com.vuong.app.v1.GrpcErrorCode;
+import com.vuong.app.v1.GrpcErrorResponse;
+import com.vuong.app.v1.GrpcMeta;
+import com.vuong.app.v1.discord.*;
+import io.grpc.Metadata;
+import io.grpc.Status;
+import io.grpc.protobuf.ProtoUtils;
+import io.grpc.stub.StreamObserver;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.jpa.domain.Specification;
+import net.devh.boot.grpc.server.service.GrpcService;
 
-import javax.persistence.criteria.Fetch;
-import javax.persistence.criteria.Join;
-import javax.persistence.criteria.JoinType;
-import java.util.Arrays;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Optional;
 
+@GrpcService
 @RequiredArgsConstructor
-public class MemberService {
+public class MemberService extends MemberServiceGrpc.MemberServiceImplBase {
 
-    private final MemberRepository memberRepository;
+    private final MysteryJdbc mysteryJdbc;
 
-    public Page<MemberRepository.MemberWithServer> getMembersByProfileId(Integer profileId, int page, int size) {
-        NumberOperators profileIdOperators = new NumberOperators();
-        profileIdOperators.setEq(Float.valueOf(profileId));
+    @Override
+    public void getMembersByServerId(GrpcGetMembersByServerIdRequest request, StreamObserver<GrpcGetMembersByServerIdResponse> responseObserver) {
+        String isMemberQuery = "exists (select 1 from tbl_member as m1 where m1.profile_id = ? and m1.server_id = ?)";
+        String countQuery = "select count(m.id) from tbl_member as m where m.server_id = ? and " + isMemberQuery;
 
-        MemberFilterParameter memberFilterParameter = new MemberFilterParameter();
-        memberFilterParameter.setProfileId(profileIdOperators);
+        String memberProfileQuery = "select " +
+                "ms.id as member_id, p.id as profile_id, ms.role as member_role, " +
+                "ms.join_at as member_join_at, p.name as profile_name, p.avt_url as profile_avt_url " +
+                "from tbl_profile as p inner join " +
+                "(select * from tbl_member as m where m.server_id = ? and m.profile_id <> ? and " + isMemberQuery +
+                " order by m.role asc limit ? offset ?) as ms " +
+                "on p.id = ms.profile_id";
 
-        MemberSortParameter memberSortParameter = new MemberSortParameter();
-        memberSortParameter.setUpdatedAt(SortOrder.ASC);
+        Connection con = null;
+        PreparedStatement pst1 = null;
+        PreparedStatement pst2 = null;
+        ResultSet rs1 = null;
+        ResultSet rs2 = null;
 
-        MemberOptions memberOptions = new MemberOptions();
-        memberOptions.setFilter(memberFilterParameter);
-        memberOptions.setSort(memberSortParameter);
+        GrpcGetMembersByServerIdResponse.Builder builder = GrpcGetMembersByServerIdResponse.newBuilder();
 
-        QueryBuilder queryBuilder = new QueryBuilder();
+        try {
+            con = mysteryJdbc.getConnection();
 
-        queryBuilder.query(this.fetchServer());
-        this.buildFilter(queryBuilder, memberFilterParameter);
-        this.buildSortOrder(queryBuilder, memberSortParameter);
+            pst1 = con.prepareStatement(countQuery);
+            pst1.setString(1, request.getServerId());
+            pst1.setString(2, request.getProfileId());
+            pst1.setString(3, request.getServerId());
+            rs1 = pst1.executeQuery();
 
-        Page<MemberRepository.MemberWithServer> pageMember = this.memberRepository.findAll(queryBuilder.build(), MemberRepository.MemberWithServer.class, PageRequest.of(page, size));
-        return pageMember;
+            long totalElements = 0;
+
+            while (rs1.next()) {
+                totalElements = rs1.getLong(1);
+            }
+
+            if (totalElements == 0) {
+                GrpcMeta meta = GrpcMeta.newBuilder()
+                        .setTotalElements(0)
+                        .setTotalPages(0)
+                        .setPageNumber(request.getPageNumber())
+                        .setPageSize(request.getPageSize())
+                        .build();
+                builder.setMeta(meta);
+
+                responseObserver.onNext(builder.build());
+                responseObserver.onCompleted();
+                return;
+            }
+
+            GrpcMeta meta = GrpcMeta.newBuilder()
+                    .setTotalElements(totalElements)
+                    .setTotalPages(totalElements == 0 ? 1 : (int)Math.ceil((double)totalElements / (double)request.getPageSize()))
+                    .setPageNumber(request.getPageNumber())
+                    .setPageSize(request.getPageSize())
+                    .build();
+
+            builder.setMeta(meta);
+
+            pst2 = con.prepareStatement(memberProfileQuery);
+            pst2.setString(1, request.getServerId());
+            pst2.setString(2, request.getProfileId());
+            pst2.setString(3, request.getProfileId());
+            pst2.setString(4, request.getServerId());
+            pst2.setInt(5, request.getPageSize());
+            pst2.setInt(6, request.getPageNumber() * request.getPageSize());
+
+            rs2 = pst2.executeQuery();
+
+            while (rs2.next()) {
+                builder.addContent(GrpcMemberProfile.newBuilder()
+                        .setMemberId(rs2.getString(1))
+                        .setProfileId(rs2.getString(2))
+                        .setRole(GrpcMemberRole.forNumber(rs2.getInt(3)))
+                        .setJoinAt(rs2.getString(4))
+                        .setName(rs2.getString(5))
+                        .setAvtUrl(rs2.getString(6))
+                        .build());
+            }
+
+            responseObserver.onNext(builder.build());
+            responseObserver.onCompleted();
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+        } finally {
+            mysteryJdbc.closeResultSet(rs1, rs2);
+            mysteryJdbc.closePreparedStatement(pst1, pst2);
+        }
     }
 
-    public Optional<MemberRepository.MemberWithServer> getMemberWithPermission(Integer profileId, Integer serverId) {
-        NumberOperators profileIdOperators = new NumberOperators();
-        profileIdOperators.setEq(Float.valueOf(profileId));
+    @Override
+    public void getMemberByServerId(GrpcGetMemberByServerIdRequest request, StreamObserver<GrpcGetMemberByServerIdResponse> responseObserver) {
+        String memberQuery = "select * from tbl_member as m where m.profile_id = ? and m.server_id = ?";
+        String memberProfileQuery = "select " +
+                "ms.id as member_id, p.id as profile_id, ms.role as member_role, " +
+                "ms.join_at as member_join_at, p.name as profile_name, p.avt_url as profile_avt_url " +
+                "from tbl_profile as p inner join " +
+                "(" + memberQuery + ") as ms " +
+                "on p.id = ms.profile_id";
 
-        NumberOperators serverIdOperators = new NumberOperators();
-        serverIdOperators.setEq(Float.valueOf(serverId));
+        Connection con = null;
+        PreparedStatement pst = null;
+        ResultSet rs = null;
 
-        ListOperators<String> memberRoles = new ListOperators<>();
-        memberRoles.setIn(Arrays.asList(MemberRole.ADMIN.name(), MemberRole.MODERATOR.name()));
+        try {
+            con = mysteryJdbc.getConnection();
 
-        MemberFilterParameter memberFilterParameter = new MemberFilterParameter();
-        memberFilterParameter.setProfileId(profileIdOperators);
-        memberFilterParameter.setServerId(serverIdOperators);
-        memberFilterParameter.setMemberRoles(memberRoles);
+            pst = con.prepareStatement(memberProfileQuery);
+            pst.setString(1, request.getProfileId());
+            pst.setString(2, request.getServerId());
 
-        QueryBuilder queryBuilder = new QueryBuilder();
+            rs = pst.executeQuery();
 
-        queryBuilder.query(this.fetchServer());
-        this.buildFilter(queryBuilder, memberFilterParameter);
+            GrpcMemberProfile memberProfile = null;
 
-        Optional<MemberRepository.MemberWithServer> member = this.memberRepository.findOne(queryBuilder.build(), MemberRepository.MemberWithServer.class);
-        return member;
+            while (rs.next()) {
+                memberProfile = GrpcMemberProfile.newBuilder()
+                        .setMemberId(rs.getString(1))
+                        .setProfileId(rs.getString(2))
+                        .setRole(GrpcMemberRole.forNumber(rs.getInt(3)))
+                        .setJoinAt(rs.getString(4))
+                        .setName(rs.getString(5))
+                        .setAvtUrl(rs.getString(6))
+                        .build();
+            }
+
+            if (memberProfile == null) {
+                Metadata metadata = new Metadata();
+                Metadata.Key<GrpcErrorResponse> responseKey = ProtoUtils.keyForProto(GrpcErrorResponse.getDefaultInstance());
+                GrpcErrorCode errorCode = GrpcErrorCode.ERROR_CODE_NOT_FOUND;
+                GrpcErrorResponse errorResponse = GrpcErrorResponse.newBuilder()
+                        .setErrorCode(errorCode)
+                        .setMessage("not has first server join")
+                        .build();
+                // pass the error object via metadata
+                metadata.put(responseKey, errorResponse);
+                responseObserver.onError(Status.NOT_FOUND.asRuntimeException(metadata));
+                return;
+            }
+
+            GrpcGetMemberByServerIdResponse response = GrpcGetMemberByServerIdResponse.newBuilder()
+                    .setResult(memberProfile)
+                    .build();
+
+            responseObserver.onNext(response);
+            responseObserver.onCompleted();
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+        } finally {
+            mysteryJdbc.closeResultSet(rs);
+            mysteryJdbc.closePreparedStatement(pst);
+        }
     }
-
-    private void buildSortOrder(QueryBuilder queryBuilder, MemberSortParameter sortParameter) {
-        if (sortParameter == null) return ;
-        QueryHelper.buildOneSortOrder(queryBuilder, sortParameter.getCreatedAt(), Member_.CREATED_AT);
-        QueryHelper.buildOneSortOrder(queryBuilder, sortParameter.getUpdatedAt(), Member_.UPDATED_AT);
-    }
-
-    private void buildFilter(QueryBuilder queryBuilder, MemberFilterParameter filterParameter) {
-        if (filterParameter == null) return;
-        QueryHelper.buildOneNumberOperatorFilter(queryBuilder, filterParameter.getMemberId(), Member_.MEMBER_ID);
-        QueryHelper.buildOneNumberOperatorFilter(queryBuilder, filterParameter.getProfileId(), Member_.PROFILE_ID);
-        QueryHelper.buildOneNumberOperatorFilter(queryBuilder, filterParameter.getServerId(), Server_.SERVER_ID);
-        QueryHelper.buildOneListOperatorFilter(queryBuilder, filterParameter.getMemberRoles(), Member_.MEMBER_ROLE);
-        QueryHelper.buildOneDateOperatorFilter(queryBuilder, filterParameter.getCreatedAt(), Member_.CREATED_AT);
-        QueryHelper.buildOneDateOperatorFilter(queryBuilder, filterParameter.getUpdatedAt(), Member_.UPDATED_AT);
-    }
-
-    private Specification<Member> fetchServer() {
-        return (root, query, criteriaBuilder) -> {
-//            Fetch<Member, Server> f = root.fetch(Member_.SERVER, JoinType.INNER);
-//            Join<Member, Server> join = (Join<Member, Server>) f;
-            Fetch<Object, Object> f = root.fetch(Member_.SERVER, JoinType.INNER);
-            Join<Object, Object> join = (Join<Object, Object>) f;
-            return join.getOn();
-        };
-    }
-
 }

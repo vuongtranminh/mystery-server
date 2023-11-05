@@ -18,15 +18,22 @@ import java.util.function.Function;
 
 @Service
 @Slf4j
-@RequiredArgsConstructor
 public class TokenProvider {
 
     private final AppProperties appProperties;
+    private MacAlgorithm algAccessToken;
+    private SecretKey keyAccessToken;
+    private MacAlgorithm algRefreshToken;
+    private SecretKey keyRefreshToken;
 
-    public static SecretKey convertStringToSecretKeyto(String encodedKey) {
-        byte[] decodedKey = Base64.getDecoder().decode(encodedKey);
-        SecretKey originalKey = new SecretKeySpec(decodedKey, 0, decodedKey.length, "AES");
-        return originalKey;
+    public TokenProvider(AppProperties appProperties) {
+        this.appProperties = appProperties;
+
+        this.algAccessToken = Jwts.SIG.HS512;
+        this.keyAccessToken = algAccessToken.key().build();
+
+        this.algRefreshToken = Jwts.SIG.HS512;
+        this.keyRefreshToken = algRefreshToken.key().build();
     }
 
     public AccessToken generateAccessToken(String userId) {
@@ -39,15 +46,14 @@ public class TokenProvider {
 //                .setExpiration(expiryDate)
 //                .signWith(SignatureAlgorithm.HS256, appProperties.getAuth().getAccessTokenSecret())
 //                .compact();
-        MacAlgorithm alg = Jwts.SIG.HS512; //or HS384 or HS256
-        SecretKey key = convertStringToSecretKeyto(appProperties.getAuth().getAccessTokenSecret());
+        // Create a test key suitable for the desired HMAC-SHA algorithm:
 
         String accessToken = Jwts.builder()
                 .header()
                 .add("typ", "JWT")
                 .and()
                 .issuer("mystery-server")
-                .subject("Bob")
+                .subject(userId)
                 .audience()
                 .add("mystery-client")
                 .and()
@@ -55,7 +61,7 @@ public class TokenProvider {
                 .notBefore(now) //a java.util.Date
                 .issuedAt(now) // for example, now
                 .id(UUID.randomUUID().toString())
-                .signWith(key, alg)
+                .signWith(keyAccessToken, algAccessToken)
                 .compact();
 
         return AccessToken.builder()
@@ -75,15 +81,12 @@ public class TokenProvider {
 //                .signWith(SignatureAlgorithm.HS256, appProperties.getAuth().getRefreshTokenSecret())
 //                .compact();
 
-        MacAlgorithm alg = Jwts.SIG.HS512; //or HS384 or HS256
-        SecretKey key = convertStringToSecretKeyto(appProperties.getAuth().getAccessTokenSecret());
-
         String refreshToken = Jwts.builder()
                 .header()
                 .add("typ", "JWT")
                 .and()
                 .issuer("mystery-server")
-                .subject("Bob")
+                .subject(userId)
                 .audience()
                 .add("mystery-client")
                 .and()
@@ -91,7 +94,7 @@ public class TokenProvider {
                 .notBefore(now) //a java.util.Date
                 .issuedAt(now) // for example, now
                 .id(UUID.randomUUID().toString())
-                .signWith(key, alg)
+                .signWith(keyRefreshToken, algRefreshToken)
                 .compact();
 
         return RefreshToken.builder()
@@ -143,47 +146,47 @@ public class TokenProvider {
     }
 
     public String extractUserIdFromAccessToken(String token) {
-        return extractSubject(token, appProperties.getAuth().getAccessTokenSecret());
+        return extractSubject(token, keyAccessToken);
     }
 
     public String extractUserIdFromRefreshToken(String token) {
-        return extractSubject(token, appProperties.getAuth().getRefreshTokenSecret());
-    }
-
-    public String getUserIdFromRefreshToken(String token) {
-        return extractSubject(token, appProperties.getAuth().getRefreshTokenSecret());
+        return extractSubject(token, keyRefreshToken);
     }
 
     public Date extractExpirationFromRefreshToken(String token) {
-        return extractExpiration(token, appProperties.getAuth().getRefreshTokenSecret());
+        return extractExpiration(token, keyRefreshToken);
     }
 
-    private Boolean isTokenExpired(String token, String secretKey) {
-        return extractExpiration(token, secretKey).before(new Date());
+    private Boolean isTokenExpired(String token, SecretKey key) {
+        return extractExpiration(token, key).before(new Date());
     }
 
-    public String extractSubject(String token, String secretKey) {
-        return extractClaim(token, secretKey, Claims::getSubject);
+    public String extractSubject(String token, SecretKey key) {
+        return extractClaim(token, key, Claims::getSubject);
     }
 
-    public Date extractExpiration(String token, String secretKey) {
-        return extractClaim(token, secretKey, Claims::getExpiration);
+    public Date extractExpiration(String token, SecretKey key) {
+        return extractClaim(token, key, Claims::getExpiration);
     }
 
-    public <T> T extractClaim(String token, String secretKey, Function<Claims, T> claimsResolver) {
-        final Claims claims = extractAllClaims(token, secretKey);
+    public <T> T extractClaim(String token, SecretKey key, Function<Claims, T> claimsResolver) {
+        final Claims claims = extractAllClaims(token, key);
         return claimsResolver.apply(claims);
     }
 
-    private Claims extractAllClaims(String token, String secretKey) {
-        MacAlgorithm alg = Jwts.SIG.HS512; //or HS384 or HS256
-        SecretKey key = convertStringToSecretKeyto(appProperties.getAuth().getAccessTokenSecret());
+    private Claims extractAllClaims(String token, SecretKey key) {
         return Jwts.parser().verifyWith(key).build().parseSignedClaims(token).getPayload();
     }
 
-    public boolean validateToken(String token) {
-        MacAlgorithm alg = Jwts.SIG.HS512; //or HS384 or HS256
-        SecretKey key = convertStringToSecretKeyto(appProperties.getAuth().getAccessTokenSecret());
+    public boolean validateAccessToken(String token) {
+        return this.validateToken(token, this.keyAccessToken);
+    }
+
+    public boolean validateRefreshToken(String token) {
+        return this.validateToken(token, this.keyRefreshToken);
+    }
+
+    public boolean validateToken(String token, SecretKey key) {
         try {
             Jwts.parser().verifyWith(key).build().parseSignedClaims(token);
             return true;

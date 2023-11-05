@@ -11,6 +11,7 @@ import com.vuong.app.config.AppProperties;
 import com.vuong.app.exception.wrapper.BadRequestException;
 import com.vuong.app.grpc.message.auth.*;
 import com.vuong.app.grpc.service.AuthClientService;
+import com.vuong.app.grpc.service.UserClientService;
 import com.vuong.app.redis.doman.AuthMetadata;
 import com.vuong.app.redis.doman.TokenStore;
 import com.vuong.app.redis.repository.ManagerAuthSessionRepository;
@@ -48,6 +49,8 @@ public class AuthServiceImpl implements AuthService {
     private final AppProperties appProperties;
 
     private final ManagerAuthSessionRepository managerAuthSessionRepository;
+
+    private final UserClientService userClientService;
 
 //    @Override
 //    public boolean existsByEmail(String email) {
@@ -97,7 +100,7 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public ResponseObject signUp(SignUpRequest signUpRequest) {
-        ExistsUserByEmailResponse existsUserByEmailResponse = this.authClientService.existsUserByEmail(ExistsUserByEmailRequest.builder()
+        ExistsUserByEmailResponse existsUserByEmailResponse = this.userClientService.existsUserByEmail(ExistsUserByEmailRequest.builder()
                 .email(signUpRequest.getEmail())
                 .build());
         if (existsUserByEmailResponse.isExists()) {
@@ -107,15 +110,13 @@ public class AuthServiceImpl implements AuthService {
 //            throw new BadRequestException("Email address already in use.");
 //        }
 
-        CreateUserResponse createUserResponse = this.authClientService.createUser(CreateUserRequest.builder()
+        CreateUserLocalResponse createUserLocalResponse = this.authClientService.createUserLocal(CreateUserLocalRequest.builder()
                 .name(signUpRequest.getName())
                 .email(signUpRequest.getEmail())
                 .password(passwordEncoder.encode(signUpRequest.getPassword()))
-                .emailVerified(false)
-                .provider(AuthProvider.local)
                 .build());
 
-        return new ResponseMsg("Sign up successfully!", HttpStatus.OK, new SignUpResponse(createUserResponse.getUserId()));
+        return new ResponseMsg("Sign up successfully!", HttpStatus.OK, new SignUpResponse(createUserLocalResponse.getUserId()));
     }
 
     @Override
@@ -143,7 +144,7 @@ public class AuthServiceImpl implements AuthService {
 
         String oldRefreshToken = oldRefreshTokenOptional.get().getValue();
 
-        if (managerAuthSessionRepository.hasRefreshToken(oldRefreshToken) || !tokenProvider.validateToken(oldRefreshToken)) { // pass is expiresAt before now
+        if (managerAuthSessionRepository.hasRefreshToken(oldRefreshToken) || !tokenProvider.validateRefreshToken(oldRefreshToken)) { // pass is expiresAt before now
             return new ExceptionMsg("Invalid refresh token", HttpStatus.BAD_REQUEST);
         }
 

@@ -1,20 +1,19 @@
 package com.vuong.app.service;
 
-import com.vuong.app.common.ServiceHelper;
 import com.vuong.app.config.MysteryJdbc;
 import com.vuong.app.doman.AuthProvider;
 import com.vuong.app.doman.VerificationCredential;
 import com.vuong.app.redis.repository.UserRepository;
 import com.vuong.app.v1.GrpcErrorCode;
-import com.vuong.app.v1.GrpcRequest;
-import com.vuong.app.v1.GrpcResponse;
+import com.vuong.app.v1.GrpcErrorResponse;
 import com.vuong.app.v1.auth.*;
-import com.vuong.app.v1.user.*;
+import io.grpc.Metadata;
+import io.grpc.Status;
+import io.grpc.protobuf.ProtoUtils;
 import io.grpc.stub.StreamObserver;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.devh.boot.grpc.server.service.GrpcService;
-import org.apache.commons.lang3.StringUtils;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -34,10 +33,9 @@ public class AuthService extends AuthServiceGrpc.AuthServiceImplBase {
     private final UserRepository userRepository;
 
     @Override
-    public void createUserSocial(GrpcRequest request, StreamObserver<GrpcResponse> responseObserver) {
-        GrpcCreateUserSocialRequest req = ServiceHelper.unpackedRequest(request, GrpcCreateUserSocialRequest.class);
+    public void createUserSocial(GrpcCreateUserSocialRequest request, StreamObserver<GrpcCreateUserSocialResponse> responseObserver) {
 
-        AuthProvider authProvider = AuthProvider.forNumber(req.getProvider().getNumber());
+        AuthProvider authProvider = AuthProvider.forNumber(request.getProvider().getNumber());
 
         String insertUserQuery = "insert into tbl_user(id, name, avt_url, email, verified, provider, provider_id, created_at, updated_at) " +
                 "values (?, ?, ?, ?, ?, ?, ?, ?, ?)";
@@ -55,25 +53,28 @@ public class AuthService extends AuthServiceGrpc.AuthServiceImplBase {
 
             pst1 = con.prepareStatement(insertUserQuery);
             pst1.setString(1, userId);
-            pst1.setString(2, req.getName());
-            pst1.setString(3, req.getAvtUrl());
-            pst1.setString(4, req.getEmail());
+            pst1.setString(2, request.getName());
+            pst1.setString(3, request.getAvtUrl());
+            pst1.setString(4, request.getEmail());
             pst1.setBoolean(5, true);
             pst1.setInt(6, authProvider.getNumber());
-            pst1.setString(7, req.getProviderId());
+            pst1.setString(7, request.getProviderId());
             pst1.setString(8, createdAt);
             pst1.setString(9, updatedAt);
 
             int result1 = pst1.executeUpdate();
 
+//            mysteryJdbc.doCommit();
+
             this.userRepository.saveUser(GrpcUserPrincipal.newBuilder()
                     .setUserId(userId)
-                    .setEmail(req.getEmail())
+                    .setEmail(request.getEmail())
                     .build());
 
             GrpcCreateUserSocialResponse response = GrpcCreateUserSocialResponse.newBuilder().setUserId(userId).build();
-            ServiceHelper.next(responseObserver, ServiceHelper.packedSuccessResponse(response));
 
+            responseObserver.onNext(response);
+            responseObserver.onCompleted();
         } catch (SQLException ex) {
             log.error(ex.getMessage());
             mysteryJdbc.doRollback();
@@ -83,9 +84,7 @@ public class AuthService extends AuthServiceGrpc.AuthServiceImplBase {
     }
 
     @Override
-    public void createUserLocal(GrpcRequest request, StreamObserver<GrpcResponse> responseObserver) {
-        GrpcCreateUserLocalRequest req = ServiceHelper.unpackedRequest(request, GrpcCreateUserLocalRequest.class);
-
+    public void createUserLocal(GrpcCreateUserLocalRequest request, StreamObserver<GrpcCreateUserLocalResponse> responseObserver) {
         String insertUserQuery = "insert into tbl_user(id, name, email, password, verified, provider, created_at, updated_at) " +
                 "values (?, ?, ?, ?, ?, ?, ?, ?)";
 
@@ -102,9 +101,9 @@ public class AuthService extends AuthServiceGrpc.AuthServiceImplBase {
 
             pst1 = con.prepareStatement(insertUserQuery);
             pst1.setString(1, userId);
-            pst1.setString(2, req.getName());
-            pst1.setString(3, req.getEmail());
-            pst1.setString(4, req.getPassword());
+            pst1.setString(2, request.getName());
+            pst1.setString(3, request.getEmail());
+            pst1.setString(4, request.getPassword());
             pst1.setBoolean(5, false);
             pst1.setInt(6, AuthProvider.local.getNumber());
             pst1.setString(7, createdAt);
@@ -139,8 +138,14 @@ public class AuthService extends AuthServiceGrpc.AuthServiceImplBase {
 
             mysteryJdbc.doCommit();
 
-            this.verificationCredentialService.sendMailVerify(req.getEmail(), verificationCredential);
+            this.verificationCredentialService.sendMailVerify(request.getEmail(), verificationCredential);
 
+            GrpcCreateUserLocalResponse response = GrpcCreateUserLocalResponse.newBuilder()
+                    .setUserId(userId)
+                    .build();
+
+            responseObserver.onNext(response);
+            responseObserver.onCompleted();
         } catch (SQLException ex) {
             log.error(ex.getMessage());
             mysteryJdbc.doRollback();
@@ -150,11 +155,9 @@ public class AuthService extends AuthServiceGrpc.AuthServiceImplBase {
     }
 
     @Override
-    public void getUserPrincipalByUserId(GrpcRequest request, StreamObserver<GrpcResponse> responseObserver) {
-        GrpcGetUserPrincipalByUserIdRequest req = ServiceHelper.unpackedRequest(request, GrpcGetUserPrincipalByUserIdRequest.class);
-
+    public void getUserPrincipalByUserId(GrpcGetUserPrincipalByUserIdRequest request, StreamObserver<GrpcGetUserPrincipalByUserIdResponse> responseObserver) {
         String userQuery = "select " +
-                "tbl_user.id, tbl_user.email, tbl_user.password" +
+                "tbl_user.id, tbl_user.email, tbl_user.password " +
                 "from tbl_user " +
                 "where tbl_user.id = ?";
 
@@ -166,24 +169,35 @@ public class AuthService extends AuthServiceGrpc.AuthServiceImplBase {
             con = mysteryJdbc.getConnection();
 
             pst = con.prepareStatement(userQuery);
-            pst.setString(1, req.getUserId());
+            pst.setString(1, request.getUserId());
 
             rs = pst.executeQuery();
 
-            if (!rs.next()) {
-                ServiceHelper.next(responseObserver, ServiceHelper.packedErrorResponse(GrpcErrorCode.ERROR_CODE_NOT_FOUND, "user not found with id"));
-                return;
-            }
-
             GrpcUserPrincipal.Builder builder = GrpcUserPrincipal.newBuilder();
+            boolean hasResult = false;
 
             while (rs.next()) {
+                hasResult = true;
                 builder.setUserId(rs.getString(1));
                 builder.setEmail(rs.getString(2));
 
                 if (rs.getString(3) != null) {
                     builder.setPassword(rs.getString(3));
                 }
+            }
+
+            if (!hasResult) {
+                Metadata metadata = new Metadata();
+                Metadata.Key<GrpcErrorResponse> responseKey = ProtoUtils.keyForProto(GrpcErrorResponse.getDefaultInstance());
+                GrpcErrorCode errorCode = GrpcErrorCode.ERROR_CODE_NOT_FOUND;
+                GrpcErrorResponse errorResponse = GrpcErrorResponse.newBuilder()
+                        .setErrorCode(errorCode)
+                        .setMessage("not found with userId")
+                        .build();
+                // pass the error object via metadata
+                metadata.put(responseKey, errorResponse);
+                responseObserver.onError(Status.NOT_FOUND.asRuntimeException(metadata));
+                return;
             }
 
             GrpcUserPrincipal userPrincipal = builder.build();
@@ -194,7 +208,8 @@ public class AuthService extends AuthServiceGrpc.AuthServiceImplBase {
                     .setResult(userPrincipal)
                     .build();
 
-            ServiceHelper.next(responseObserver, ServiceHelper.packedSuccessResponse(response));
+            responseObserver.onNext(response);
+            responseObserver.onCompleted();
         } catch (SQLException ex) {
             log.error(ex.getMessage());
 //            mysteryJdbc.doRollback();
@@ -205,9 +220,7 @@ public class AuthService extends AuthServiceGrpc.AuthServiceImplBase {
     }
 
     @Override
-    public void getUserPrincipalByEmail(GrpcRequest request, StreamObserver<GrpcResponse> responseObserver) {
-        GrpcGetUserPrincipalByEmailRequest req = ServiceHelper.unpackedRequest(request, GrpcGetUserPrincipalByEmailRequest.class);
-
+    public void getUserPrincipalByEmail(GrpcGetUserPrincipalByEmailRequest request, StreamObserver<GrpcGetUserPrincipalByEmailResponse> responseObserver) {
         String userQuery = "select " +
                 "tbl_user.id, tbl_user.email, tbl_user.password " +
                 "from tbl_user " +
@@ -221,12 +234,21 @@ public class AuthService extends AuthServiceGrpc.AuthServiceImplBase {
             con = mysteryJdbc.getConnection();
 
             pst = con.prepareStatement(userQuery);
-            pst.setString(1, req.getEmail());
+            pst.setString(1, request.getEmail());
 
             rs = pst.executeQuery();
 
             if (!rs.next()) {
-                ServiceHelper.next(responseObserver, ServiceHelper.packedErrorResponse(GrpcErrorCode.ERROR_CODE_NOT_FOUND, "user not found with id"));
+                Metadata metadata = new Metadata();
+                Metadata.Key<GrpcErrorResponse> responseKey = ProtoUtils.keyForProto(GrpcErrorResponse.getDefaultInstance());
+                GrpcErrorCode errorCode = GrpcErrorCode.ERROR_CODE_NOT_FOUND;
+                GrpcErrorResponse errorResponse = GrpcErrorResponse.newBuilder()
+                        .setErrorCode(errorCode)
+                        .setMessage("not found with email")
+                        .build();
+                // pass the error object via metadata
+                metadata.put(responseKey, errorResponse);
+                responseObserver.onError(Status.NOT_FOUND.asRuntimeException(metadata));
                 return;
             }
 
@@ -249,12 +271,58 @@ public class AuthService extends AuthServiceGrpc.AuthServiceImplBase {
                     .setResult(userPrincipal)
                     .build();
 
-            ServiceHelper.next(responseObserver, ServiceHelper.packedSuccessResponse(response));
+            responseObserver.onNext(response);
+            responseObserver.onCompleted();
         } catch (SQLException ex) {
             log.error(ex.getMessage());
 //            mysteryJdbc.doRollback();
         } finally {
             mysteryJdbc.closeResultSet(rs);
+            mysteryJdbc.closePreparedStatement(pst);
+        }
+    }
+
+    @Override
+    public void changeUserPasswordByUserId(GrpcChangeUserPasswordByUserIdRequest request, StreamObserver<GrpcChangeUserPasswordByUserIdResponse> responseObserver) {
+        String changeUserPasswordQuery = "update tbl_user set password = ? where tbl_user.id = ? and tbl_user.password = ?";
+
+        Connection con = null;
+        PreparedStatement pst = null;
+
+        try {
+            con = mysteryJdbc.getConnection();
+
+            pst = con.prepareStatement(changeUserPasswordQuery);
+            pst.setString(1, request.getNewPassword());
+            pst.setString(2, request.getUserId());
+            pst.setString(3, request.getOldPassword());
+
+            int result = pst.executeUpdate();
+
+            if (result == 0) {
+                Metadata metadata = new Metadata();
+                Metadata.Key<GrpcErrorResponse> responseKey = ProtoUtils.keyForProto(GrpcErrorResponse.getDefaultInstance());
+                GrpcErrorCode errorCode = GrpcErrorCode.ERROR_CODE_NOT_FOUND;
+                GrpcErrorResponse errorResponse = GrpcErrorResponse.newBuilder()
+                        .setErrorCode(errorCode)
+                        .setMessage("not found with email")
+                        .build();
+                // pass the error object via metadata
+                metadata.put(responseKey, errorResponse);
+                responseObserver.onError(Status.NOT_FOUND.asRuntimeException(metadata));
+                return;
+            }
+
+            GrpcChangeUserPasswordByUserIdResponse response = GrpcChangeUserPasswordByUserIdResponse.newBuilder()
+                    .setUserId(request.getUserId())
+                    .build();
+
+            responseObserver.onNext(response);
+            responseObserver.onCompleted();
+        } catch (SQLException ex) {
+            log.error(ex.getMessage());
+            mysteryJdbc.doRollback();
+        } finally {
             mysteryJdbc.closePreparedStatement(pst);
         }
     }

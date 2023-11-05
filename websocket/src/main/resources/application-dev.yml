@@ -1,4 +1,4 @@
 
 grpc:
   server:
-    port: 8800
+    port: 8080

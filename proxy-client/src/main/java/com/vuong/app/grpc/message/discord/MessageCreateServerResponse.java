@@ -12,5 +12,5 @@ import java.time.Instant;
 @Data
 @Builder
 public class MessageCreateServerResponse {
-    private Integer serverId;
+    private String serverId;
 }

@@ -9,6 +9,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Data
 @Builder
-public class MessageGetServerByInviteCodeRequest {
-    private String inviteCode;
+public class MessageCreateMessageResponse {
+    private String messageId;
 }

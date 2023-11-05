@@ -9,6 +9,10 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Data
 @Builder
-public class MessageGetServerByServerIdRequest {
-    private Integer serverId;
+public class MessageGetMessagesByChannelIdRequest {
+    private String channelId;
+    private String serverId;
+    private String profileId;
+    private int pageNumber;
+    private int pageSize;
 }

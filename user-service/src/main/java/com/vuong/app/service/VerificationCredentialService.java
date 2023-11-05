@@ -1,11 +1,13 @@
 package com.vuong.app.service;
 
-import com.vuong.app.common.ServiceHelper;
 import com.vuong.app.config.MysteryJdbc;
 import com.vuong.app.doman.VerificationCredential;
 import com.vuong.app.event.NotificationEmailEvent;
 import com.vuong.app.v1.*;
 import com.vuong.app.v1.user.*;
+import io.grpc.Metadata;
+import io.grpc.Status;
+import io.grpc.protobuf.ProtoUtils;
 import io.grpc.stub.StreamObserver;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -57,9 +59,7 @@ public class VerificationCredentialService extends VerificationCredentialService
     }
 
     @Override
-    public void verificationCredentialByVerificationToken(GrpcRequest request, StreamObserver<GrpcResponse> responseObserver) {
-        GrpcVerificationCredentialByVerificationTokenRequest req = ServiceHelper.unpackedRequest(request, GrpcVerificationCredentialByVerificationTokenRequest.class);
-
+    public void verificationCredentialByVerificationToken(GrpcVerificationCredentialByVerificationTokenRequest request, StreamObserver<GrpcVerificationCredentialByVerificationTokenResponse> responseObserver) {
         String verificationCredentialQuery = "select " +
                 "tbl_verification_credential.id, tbl_verification_credential.verification_token, tbl_verification_credential.verification_otp, tbl_verification_credential.expire_date " +
                 "where tbl_verification_credential.verification_token = ?";
@@ -75,9 +75,23 @@ public class VerificationCredentialService extends VerificationCredentialService
             con = mysteryJdbc.getConnection();
 
             pst1 = con.prepareStatement(verificationCredentialQuery);
-            pst1.setString(1, req.getVerificationToken());
+            pst1.setString(1, request.getVerificationToken());
 
             rs = pst1.executeQuery();
+
+            if (!rs.next()) {
+                Metadata metadata = new Metadata();
+                Metadata.Key<GrpcErrorResponse> responseKey = ProtoUtils.keyForProto(GrpcErrorResponse.getDefaultInstance());
+                GrpcErrorCode errorCode = GrpcErrorCode.ERROR_CODE_NOT_FOUND;
+                GrpcErrorResponse errorResponse = GrpcErrorResponse.newBuilder()
+                        .setErrorCode(errorCode)
+                        .setMessage("not found with VerificationToken")
+                        .build();
+                // pass the error object via metadata
+                metadata.put(responseKey, errorResponse);
+                responseObserver.onError(Status.NOT_FOUND.asRuntimeException(metadata));
+                return;
+            }
 
             VerificationCredential verificationCredential = null;
 
@@ -90,16 +104,17 @@ public class VerificationCredentialService extends VerificationCredentialService
                         .build();
             }
 
-            GrpcVerificationCredentialByVerificationTokenResponse.Builder builderResponse = GrpcVerificationCredentialByVerificationTokenResponse.newBuilder();
-            if (verificationCredential == null) {
-                builderResponse.setVerified(false);
-                ServiceHelper.next(responseObserver, ServiceHelper.packedSuccessResponse(builderResponse.build()));
-                return;
-            }
-
             if (Instant.parse(verificationCredential.getExpireDate()).isAfter(Instant.now())) {
-                builderResponse.setVerified(false);
-                ServiceHelper.next(responseObserver, ServiceHelper.packedSuccessResponse(builderResponse.build()));
+                Metadata metadata = new Metadata();
+                Metadata.Key<GrpcErrorResponse> responseKey = ProtoUtils.keyForProto(GrpcErrorResponse.getDefaultInstance());
+                GrpcErrorCode errorCode = GrpcErrorCode.ERROR_CODE_NOT_FOUND;
+                GrpcErrorResponse errorResponse = GrpcErrorResponse.newBuilder()
+                        .setErrorCode(errorCode)
+                        .setMessage("ExpireDate with VerificationToken")
+                        .build();
+                // pass the error object via metadata
+                metadata.put(responseKey, errorResponse);
+                responseObserver.onError(Status.NOT_FOUND.asRuntimeException(metadata));
                 return;
             }
 
@@ -108,9 +123,12 @@ public class VerificationCredentialService extends VerificationCredentialService
             pst2.setString(2, verificationCredential.getVerificationCredentialId());
 
             int result = pst2.executeUpdate();
+            GrpcVerificationCredentialByVerificationTokenResponse response = GrpcVerificationCredentialByVerificationTokenResponse.newBuilder()
+                    .setVerified(true)
+                    .build();
 
-            builderResponse.setVerified(true);
-            ServiceHelper.next(responseObserver, ServiceHelper.packedSuccessResponse(builderResponse.build()));
+            responseObserver.onNext(response);
+            responseObserver.onCompleted();
         } catch (SQLException ex) {
             mysteryJdbc.doRollback();
         } finally {
@@ -120,9 +138,7 @@ public class VerificationCredentialService extends VerificationCredentialService
     }
 
     @Override
-    public void verificationCredentialByVerificationOtp(GrpcRequest request, StreamObserver<GrpcResponse> responseObserver) {
-        GrpcVerificationCredentialByVerificationOtpRequest req = ServiceHelper.unpackedRequest(request, GrpcVerificationCredentialByVerificationOtpRequest.class);
-
+    public void verificationCredentialByVerificationOtp(GrpcVerificationCredentialByVerificationOtpRequest request, StreamObserver<GrpcVerificationCredentialByVerificationOtpResponse> responseObserver) {
         String verificationCredentialQuery = "select " +
                 "tbl_verification_credential.id, tbl_verification_credential.verification_token, tbl_verification_credential.verification_otp, tbl_verification_credential.expire_date " +
                 "where tbl_verification_credential.verification_token = ?";
@@ -138,9 +154,23 @@ public class VerificationCredentialService extends VerificationCredentialService
             con = mysteryJdbc.getConnection();
 
             pst1 = con.prepareStatement(verificationCredentialQuery);
-            pst1.setString(1, req.getVerificationOtp());
+            pst1.setString(1, request.getVerificationOtp());
 
             rs = pst1.executeQuery();
+
+            if (!rs.next()) {
+                Metadata metadata = new Metadata();
+                Metadata.Key<GrpcErrorResponse> responseKey = ProtoUtils.keyForProto(GrpcErrorResponse.getDefaultInstance());
+                GrpcErrorCode errorCode = GrpcErrorCode.ERROR_CODE_NOT_FOUND;
+                GrpcErrorResponse errorResponse = GrpcErrorResponse.newBuilder()
+                        .setErrorCode(errorCode)
+                        .setMessage("not found with VerificationToken")
+                        .build();
+                // pass the error object via metadata
+                metadata.put(responseKey, errorResponse);
+                responseObserver.onError(Status.NOT_FOUND.asRuntimeException(metadata));
+                return;
+            }
 
             VerificationCredential verificationCredential = null;
 
@@ -153,16 +183,17 @@ public class VerificationCredentialService extends VerificationCredentialService
                         .build();
             }
 
-            GrpcVerificationCredentialByVerificationOtpResponse.Builder builderResponse = GrpcVerificationCredentialByVerificationOtpResponse.newBuilder();
-            if (verificationCredential == null) {
-                builderResponse.setVerified(false);
-                ServiceHelper.next(responseObserver, ServiceHelper.packedSuccessResponse(builderResponse.build()));
-                return;
-            }
-
             if (Instant.parse(verificationCredential.getExpireDate()).isAfter(Instant.now())) {
-                builderResponse.setVerified(false);
-                ServiceHelper.next(responseObserver, ServiceHelper.packedSuccessResponse(builderResponse.build()));
+                Metadata metadata = new Metadata();
+                Metadata.Key<GrpcErrorResponse> responseKey = ProtoUtils.keyForProto(GrpcErrorResponse.getDefaultInstance());
+                GrpcErrorCode errorCode = GrpcErrorCode.ERROR_CODE_NOT_FOUND;
+                GrpcErrorResponse errorResponse = GrpcErrorResponse.newBuilder()
+                        .setErrorCode(errorCode)
+                        .setMessage("ExpireDate with VerificationToken")
+                        .build();
+                // pass the error object via metadata
+                metadata.put(responseKey, errorResponse);
+                responseObserver.onError(Status.NOT_FOUND.asRuntimeException(metadata));
                 return;
             }
 
@@ -172,8 +203,12 @@ public class VerificationCredentialService extends VerificationCredentialService
 
             int result = pst2.executeUpdate();
 
-            builderResponse.setVerified(true);
-            ServiceHelper.next(responseObserver, ServiceHelper.packedSuccessResponse(builderResponse.build()));
+            GrpcVerificationCredentialByVerificationOtpResponse response = GrpcVerificationCredentialByVerificationOtpResponse.newBuilder()
+                    .setVerified(true)
+                    .build();
+
+            responseObserver.onNext(response);
+            responseObserver.onCompleted();
         } catch (SQLException ex) {
             mysteryJdbc.doRollback();
         } finally {
@@ -183,9 +218,7 @@ public class VerificationCredentialService extends VerificationCredentialService
     }
 
     @Override
-    public void reissueVerificationCredentialByUserId(GrpcRequest request, StreamObserver<GrpcResponse> responseObserver) {
-        GrpcReissueVerificationCredentialByUserIdRequest req = ServiceHelper.unpackedRequest(request, GrpcReissueVerificationCredentialByUserIdRequest.class);
-
+    public void reissueVerificationCredentialByUserId(GrpcReissueVerificationCredentialByUserIdRequest request, StreamObserver<GrpcReissueVerificationCredentialByUserIdResponse> responseObserver) {
         String userVerificationCredentialQuery = "select " +
                 "tbl_user.email, tbl_verification_credential.id " +
                 "from tbl_user" +
@@ -200,12 +233,10 @@ public class VerificationCredentialService extends VerificationCredentialService
         PreparedStatement pst2 = null;
         ResultSet rs = null;
 
-        GrpcReissueVerificationCredentialByUserIdResponse.Builder builderResponse = GrpcReissueVerificationCredentialByUserIdResponse.newBuilder();
-
         try {
             con = mysteryJdbc.getConnection();
             pst1 = con.prepareStatement(updateVerificationCredentialQuery);
-            pst1.setString(1, req.getUserId());
+            pst1.setString(1, request.getUserId());
 
             rs = pst1.executeQuery();
 
@@ -218,8 +249,16 @@ public class VerificationCredentialService extends VerificationCredentialService
             }
 
             if (verificationCredentialId == null) {
-                builderResponse.setReissue(false);
-                ServiceHelper.next(responseObserver, ServiceHelper.packedSuccessResponse(builderResponse.build()));
+                Metadata metadata = new Metadata();
+                Metadata.Key<GrpcErrorResponse> responseKey = ProtoUtils.keyForProto(GrpcErrorResponse.getDefaultInstance());
+                GrpcErrorCode errorCode = GrpcErrorCode.ERROR_CODE_NOT_FOUND;
+                GrpcErrorResponse errorResponse = GrpcErrorResponse.newBuilder()
+                        .setErrorCode(errorCode)
+                        .setMessage("not found with VerificationToken")
+                        .build();
+                // pass the error object via metadata
+                metadata.put(responseKey, errorResponse);
+                responseObserver.onError(Status.NOT_FOUND.asRuntimeException(metadata));
                 return;
             }
 
@@ -236,9 +275,6 @@ public class VerificationCredentialService extends VerificationCredentialService
 
             int result = pst2.executeUpdate();
 
-            builderResponse.setReissue(true);
-            ServiceHelper.next(responseObserver, ServiceHelper.packedSuccessResponse(builderResponse.build()));
-
             VerificationCredential verificationCredential = VerificationCredential.builder()
                     .verificationCredentialId(verificationCredentialId)
                     .verificationToken(verificationToken)
@@ -247,6 +283,13 @@ public class VerificationCredentialService extends VerificationCredentialService
                     .build();
 
             this.sendMailVerify(email, verificationCredential);
+
+            GrpcReissueVerificationCredentialByUserIdResponse response = GrpcReissueVerificationCredentialByUserIdResponse.newBuilder()
+                    .setReissue(true)
+                    .build();
+
+            responseObserver.onNext(response);
+            responseObserver.onCompleted();
         } catch (SQLException ex) {
             mysteryJdbc.doRollback();
         } finally {

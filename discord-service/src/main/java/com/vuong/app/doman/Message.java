@@ -10,21 +10,23 @@ import java.time.Instant;
 @AllArgsConstructor
 @Data
 @Builder
-public final class Message extends AbstractMappedEntity implements Serializable {
+public final class Message implements Serializable {
     private static final long serialVersionUID = 1L;
 
-    private Integer messageId;
+    private String messageId;
 
     private String content;
 
     private String fileUrl;
 
-    private Member member;
+    private String createdBy;
 
-    private Channel channel;
+    private String channelId;
 
-    private Boolean deleted;
+    private String deletedAt;
 
-    private Instant deletedAt;
+    private String createdAt;
+
+    private String updatedAt;
 
 }

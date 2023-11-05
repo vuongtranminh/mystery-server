@@ -9,8 +9,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Data
 @Builder
-public class MessageCreateServerRequest {
-    private String name;
-    private String imgUrl;
-    private String authorId;
+public class MessageGetFirstServerJoinResponse {
+    private MessageServer result;
 }

@@ -9,9 +9,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Data
 @Builder
-public class MessageUpdateServerByServerIdRequest {
-    private Integer profileId;
-    private Integer serverId;
-    private String name;
-    private String imgUrl;
+public class MessageGetServerJoinByServerIdRequest {
+    private String profileId;
+    private String serverId;
 }

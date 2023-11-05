@@ -1,6 +1,5 @@
 package com.vuong.app.grpc.message.auth;
 
-import com.vuong.app.common.Node;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

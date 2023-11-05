@@ -41,7 +41,7 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
                     .map(cookie -> CookieUtils.deserialize(cookie, String.class))
                     .orElse(null);
 
-            if (StringUtils.hasText(jwt) && tokenProvider.validateToken(jwt)) {
+            if (StringUtils.hasText(jwt) && tokenProvider.validateAccessToken(jwt)) {
 
                 String userId = tokenProvider.extractUserIdFromAccessToken(jwt);
 

@@ -78,8 +78,8 @@ message GrpcGetMessagesByChannelIdResponse {
 }
 
 service MessageService {
-  rpc createMessage(vuong.app.v1.GrpcRequest) returns (vuong.app.v1.GrpcResponse);
-  rpc updateMessage(vuong.app.v1.GrpcRequest) returns (vuong.app.v1.GrpcResponse);
-  rpc deleteMessage(vuong.app.v1.GrpcRequest) returns (vuong.app.v1.GrpcResponse);
-  rpc getMessagesByChannelId(vuong.app.v1.GrpcRequest) returns (vuong.app.v1.GrpcResponse);
+  rpc createMessage(GrpcCreateMessageRequest) returns (GrpcCreateMessageResponse);
+  rpc updateMessage(GrpcUpdateMessageRequest) returns (GrpcUpdateMessageResponse);
+  rpc deleteMessage(GrpcDeleteMessageRequest) returns (GrpcDeleteMessageResponse);
+  rpc getMessagesByChannelId(GrpcGetMessagesByChannelIdRequest) returns (GrpcGetMessagesByChannelIdResponse);
 }

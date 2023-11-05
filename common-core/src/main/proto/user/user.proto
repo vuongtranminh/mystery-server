@@ -18,28 +18,15 @@ enum GrpcAuthProvider {
 message GrpcUser {
   string user_id = 1;
   string name = 2;
-  string avt_url = 3;
-  string bio = 4;
+  optional string avt_url = 3;
+  optional string bio = 4;
   string email = 5;
-  string password = 6;
+  optional string password = 6;
   bool verified = 7;
   GrpcAuthProvider provider = 8;
-  string provider_id = 9;
+  optional string provider_id = 9;
   string created_at = 10;
   string updated_at = 11;
-}
-
-message GrpcCreateUserRequest {
-  string name = 1;
-  string avt_url = 2;
-  string email = 4;
-  string password = 5;
-  GrpcAuthProvider provider = 6;
-  string provider_id = 7;
-}
-
-message GrpcCreateUserResponse {
-  string user_id = 1;
 }
 
 message GrpcUpdateUserByUserIdRequest {
@@ -53,30 +40,12 @@ message GrpcUpdateUserByUserIdResponse {
   string user_id = 1;
 }
 
-message GrpcChangeUserPasswordByUserIdRequest {
-  string user_id = 1;
-  string old_password = 2;
-  string new_password = 3;
-}
-
-message GrpcChangeUserPasswordByUserIdResponse {
-  string user_id = 1;
-}
-
 message GrpcExistsUserByEmailRequest {
   string email = 1;
 }
 
 message GrpcExistsUserByEmailResponse {
   bool exists = 1;
-}
-
-message GrpcCheckUserVerifiedByUserIdRequest {
-  string user_id = 1;
-}
-
-message GrpcCheckUserVerifiedByUserIdResponse {
-  bool verified = 1;
 }
 
 message GrpcGetUserByUserIdRequest {
@@ -96,11 +65,8 @@ message GrpcGetUserByEmailResponse {
 }
 
 service UserService {
-  rpc createUser(vuong.app.v1.GrpcRequest) returns (vuong.app.v1.GrpcResponse);
-  rpc updateUserByUserId(vuong.app.v1.GrpcRequest) returns (vuong.app.v1.GrpcResponse);
-  rpc changeUserPasswordByUserId(vuong.app.v1.GrpcRequest) returns (vuong.app.v1.GrpcResponse);
-  rpc existsUserByEmail(vuong.app.v1.GrpcRequest) returns (vuong.app.v1.GrpcResponse);
-  rpc checkUserVerifiedByUserId(vuong.app.v1.GrpcRequest) returns (vuong.app.v1.GrpcResponse);
-  rpc getUserByUserId(vuong.app.v1.GrpcRequest) returns (vuong.app.v1.GrpcResponse);
-  rpc getUserByEmail(vuong.app.v1.GrpcRequest) returns (vuong.app.v1.GrpcResponse);
+  rpc updateUserByUserId(GrpcUpdateUserByUserIdRequest) returns (GrpcUpdateUserByUserIdResponse);
+  rpc existsUserByEmail(GrpcExistsUserByEmailRequest) returns (GrpcExistsUserByEmailResponse);
+  rpc getUserByUserId(GrpcGetUserByUserIdRequest) returns (GrpcGetUserByUserIdResponse);
+  rpc getUserByEmail(GrpcGetUserByEmailRequest) returns (GrpcGetUserByEmailResponse);
 }

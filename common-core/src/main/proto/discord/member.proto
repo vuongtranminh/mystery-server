@@ -15,13 +15,13 @@ enum GrpcMemberRole {
 }
 
 message GrpcMemberProfile {
-  string member_id = 1;
-  GrpcMemberRole role = 2;
-  string server_id = 3;
-  string join_at = 4;
+  optional string member_id = 1;
+  optional GrpcMemberRole role = 2;
+  optional string server_id = 3;
+  optional string join_at = 4;
   string profile_id = 5;
   string name = 6;
-  string avt_url = 7;
+  optional string avt_url = 7;
 }
 
 message GrpcGetMembersByServerIdRequest {
@@ -46,6 +46,6 @@ message GrpcGetMemberByServerIdResponse {
 }
 
 service MemberService {
-  rpc getMembersByServerId(vuong.app.v1.GrpcRequest) returns (vuong.app.v1.GrpcResponse);
-  rpc getMemberByServerId(vuong.app.v1.GrpcRequest) returns (vuong.app.v1.GrpcResponse);
+  rpc getMembersByServerId(GrpcGetMembersByServerIdRequest) returns (GrpcGetMembersByServerIdResponse);
+  rpc getMemberByServerId(GrpcGetMemberByServerIdRequest) returns (GrpcGetMemberByServerIdResponse);
 }

@@ -9,8 +9,9 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Data
 @Builder
-public class MessageGetServersByProfileIdRequest {
-    private Integer profileId;
-    private int page;
-    private int size;
+public class MessageUpdateMessageRequest {
+    private String messageId;
+    private String content;
+    private String profileId;
+    private String serverId;
 }

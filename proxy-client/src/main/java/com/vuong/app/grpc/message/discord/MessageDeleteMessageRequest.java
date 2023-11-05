@@ -9,8 +9,8 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Data
 @Builder
-public class MessageCreateServerRequest {
-    private String name;
-    private String imgUrl;
-    private String authorId;
+public class MessageDeleteMessageRequest {
+    private String messageId;
+    private String profileId;
+    private String serverId;
 }

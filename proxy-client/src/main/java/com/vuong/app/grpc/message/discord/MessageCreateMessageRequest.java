@@ -9,6 +9,10 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Data
 @Builder
-public class MessageUpdateServerByServerIdResponse {
+public class MessageCreateMessageRequest {
+    private String content;
+    private String fileUrl;
+    private String channelId;
     private String serverId;
+    private String profileId;
 }

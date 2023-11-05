@@ -56,8 +56,8 @@ message GrpcGetServerJoinByServerIdResponse {
 }
 
 service ServerService {
-  rpc createServer(vuong.app.v1.GrpcRequest) returns (vuong.app.v1.GrpcResponse);
-  rpc getServersJoin(vuong.app.v1.GrpcRequest) returns (vuong.app.v1.GrpcResponse);
-  rpc getFirstServerJoin(vuong.app.v1.GrpcRequest) returns (vuong.app.v1.GrpcResponse);
-  rpc getServerJoinByServerId(vuong.app.v1.GrpcRequest) returns (vuong.app.v1.GrpcResponse);
+  rpc createServer(GrpcCreateServerRequest) returns (GrpcCreateServerResponse);
+  rpc getServersJoin(GrpcGetServersJoinRequest) returns (GrpcGetServersJoinResponse);
+  rpc getFirstServerJoin(GrpcGetFirstServerJoinRequest) returns (GrpcGetFirstServerJoinResponse);
+  rpc getServerJoinByServerId(GrpcGetServerJoinByServerIdRequest) returns (GrpcGetServerJoinByServerIdResponse);
 }

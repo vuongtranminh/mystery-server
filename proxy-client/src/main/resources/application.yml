@@ -9,10 +9,6 @@ spring:
   profiles:
     active:
       - dev
-  graphql:
-    graphiql:
-      enabled: true
-      path: /graphiql
   redis:
     password: test
     data:

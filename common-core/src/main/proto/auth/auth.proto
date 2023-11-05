@@ -58,9 +58,20 @@ message GrpcGetUserPrincipalByEmailResponse {
   GrpcUserPrincipal result = 1;
 }
 
+message GrpcChangeUserPasswordByUserIdRequest {
+  string user_id = 1;
+  string old_password = 2;
+  string new_password = 3;
+}
+
+message GrpcChangeUserPasswordByUserIdResponse {
+  string user_id = 1;
+}
+
 service AuthService {
-  rpc createUserSocial(vuong.app.v1.GrpcRequest) returns (vuong.app.v1.GrpcResponse);
-  rpc createUserLocal(vuong.app.v1.GrpcRequest) returns (vuong.app.v1.GrpcResponse);
-  rpc getUserPrincipalByUserId(vuong.app.v1.GrpcRequest) returns (vuong.app.v1.GrpcResponse);
-  rpc getUserPrincipalByEmail(vuong.app.v1.GrpcRequest) returns (vuong.app.v1.GrpcResponse);
+  rpc createUserSocial(GrpcCreateUserSocialRequest) returns (GrpcCreateUserSocialResponse);
+  rpc createUserLocal(GrpcCreateUserLocalRequest) returns (GrpcCreateUserLocalResponse);
+  rpc getUserPrincipalByUserId(GrpcGetUserPrincipalByUserIdRequest) returns (GrpcGetUserPrincipalByUserIdResponse);
+  rpc getUserPrincipalByEmail(GrpcGetUserPrincipalByEmailRequest) returns (GrpcGetUserPrincipalByEmailResponse);
+  rpc changeUserPasswordByUserId(GrpcChangeUserPasswordByUserIdRequest) returns (GrpcChangeUserPasswordByUserIdResponse);
 }
