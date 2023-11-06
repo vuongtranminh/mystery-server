@@ -3,6 +3,7 @@ package com.vuong.app.config;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 
 public interface MysteryJdbc {
 
@@ -19,5 +20,7 @@ public interface MysteryJdbc {
     void doCommit();
 
     void setAutoCommit(boolean autoCommit);
+
+    boolean hasResult(ResultSet rs) throws SQLException;
 
 }

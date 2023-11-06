@@ -4,10 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
 
 @Component
 @Slf4j
@@ -65,6 +62,14 @@ public class MysteryJdbcImpl implements MysteryJdbc {
         } catch (SQLException e) {
             e.printStackTrace();
         }
+    }
+
+    @Override
+    public boolean hasResult(ResultSet rs) throws SQLException {
+        if (!rs.isBeforeFirst() ) {
+            return false;
+        }
+        return true;
     }
 
     private void closePreparedStatement(PreparedStatement pst) {

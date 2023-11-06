@@ -1,46 +1,67 @@
 package com.vuong.app.business.discord.service.impl;
 
+import com.vuong.app.business.Meta;
+import com.vuong.app.business.discord.model.Server;
 import com.vuong.app.business.discord.model.payload.CreateServerRequest;
-import com.vuong.app.business.discord.model.payload.DeleteServerRequest;
-import com.vuong.app.business.discord.model.payload.UpdateServerRequest;
+import com.vuong.app.business.discord.model.payload.CreateServerResponse;
+import com.vuong.app.business.discord.model.payload.GetServersJoinRequest;
+import com.vuong.app.business.discord.model.payload.GetServersJoinResponse;
 import com.vuong.app.business.discord.service.ServerService;
+import com.vuong.app.common.api.ResponseMsg;
 import com.vuong.app.common.api.ResponseObject;
+import com.vuong.app.grpc.service.ServerClientService;
 import com.vuong.app.security.UserPrincipal;
+import com.vuong.app.v1.discord.GrpcCreateServerRequest;
+import com.vuong.app.v1.discord.GrpcCreateServerResponse;
+import com.vuong.app.v1.discord.GrpcGetServersJoinRequest;
+import com.vuong.app.v1.discord.GrpcGetServersJoinResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class ServerServiceImpl implements ServerService {
+
+    private final ServerClientService serverClientService;
+
     @Override
-    public ResponseObject createServer(CreateServerRequest request, UserPrincipal currentUser) {
-        return null;
+    public ResponseObject createServer(UserPrincipal currentUser, CreateServerRequest request) {
+        GrpcCreateServerResponse grpcResponse = this.serverClientService.createServer(GrpcCreateServerRequest.newBuilder()
+                .setName(request.getName())
+                .setImgUrl(request.getImgUrl())
+                .setAuthorId(currentUser.getUserId())
+                .build());
+
+        return new ResponseMsg("Sign up successfully!", HttpStatus.OK, CreateServerResponse.builder()
+                .serverId(grpcResponse.getServerId())
+                .build());
     }
 
     @Override
-    public ResponseObject getServerByInviteCode(String inviteCode) {
-        return null;
+    public ResponseObject getServersJoin(UserPrincipal currentUser, GetServersJoinRequest request) {
+        GrpcGetServersJoinResponse grpcResponse = this.serverClientService.getServersJoin(GrpcGetServersJoinRequest.newBuilder()
+                .setProfileId(currentUser.getUserId())
+                .setPageNumber(request.getPageNumber())
+                .setPageSize(request.getPageSize())
+                .build());
+
+        return new ResponseMsg("Sign up successfully!", HttpStatus.OK, GetServersJoinResponse.builder()
+                .meta(Meta.parse(grpcResponse.getMeta()))
+                .content(grpcResponse.getContentList().stream().map(grpcServer -> Server.builder()
+                        .serverId(grpcServer.getServerId())
+                        .name(grpcServer.getName())
+                        .imgUrl(grpcServer.getImgUrl())
+                        .authorId(grpcServer.getAuthorId())
+                        .createdAt(grpcServer.getCreatedAt())
+                        .updatedAt(grpcServer.getUpdatedAt())
+                        .build())
+                        .collect(Collectors.toUnmodifiableList()))
+                .build());
     }
 
-    @Override
-    public ResponseObject getServerByServerId(Integer serverId) {
-        return null;
-    }
-
-    @Override
-    public ResponseObject deleteServerByServerId(DeleteServerRequest request, UserPrincipal currentUser) {
-        return null;
-    }
-
-    @Override
-    public ResponseObject updateServerByServerId(UpdateServerRequest request, UserPrincipal currentUser) {
-        return null;
-    }
-
-    @Override
-    public ResponseObject getFirstServer(UserPrincipal currentUser) {
-        return null;
-    }
 
 //    private final ServerClientService serverClientService;
 

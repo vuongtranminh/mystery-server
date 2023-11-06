@@ -1,14 +1,15 @@
 package com.vuong.app.grpc.service;
 
+import com.vuong.app.business.auth.model.AuthProvider;
 import com.vuong.app.exception.wrapper.WTuxException;
-import com.vuong.app.grpc.message.auth.UpdateUserByUserIdResponse;
+import com.vuong.app.grpc.message.auth.GetUserByEmailResponse;
 import com.vuong.app.v1.GrpcErrorCode;
 import com.vuong.app.v1.GrpcErrorResponse;
 import com.vuong.app.v1.GrpcMeta;
 import com.vuong.app.v1.discord.*;
-import com.vuong.app.v1.user.GrpcUpdateUserByUserIdRequest;
-import com.vuong.app.v1.user.GrpcUpdateUserByUserIdResponse;
-import com.vuong.app.v1.user.UserServiceGrpc;
+import com.vuong.app.v1.user.GrpcGetUserByEmailRequest;
+import com.vuong.app.v1.user.GrpcGetUserByEmailResponse;
+import com.vuong.app.v1.user.GrpcUser;
 import io.grpc.Metadata;
 import io.grpc.Status;
 import io.grpc.protobuf.ProtoUtils;
@@ -21,19 +22,18 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.time.Instant;
-import java.util.UUID;
+import java.util.Optional;
 
 @Service
 @Slf4j
-public class ServerClientService {
+public class MemberClientService {
 
     @GrpcClient("grpc-discord-service")
-    ServerServiceGrpc.ServerServiceBlockingStub serverServiceBlockingStub;
+    MemberServiceGrpc.MemberServiceBlockingStub memberServiceBlockingStub;
 
-    public GrpcCreateServerResponse createServer(GrpcCreateServerRequest request) {
+    public GrpcGetMembersByServerIdResponse getMembersByServerId(GrpcGetMembersByServerIdRequest request) {
         try {
-            GrpcCreateServerResponse response = this.serverServiceBlockingStub.createServer(request);
+            GrpcGetMembersByServerIdResponse response = this.memberServiceBlockingStub.getMembersByServerId(request);
 
             return response;
 
@@ -46,18 +46,23 @@ public class ServerClientService {
         }
     }
 
-    public GrpcGetServersJoinResponse getServersJoin(GrpcGetServersJoinRequest request) {
+    public Optional<GrpcGetMemberByServerIdResponse> getMemberByServerId(GrpcGetMemberByServerIdRequest request) {
         try {
-            GrpcGetServersJoinResponse response = this.serverServiceBlockingStub.getServersJoin(request);
+            GrpcGetMemberByServerIdResponse response = this.memberServiceBlockingStub.getMemberByServerId(request);
 
-            return response;
+            return Optional.of(response);
 
         } catch (Exception ex) {
             Metadata metadata = Status.trailersFromThrowable(ex);
             GrpcErrorResponse errorResponse = metadata.get(ProtoUtils.keyForProto(GrpcErrorResponse.getDefaultInstance()));
             log.error(errorResponse.getErrorCode() + " : " + errorResponse.getMessage());
 
+            if (errorResponse.getErrorCode().getNumber() == GrpcErrorCode.ERROR_CODE_NOT_FOUND_VALUE) {
+                return Optional.empty();
+            }
+
             throw new WTuxException(errorResponse);
         }
     }
+
 }

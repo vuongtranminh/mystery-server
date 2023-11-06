@@ -1,7 +1,5 @@
 package com.vuong.app.business.discord.model;
 
-import com.vuong.app.business.auth.model.AuthProvider;
-
 public enum MemberRole {
     ADMIN(1),
     MODERATOR(2),
