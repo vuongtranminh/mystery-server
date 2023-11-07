@@ -16,42 +16,42 @@ public class UserServiceApplication {
 		SpringApplication.run(UserServiceApplication.class, args);
 	}
 
-	private final Producer producer;
-
-	@Bean
-	public CommandLineRunner CommandLineRunnerBean() {
-		return (args) -> {
-			for (String arg : args) {
-				switch (arg) {
-					case "--producer":
-						this.producer.sendMessage("awalther", "t-shirts");
-						this.producer.sendMessage("htanaka", "t-shirts");
-						this.producer.sendMessage("htanaka", "batteries");
-						this.producer.sendMessage("eabara", "t-shirts");
-						this.producer.sendMessage("htanaka", "t-shirts");
-						this.producer.sendMessage("jsmith", "book");
-						this.producer.sendMessage("awalther", "t-shirts");
-						this.producer.sendMessage("jsmith", "batteries");
-						this.producer.sendMessage("jsmith", "gift card");
-						this.producer.sendMessage("eabara", "t-shirts");
-						break;
-					case "--consumer":
-						MessageListenerContainer listenerContainer = kafkaListenerEndpointRegistry.getListenerContainer("myConsumer");
-						listenerContainer.start();
-						break;
-					default:
-						break;
-				}
-			}
-		};
-	}
-
-	@Autowired
-	UserServiceApplication(Producer producer) {
-		this.producer = producer;
-	}
-
-	@Autowired
-	private KafkaListenerEndpointRegistry kafkaListenerEndpointRegistry;
+//	private final Producer producer;
+//
+//	@Bean
+//	public CommandLineRunner CommandLineRunnerBean() {
+//		return (args) -> {
+//			for (String arg : args) {
+//				switch (arg) {
+//					case "--producer":
+//						this.producer.sendMessage("awalther", "t-shirts");
+//						this.producer.sendMessage("htanaka", "t-shirts");
+//						this.producer.sendMessage("htanaka", "batteries");
+//						this.producer.sendMessage("eabara", "t-shirts");
+//						this.producer.sendMessage("htanaka", "t-shirts");
+//						this.producer.sendMessage("jsmith", "book");
+//						this.producer.sendMessage("awalther", "t-shirts");
+//						this.producer.sendMessage("jsmith", "batteries");
+//						this.producer.sendMessage("jsmith", "gift card");
+//						this.producer.sendMessage("eabara", "t-shirts");
+//						break;
+//					case "--consumer":
+//						MessageListenerContainer listenerContainer = kafkaListenerEndpointRegistry.getListenerContainer("myConsumer");
+//						listenerContainer.start();
+//						break;
+//					default:
+//						break;
+//				}
+//			}
+//		};
+//	}
+//
+//	@Autowired
+//	UserServiceApplication(Producer producer) {
+//		this.producer = producer;
+//	}
+//
+//	@Autowired
+//	private KafkaListenerEndpointRegistry kafkaListenerEndpointRegistry;
 
 }
