@@ -116,7 +116,7 @@ public class MessageService extends MessageServiceGrpc.MessageServiceImplBase {
                     .setMessage(message)
                     .build();
 
-            this.messagePublisher.publish(request.getServerId(), messageEvent);
+            this.messagePublisher.publish(memberProfile.getServerId(), messageEvent);
 
             GrpcCreateMessageResponse response = GrpcCreateMessageResponse.newBuilder()
                     .setMessageId(messageId)
@@ -204,9 +204,10 @@ public class MessageService extends MessageServiceGrpc.MessageServiceImplBase {
                 memberProfileBuilder.setProfileId(rs1.getString(11));
                 memberProfileBuilder.setName(rs1.getString(12));
                 memberProfileBuilder.setAvtUrl(rs1.getString(13));
-
-                builder.setAuthor(memberProfileBuilder.build());
             }
+
+            GrpcMemberProfile memberProfile = memberProfileBuilder.build();
+            builder.setAuthor(memberProfile);
 
             if (!hasResult) {
                 Metadata metadata = new Metadata();
@@ -238,7 +239,7 @@ public class MessageService extends MessageServiceGrpc.MessageServiceImplBase {
                     .setMessage(message)
                     .build();
 
-            this.messagePublisher.publish(request.getServerId(), messageEvent);
+            this.messagePublisher.publish(memberProfile.getServerId(), messageEvent);
 
             GrpcUpdateMessageResponse response = GrpcUpdateMessageResponse.newBuilder()
                     .setMessageId(request.getMessageId())
@@ -421,7 +422,7 @@ public class MessageService extends MessageServiceGrpc.MessageServiceImplBase {
                     .setMessage(grpcMessage)
                     .build();
 
-            this.messagePublisher.publish(request.getServerId(), messageEvent);
+            this.messagePublisher.publish(serverId, messageEvent);
 
             GrpcDeleteMessageResponse response = GrpcDeleteMessageResponse.newBuilder()
                     .setDeleted(true)

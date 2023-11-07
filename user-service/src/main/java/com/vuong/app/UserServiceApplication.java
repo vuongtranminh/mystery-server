@@ -1,13 +1,7 @@
 package com.vuong.app;
 
-import com.vuong.app.kafka.Producer;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.context.annotation.Bean;
-import org.springframework.kafka.config.KafkaListenerEndpointRegistry;
-import org.springframework.kafka.listener.MessageListenerContainer;
 
 @SpringBootApplication
 public class UserServiceApplication {

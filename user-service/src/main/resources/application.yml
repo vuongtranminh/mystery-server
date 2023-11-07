@@ -12,15 +12,15 @@ spring:
       auto-offset-reset: earliest
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.springframework.kafka.support.serializer.ErrorHandlingDeserializer
-        properties:
-          spring:
-            json:
-              trusted:
-                packages: "com.codersee.kafkaexample.dto"
-            deserializer:
-              value:
-                delegate:
-                  class: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring:
+          json:
+            trusted:
+              packages: "com.vuong.app.event"
+          deserializer:
+            value:
+              delegate:
+                class: org.springframework.kafka.support.serializer.JsonDeserializer
     producer:
       bootstrap-servers: localhost:8098
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
