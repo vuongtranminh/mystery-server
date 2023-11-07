@@ -29,7 +29,6 @@ public class MessageServiceImpl implements MessageService {
                 .setContent(request.getContent())
                 .setFileUrl(request.getFileUrl())
                 .setChannelId(request.getChannelId())
-                .setServerId(request.getServerId())
                 .setProfileId(currentUser.getUserId())
                 .build());
 
@@ -44,7 +43,6 @@ public class MessageServiceImpl implements MessageService {
                 .setMessageId(request.getMessageId())
                 .setContent(request.getContent())
                 .setProfileId(currentUser.getUserId())
-                .setServerId(request.getServerId())
                 .build());
 
         return new ResponseMsg("Sign up successfully!", HttpStatus.OK, UpdateMessageResponse.builder()
@@ -57,7 +55,6 @@ public class MessageServiceImpl implements MessageService {
         GrpcDeleteMessageResponse grpcResponse = this.messageClientService.deleteMessage(GrpcDeleteMessageRequest.newBuilder()
                 .setMessageId(request.getMessageId())
                 .setProfileId(currentUser.getUserId())
-                .setServerId(request.getServerId())
                 .build());
 
         return new ResponseMsg("Sign up successfully!", HttpStatus.OK, DeleteMessageResponse.builder()
@@ -69,7 +66,6 @@ public class MessageServiceImpl implements MessageService {
     public ResponseObject getMessagesByChannelId(UserPrincipal currentUser, GetMessagesByChannelIdRequest request) {
         GrpcGetMessagesByChannelIdResponse grpcResponse = this.messageClientService.getMessagesByChannelId(GrpcGetMessagesByChannelIdRequest.newBuilder()
                 .setChannelId(request.getChannelId())
-                .setServerId(request.getServerId())
                 .setProfileId(currentUser.getUserId())
                 .setPageNumber(request.getPageNumber())
                 .setPageSize(request.getPageSize())

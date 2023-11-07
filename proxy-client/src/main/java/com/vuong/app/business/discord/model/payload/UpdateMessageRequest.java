@@ -12,5 +12,4 @@ import lombok.NoArgsConstructor;
 public class UpdateMessageRequest {
     private String messageId;
     private String content;
-    private String serverId;
 }

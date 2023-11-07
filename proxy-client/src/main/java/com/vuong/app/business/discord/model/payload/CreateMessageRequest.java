@@ -13,5 +13,4 @@ public class CreateMessageRequest {
     private String content;
     private String fileUrl;
     private String channelId;
-    private String serverId;
 }

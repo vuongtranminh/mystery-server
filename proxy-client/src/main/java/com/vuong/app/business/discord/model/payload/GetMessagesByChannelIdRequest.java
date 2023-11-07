@@ -11,7 +11,6 @@ import lombok.NoArgsConstructor;
 @Builder
 public class GetMessagesByChannelIdRequest {
     private String channelId;
-    private String serverId;
     private int pageNumber;
     private int pageSize;
 }

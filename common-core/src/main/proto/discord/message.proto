@@ -35,8 +35,7 @@ message GrpcCreateMessageRequest {
   optional string content = 1;
   optional string file_url = 2;
   string channel_id = 3;
-  string server_id = 4;
-  string profile_id = 5;
+  string profile_id = 4;
 }
 
 message GrpcCreateMessageResponse {
@@ -47,7 +46,6 @@ message GrpcUpdateMessageRequest {
   string message_id = 1;
   string content = 2;
   string profile_id = 3;
-  string server_id = 4;
 }
 
 message GrpcUpdateMessageResponse {
@@ -57,7 +55,6 @@ message GrpcUpdateMessageResponse {
 message GrpcDeleteMessageRequest {
   string message_id = 1;
   string profile_id = 2;
-  string server_id = 3;
 }
 
 message GrpcDeleteMessageResponse {
@@ -66,10 +63,9 @@ message GrpcDeleteMessageResponse {
 
 message GrpcGetMessagesByChannelIdRequest {
   string channel_id = 1;
-  string server_id = 2;
-  string profile_id = 3;
-  int32 page_number = 4;
-  int32 page_size = 5;
+  string profile_id = 2;
+  int32 page_number = 3;
+  int32 page_size = 4;
 }
 
 message GrpcGetMessagesByChannelIdResponse {
