@@ -31,7 +31,6 @@ import java.util.UUID;
 public class VerificationCredentialService extends VerificationCredentialServiceGrpc.VerificationCredentialServiceImplBase {
 
     private final MysteryJdbc mysteryJdbc;
-    private final KafkaTemplate<String, Object> kafkaTemplate;
 
     public String generateVerificationToken() {
         return UUID.randomUUID().toString();
@@ -54,8 +53,8 @@ public class VerificationCredentialService extends VerificationCredentialService
     }
 
     public void sendMailVerify(String email, VerificationCredential verificationCredential) {
-        this.kafkaTemplate.send("userTopic", new NotificationEmailEvent("Please Activate your Account",
-                email, buildMailVerify(verificationCredential)));
+//        this.kafkaTemplate.send("userTopic", new NotificationEmailEvent("Please Activate your Account",
+//                email, buildMailVerify(verificationCredential)));
     }
 
     @Override

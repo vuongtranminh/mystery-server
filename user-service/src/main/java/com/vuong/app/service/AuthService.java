@@ -4,7 +4,7 @@ import com.vuong.app.config.MysteryJdbc;
 import com.vuong.app.doman.AuthProvider;
 import com.vuong.app.doman.VerificationCredential;
 import com.vuong.app.event.CreateUserEvent;
-import com.vuong.app.kafka.Producer;
+import com.vuong.app.kafka.KafKaProducerService;
 import com.vuong.app.redis.repository.UserRepository;
 import com.vuong.app.v1.GrpcErrorCode;
 import com.vuong.app.v1.GrpcErrorResponse;
@@ -33,7 +33,7 @@ public class AuthService extends AuthServiceGrpc.AuthServiceImplBase {
     private final MysteryJdbc mysteryJdbc;
     private final VerificationCredentialService verificationCredentialService;
     private final UserRepository userRepository;
-    private final Producer producer;
+    private final KafKaProducerService producer;
 
     @Override
     public void createUserSocial(GrpcCreateUserSocialRequest request, StreamObserver<GrpcCreateUserSocialResponse> responseObserver) {
