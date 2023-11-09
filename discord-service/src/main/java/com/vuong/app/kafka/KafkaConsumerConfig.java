@@ -41,7 +41,7 @@ public class KafkaConsumerConfig {
 
     // 2. Consume user objects from Kafka
 
-    @Bean
+//    @Bean
     public ConsumerFactory<String, CreateUserEvent> createUserConsumerFactory() {
         Map<String, Object> props = new HashMap<>();
         props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
@@ -59,7 +59,7 @@ public class KafkaConsumerConfig {
         return factory;
     }
 
-    @Bean
+//    @Bean
     public ConsumerFactory<String, UpdateUserEvent> updateUserConsumerFactory() {
         Map<String, Object> props = new HashMap<>();
         props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
