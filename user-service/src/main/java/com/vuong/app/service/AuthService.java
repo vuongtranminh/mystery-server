@@ -153,6 +153,11 @@ public class AuthService extends AuthServiceGrpc.AuthServiceImplBase {
                     .setUserId(userId)
                     .build();
 
+            this.producer.sendMessage("add", CreateUserEvent.builder()
+                    .userId(userId)
+                    .name(request.getName())
+                    .build());
+
             responseObserver.onNext(response);
             responseObserver.onCompleted();
         } catch (SQLException ex) {

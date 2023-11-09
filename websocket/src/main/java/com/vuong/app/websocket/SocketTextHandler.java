@@ -3,9 +3,8 @@ package com.vuong.app.websocket;
 import com.vuong.app.redis.RedisMessageSubscriber;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.springframework.web.socket.CloseStatus;
-import org.springframework.web.socket.TextMessage;
-import org.springframework.web.socket.WebSocketSession;
+import org.springframework.web.socket.*;
+import org.springframework.web.socket.handler.AbstractWebSocketHandler;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 
 import java.io.IOException;
@@ -13,7 +12,7 @@ import java.util.List;
 
 @Service
 @Slf4j
-public class SocketTextHandler extends TextWebSocketHandler {
+public class SocketTextHandler extends AbstractWebSocketHandler {
 
     private final WebSocketSessionManager webSocketSessionManager;
     private final RedisMessageSubscriber subscriber;
@@ -58,4 +57,19 @@ public class SocketTextHandler extends TextWebSocketHandler {
 //        log.info("got the payload {} and going to send to channel {}", payload, targetUserId);
 //        this.redisMessagePublisher.publish(targetUserId, userId + ":" + messageToBeSent);
     }
+
+    @Override
+    protected void handleBinaryMessage(WebSocketSession session, BinaryMessage message) throws Exception {
+        super.handleBinaryMessage(session, message);
+    }
+
+//    @Override
+//    protected void handlePongMessage(WebSocketSession session, PongMessage message) throws Exception {
+//        super.handlePongMessage(session, message);
+//    }
+//
+//    @Override
+//    public void handleTransportError(WebSocketSession session, Throwable exception) throws Exception {
+//        super.handleTransportError(session, exception);
+//    }
 }
