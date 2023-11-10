@@ -33,7 +33,7 @@ public class AuthService extends AuthServiceGrpc.AuthServiceImplBase {
     private final MysteryJdbc mysteryJdbc;
     private final VerificationCredentialService verificationCredentialService;
     private final UserRepository userRepository;
-    private final KafKaProducerService producer;
+    private final KafKaProducerService kafKaProducerService;
 
     @Override
     public void createUserSocial(GrpcCreateUserSocialRequest request, StreamObserver<GrpcCreateUserSocialResponse> responseObserver) {
@@ -76,7 +76,7 @@ public class AuthService extends AuthServiceGrpc.AuthServiceImplBase {
 
             GrpcCreateUserSocialResponse response = GrpcCreateUserSocialResponse.newBuilder().setUserId(userId).build();
 
-            this.producer.sendMessage("add", CreateUserEvent.builder()
+            this.kafKaProducerService.sendMessage("create-user-key", CreateUserEvent.builder()
                     .userId(userId)
                     .name(request.getName())
                     .avtUrl(request.getAvtUrl())
@@ -153,7 +153,7 @@ public class AuthService extends AuthServiceGrpc.AuthServiceImplBase {
                     .setUserId(userId)
                     .build();
 
-            this.producer.sendMessage("add", CreateUserEvent.builder()
+            this.kafKaProducerService.sendMessage("create-user-key", CreateUserEvent.builder()
                     .userId(userId)
                     .name(request.getName())
                     .build());

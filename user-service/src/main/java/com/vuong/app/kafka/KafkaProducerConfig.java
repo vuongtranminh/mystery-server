@@ -20,9 +20,12 @@ import java.util.Map;
 @Configuration
 public class KafkaProducerConfig {
 
-    //1. Send string to Kafka
+//    public static final String CREATE_USER_KAFKA_TEMPLATE_BEAN = "createUserKafkaTemplate";
+//    public static final String UPDATE_USER_KAFKA_TEMPLATE_BEAN = "updateUserKafkaTemplate";
 
-    @Bean
+    public static final String USER_KAFKA_TEMPLATE_BEAN = "userKafkaTemplate";
+
+    //1. Send string to Kafka
     public ProducerFactory<String, String> producerFactory() {
         Map<String, Object> props = new HashMap<>();
         props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
@@ -37,8 +40,7 @@ public class KafkaProducerConfig {
     }
 
     //2. Send User objects to Kafka
-    @Bean
-    public ProducerFactory<String, CreateUserEvent> createUserProducerFactory() {
+    public ProducerFactory<String, CreateUserEvent> userProducerFactory() {
         Map<String, Object> configProps = new HashMap<>();
         configProps.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
         configProps.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
@@ -46,22 +48,33 @@ public class KafkaProducerConfig {
         return new DefaultKafkaProducerFactory<>(configProps);
     }
 
-    @Bean
-    public KafkaTemplate<String, CreateUserEvent> createUserKafkaTemplate() {
-        return new KafkaTemplate<>(createUserProducerFactory());
+    @Bean(USER_KAFKA_TEMPLATE_BEAN)
+    public KafkaTemplate<String, CreateUserEvent> userKafkaTemplate() {
+        return new KafkaTemplate<>(userProducerFactory());
     }
-
-    @Bean
-    public ProducerFactory<String, UpdateUserEvent> updateUserProducerFactory() {
-        Map<String, Object> configProps = new HashMap<>();
-        configProps.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
-        configProps.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
-        configProps.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, JsonSerializer.class);
-        return new DefaultKafkaProducerFactory<>(configProps);
-    }
-
-    @Bean
-    public KafkaTemplate<String, UpdateUserEvent> updateUserKafkaTemplate() {
-        return new KafkaTemplate<>(updateUserProducerFactory());
-    }
+//    public ProducerFactory<String, CreateUserEvent> createUserProducerFactory() {
+//        Map<String, Object> configProps = new HashMap<>();
+//        configProps.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
+//        configProps.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
+//        configProps.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, JsonSerializer.class);
+//        return new DefaultKafkaProducerFactory<>(configProps);
+//    }
+//
+//    @Bean(CREATE_USER_KAFKA_TEMPLATE_BEAN)
+//    public KafkaTemplate<String, CreateUserEvent> createUserKafkaTemplate() {
+//        return new KafkaTemplate<>(createUserProducerFactory());
+//    }
+//
+//    public ProducerFactory<String, UpdateUserEvent> updateUserProducerFactory() {
+//        Map<String, Object> configProps = new HashMap<>();
+//        configProps.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
+//        configProps.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
+//        configProps.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, JsonSerializer.class);
+//        return new DefaultKafkaProducerFactory<>(configProps);
+//    }
+//
+//    @Bean(UPDATE_USER_KAFKA_TEMPLATE_BEAN)
+//    public KafkaTemplate<String, UpdateUserEvent> updateUserKafkaTemplate() {
+//        return new KafkaTemplate<>(updateUserProducerFactory());
+//    }
 }

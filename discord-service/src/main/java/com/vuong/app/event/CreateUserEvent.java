@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Data
 @Builder
-public class CreateUserEvent {
+public class CreateUserEvent implements UserEvent {
     private String userId;
     private String name;
     private String avtUrl;

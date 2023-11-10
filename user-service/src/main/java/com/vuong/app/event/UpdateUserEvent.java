@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Data
 @Builder
-public class UpdateUserEvent {
+public class UpdateUserEvent implements UserEvent {
     private String userId;
     private String name;
     private String avtUrl;

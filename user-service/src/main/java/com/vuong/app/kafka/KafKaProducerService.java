@@ -2,10 +2,12 @@ package com.vuong.app.kafka;
 
 import com.vuong.app.event.CreateUserEvent;
 import com.vuong.app.event.UpdateUserEvent;
+import com.vuong.app.event.UserEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.kafka.core.KafkaFailureCallback;
 import org.springframework.kafka.core.KafkaProducerException;
 import org.springframework.kafka.core.KafkaSendCallback;
@@ -22,44 +24,50 @@ public class KafKaProducerService {
 
     private static final String TOPIC = "user-topic";
 
-    private final KafkaTemplate<String, CreateUserEvent> createUserKafkaTemplate;
-    private final KafkaTemplate<String, UpdateUserEvent> updateUserKafkaTemplate;
+//    @Qualifier(KafkaProducerConfig.CREATE_USER_KAFKA_TEMPLATE_BEAN)
+//    private final KafkaTemplate<String, CreateUserEvent> createUserKafkaTemplate;
+//
+//    @Qualifier(KafkaProducerConfig.UPDATE_USER_KAFKA_TEMPLATE_BEAN)
+//    private final KafkaTemplate<String, UpdateUserEvent> updateUserKafkaTemplate;
 
-    public void sendMessage(String key, CreateUserEvent data) {
-        ListenableFuture<SendResult<String, CreateUserEvent>> future = createUserKafkaTemplate.send(TOPIC, key, data);
-        future.addCallback(new KafkaSendCallback<String, CreateUserEvent>() {
+    @Qualifier(KafkaProducerConfig.USER_KAFKA_TEMPLATE_BEAN)
+    private final KafkaTemplate<String, UserEvent> userKafkaTemplate;
+
+    public void sendMessage(String key, UserEvent data) {
+        ListenableFuture<SendResult<String, UserEvent>> future = userKafkaTemplate.send(TOPIC, key, data);
+        future.addCallback(new KafkaSendCallback<String, UserEvent>() {
 
             @Override
-            public void onSuccess(SendResult<String, CreateUserEvent> result) {
+            public void onSuccess(SendResult<String, UserEvent> result) {
                 log.info("Sent message: " + data
                         + " with offset: " + result.getRecordMetadata().offset());
             }
 
             @Override
             public void onFailure(KafkaProducerException ex) {
-                ProducerRecord<String, CreateUserEvent> failed = ex.getFailedProducerRecord();
+                ProducerRecord<String, UserEvent> failed = ex.getFailedProducerRecord();
                 log.error("Unable to send message : " + data, ex);
             }
 
         });
     }
 
-    public void sendMessage(String key, UpdateUserEvent data) {
-        ListenableFuture<SendResult<String, UpdateUserEvent>> future = updateUserKafkaTemplate.send(TOPIC, key, data);
-        future.addCallback(new KafkaSendCallback<String, UpdateUserEvent>() {
-
-            @Override
-            public void onSuccess(SendResult<String, UpdateUserEvent> result) {
-                log.info("Sent message: " + data
-                        + " with offset: " + result.getRecordMetadata().offset());
-            }
-
-            @Override
-            public void onFailure(KafkaProducerException ex) {
-                ProducerRecord<String, UpdateUserEvent> failed = ex.getFailedProducerRecord();
-                log.error("Unable to send message : " + data, ex);
-            }
-
-        });
-    }
+//    public void sendMessage(String key, UpdateUserEvent data) {
+//        ListenableFuture<SendResult<String, UpdateUserEvent>> future = updateUserKafkaTemplate.send(TOPIC, key, data);
+//        future.addCallback(new KafkaSendCallback<String, UpdateUserEvent>() {
+//
+//            @Override
+//            public void onSuccess(SendResult<String, UpdateUserEvent> result) {
+//                log.info("Sent message: " + data
+//                        + " with offset: " + result.getRecordMetadata().offset());
+//            }
+//
+//            @Override
+//            public void onFailure(KafkaProducerException ex) {
+//                ProducerRecord<String, UpdateUserEvent> failed = ex.getFailedProducerRecord();
+//                log.error("Unable to send message : " + data, ex);
+//            }
+//
+//        });
+//    }
 }

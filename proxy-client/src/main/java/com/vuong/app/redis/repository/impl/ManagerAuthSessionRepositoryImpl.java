@@ -40,9 +40,9 @@ public class ManagerAuthSessionRepositoryImpl implements ManagerAuthSessionRepos
     private ValueOperations<String, AuthMetadata> accessTokenOperations;
     private ValueOperations<String, AuthMetadata> refreshTokenOperations;
 
-    public ManagerAuthSessionRepositoryImpl(@Qualifier(RedisConfig.REDIS_TEMPALTE_MANAGER_AUTH_SESSION_BEAN) RedisTemplate<String, TokenStore> redisTemplateManagerAuthSession,
-                                            @Qualifier(RedisConfig.REDIS_TEMPALTE_ACCESS_TOKEN_BEAN) RedisTemplate<String, AuthMetadata> redisTemplateAccessToken,
-                                            @Qualifier(RedisConfig.REDIS_TEMPALTE_REFRESH_TOKEN_BEAN) RedisTemplate<String, AuthMetadata> redisTemplateRefreshToken,
+    public ManagerAuthSessionRepositoryImpl(@Qualifier(RedisConfig.REDIS_TEMPLATE_MANAGER_AUTH_SESSION_BEAN) RedisTemplate<String, TokenStore> redisTemplateManagerAuthSession,
+                                            @Qualifier(RedisConfig.REDIS_TEMPLATE_ACCESS_TOKEN_BEAN) RedisTemplate<String, AuthMetadata> redisTemplateAccessToken,
+                                            @Qualifier(RedisConfig.REDIS_TEMPLATE_REFRESH_TOKEN_BEAN) RedisTemplate<String, AuthMetadata> redisTemplateRefreshToken,
                                             AppProperties appProperties) {
         this.redisTemplateManagerAuthSession = redisTemplateManagerAuthSession;
         this.redisTemplateAccessToken = redisTemplateAccessToken;
