@@ -12,7 +12,7 @@ import java.sql.SQLException;
 public class MysteryDB {
     @Bean
     public Connection getConnection() throws SQLException {
-        HikariConfig config = new HikariConfig("user-service/src/main/resources/hikari.properties");
+        HikariConfig config = new HikariConfig("discord-service/src/main/resources/hikari.properties");
         HikariDataSource ds = new HikariDataSource(config);
         return ds.getConnection();
     }

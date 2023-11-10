@@ -33,6 +33,10 @@ public class KafKaProducerService {
     @Qualifier(KafkaProducerConfig.USER_KAFKA_TEMPLATE_BEAN)
     private final KafkaTemplate<String, UserEvent> userKafkaTemplate;
 
+//    public KafKaProducerService(@Qualifier(KafkaProducerConfig.USER_KAFKA_TEMPLATE_BEAN) KafkaTemplate<String, UserEvent> userKafkaTemplate) {
+//        this.userKafkaTemplate = userKafkaTemplate;
+//    }
+
     public void sendMessage(String key, UserEvent data) {
         ListenableFuture<SendResult<String, UserEvent>> future = userKafkaTemplate.send(TOPIC, key, data);
         future.addCallback(new KafkaSendCallback<String, UserEvent>() {

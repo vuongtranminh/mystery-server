@@ -2,6 +2,7 @@ package com.vuong.app.kafka;
 
 import com.vuong.app.event.CreateUserEvent;
 import com.vuong.app.event.UpdateUserEvent;
+import com.vuong.app.event.UserEvent;
 import org.apache.kafka.clients.admin.NewTopic;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.StringSerializer;
@@ -23,7 +24,7 @@ public class KafkaProducerConfig {
 //    public static final String CREATE_USER_KAFKA_TEMPLATE_BEAN = "createUserKafkaTemplate";
 //    public static final String UPDATE_USER_KAFKA_TEMPLATE_BEAN = "updateUserKafkaTemplate";
 
-    public static final String USER_KAFKA_TEMPLATE_BEAN = "userKafkaTemplate";
+    public static final String USER_KAFKA_TEMPLATE_BEAN = "userKafkaTemplateBean";
 
     //1. Send string to Kafka
     public ProducerFactory<String, String> producerFactory() {
@@ -40,7 +41,8 @@ public class KafkaProducerConfig {
     }
 
     //2. Send User objects to Kafka
-    public ProducerFactory<String, CreateUserEvent> userProducerFactory() {
+    @Bean
+    public ProducerFactory<String, UserEvent> userProducerFactory() {
         Map<String, Object> configProps = new HashMap<>();
         configProps.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
         configProps.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
@@ -49,8 +51,8 @@ public class KafkaProducerConfig {
     }
 
     @Bean(USER_KAFKA_TEMPLATE_BEAN)
-    public KafkaTemplate<String, CreateUserEvent> userKafkaTemplate() {
-        return new KafkaTemplate<>(userProducerFactory());
+    public KafkaTemplate<String, UserEvent> userKafkaTemplate(ProducerFactory<String, UserEvent> producerFactory) {
+        return new KafkaTemplate<>(producerFactory);
     }
 //    public ProducerFactory<String, CreateUserEvent> createUserProducerFactory() {
 //        Map<String, Object> configProps = new HashMap<>();

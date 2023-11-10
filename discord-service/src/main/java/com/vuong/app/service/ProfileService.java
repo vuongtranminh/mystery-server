@@ -42,7 +42,9 @@ public class ProfileService {
             pst.setString(2, request.getName());
             pst.setString(3, request.getAvtUrl());
             int result = pst.executeUpdate();
+
         } catch (SQLException ex) {
+            ex.printStackTrace();
             mysteryJdbc.doRollback();
         } finally {
             mysteryJdbc.closePreparedStatement(pst);

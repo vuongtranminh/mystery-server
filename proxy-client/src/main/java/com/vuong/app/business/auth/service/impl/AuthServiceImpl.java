@@ -20,6 +20,7 @@ import com.vuong.app.security.UserPrincipal;
 import com.vuong.app.util.CookieUtils;
 import com.vuong.app.util.ServletHelper;
 import lombok.RequiredArgsConstructor;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -137,14 +138,17 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public ResponseObject refeshToken(HttpServletRequest request, HttpServletResponse response) {
-        Optional<Cookie> oldRefreshTokenOptional = CookieUtils.getCookie(request, appProperties.getAuth().getRefreshTokenCookieName());
-        if (!oldRefreshTokenOptional.isPresent()) {
+        String oldRefreshToken = CookieUtils.getCookie(request, appProperties.getAuth().getRefreshTokenCookieName())
+                .map(cookie -> CookieUtils.deserialize(cookie, String.class))
+                .orElse(null);
+
+        if (StringUtils.isBlank(oldRefreshToken)) {
             return new ExceptionMsg("Refresh token not found", HttpStatus.NOT_FOUND);
         }
 
-        String oldRefreshToken = oldRefreshTokenOptional.get().getValue();
-
         if (managerAuthSessionRepository.hasRefreshToken(oldRefreshToken) || !tokenProvider.validateRefreshToken(oldRefreshToken)) { // pass is expiresAt before now
+            CookieUtils.deleteCookie(request, response, appProperties.getAuth().getAccessTokenCookieName());
+            CookieUtils.deleteCookie(request, response, appProperties.getAuth().getRefreshTokenCookieName());
             return new ExceptionMsg("Invalid refresh token", HttpStatus.BAD_REQUEST);
         }
 

@@ -47,20 +47,25 @@ public class KafkaConsumerConfig {
 
     // 2. Consume user objects from Kafka
 
-    public ConsumerFactory<String, UserEvent> userConsumerFactory() {
+    private Map<String, Object> consumerProps() {
         Map<String, Object> props = new HashMap<>();
         props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
         props.put(ConsumerConfig.GROUP_ID_CONFIG, "group-id");
         props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
         props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, JsonDeserializer.class);
         props.put(JsonDeserializer.TRUSTED_PACKAGES, "*");
-        return new DefaultKafkaConsumerFactory<>(props);
+        return props;
+    }
+
+    @Bean
+    public ConsumerFactory<String, UserEvent> userConsumerFactory() {
+        return new DefaultKafkaConsumerFactory<>(consumerProps());
     }
 
     @Bean(USER_KAFKA_LISTENER_CONTAINER_FACTORY)
-    public ConcurrentKafkaListenerContainerFactory<String, UserEvent> createUserKafkaListenerContainerFactory() {
+    public ConcurrentKafkaListenerContainerFactory<String, UserEvent> createUserKafkaListenerContainerFactory(ConsumerFactory<String, UserEvent> consumerFactory) {
         ConcurrentKafkaListenerContainerFactory<String, UserEvent> factory = new ConcurrentKafkaListenerContainerFactory<>();
-        factory.setConsumerFactory(userConsumerFactory());
+        factory.setConsumerFactory(consumerFactory);
         return factory;
     }
 

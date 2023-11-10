@@ -13,6 +13,7 @@ import com.vuong.app.security.UserPrincipal;
 import com.vuong.app.util.CookieUtils;
 import com.vuong.app.util.ServletHelper;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
@@ -30,6 +31,7 @@ import static com.vuong.app.security.oauth2.HttpCookieOAuth2AuthorizationRequest
 
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
 
     private final TokenProvider tokenProvider;
@@ -83,6 +85,8 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
                 .lastLoggedIn(Instant.now())
                 .build();
         managerAuthSessionRepository.storeToken(tokenStore, authMetadata);
+
+        log.warn("LOG TOKEN INIT: " + accessToken.getAccessToken());
 
         CookieUtils.addCookie(response, appProperties.getAuth().getAccessTokenCookieName(), CookieUtils.serialize(accessToken.getAccessToken()), (int) appProperties.getAuth().getAccessTokenExpirationMsec());
         CookieUtils.addCookie(response, appProperties.getAuth().getRefreshTokenCookieName(), CookieUtils.serialize(refreshToken.getRefreshToken()), (int) appProperties.getAuth().getRefreshTokenExpirationMsec());
