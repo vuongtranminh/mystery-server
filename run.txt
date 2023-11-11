@@ -1,0 +1,3 @@
+run redis
+run kafka
+gen GRPC: mvn clean compile
