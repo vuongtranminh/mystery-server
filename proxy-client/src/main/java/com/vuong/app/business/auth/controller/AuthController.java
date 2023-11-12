@@ -48,8 +48,8 @@ public class AuthController {
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<?> logout(HttpServletRequest request, HttpServletResponse response, @CurrentUser UserPrincipal currentUser) {
-        return ResponseEntity.ok(this.authService.logout(request, response, currentUser));
+    public ResponseEntity<?> logout(HttpServletRequest request, HttpServletResponse response) {
+        return ResponseEntity.ok(this.authService.logout(request, response));
     }
 
     @PostMapping("/refeshToken")

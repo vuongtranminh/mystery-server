@@ -121,14 +121,14 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public ResponseObject logout(HttpServletRequest request, HttpServletResponse response, UserPrincipal currentUser) {
+    public ResponseObject logout(HttpServletRequest request, HttpServletResponse response) {
         String userAgent = ServletHelper.getUserAgent(request);
 
-        AuthMetadata authMetadata = AuthMetadata.builder()
-                .userId(currentUser.getUserId())
-                .userAgent(userAgent)
-                .build();
-        managerAuthSessionRepository.removeTokenByAuthMetadata(authMetadata);
+//        AuthMetadata authMetadata = AuthMetadata.builder()
+//                .userId(currentUser.getUserId())
+//                .userAgent(userAgent)
+//                .build();
+//        managerAuthSessionRepository.removeTokenByAuthMetadata(authMetadata);
 
         CookieUtils.deleteCookie(request, response, appProperties.getAuth().getAccessTokenCookieName());
         CookieUtils.deleteCookie(request, response, appProperties.getAuth().getRefreshTokenCookieName());
@@ -147,8 +147,8 @@ public class AuthServiceImpl implements AuthService {
         }
 
         if (managerAuthSessionRepository.hasRefreshToken(oldRefreshToken) || !tokenProvider.validateRefreshToken(oldRefreshToken)) { // pass is expiresAt before now
-            CookieUtils.deleteCookie(request, response, appProperties.getAuth().getAccessTokenCookieName());
-            CookieUtils.deleteCookie(request, response, appProperties.getAuth().getRefreshTokenCookieName());
+//            CookieUtils.deleteCookie(request, response, appProperties.getAuth().getAccessTokenCookieName());
+//            CookieUtils.deleteCookie(request, response, appProperties.getAuth().getRefreshTokenCookieName());
             return new ExceptionMsg("Invalid refresh token", HttpStatus.BAD_REQUEST);
         }
 

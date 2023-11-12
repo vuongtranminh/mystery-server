@@ -16,7 +16,7 @@ public interface AuthService {
 
     ResponseObject signIn(HttpServletRequest request, HttpServletResponse response, SignInRequest signInRequest);
     ResponseObject signUp(SignUpRequest signUpRequest);
-    ResponseObject logout(HttpServletRequest request, HttpServletResponse response, UserPrincipal currentUser);
+    ResponseObject logout(HttpServletRequest request, HttpServletResponse response);
     ResponseObject refeshToken(HttpServletRequest request, HttpServletResponse response);
     ResponseObject verificationCredential(boolean isOtp, String verify);
     ResponseObject reissueVerificationCredential(ReissueVerificationCredentialRequest request);
