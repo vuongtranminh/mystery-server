@@ -1,20 +1,17 @@
 package com.vuong.app.business.discord.service.impl;
 
 import com.vuong.app.business.Meta;
+import com.vuong.app.business.discord.model.MemberProfile;
+import com.vuong.app.business.discord.model.MemberRole;
 import com.vuong.app.business.discord.model.Server;
-import com.vuong.app.business.discord.model.payload.CreateServerRequest;
-import com.vuong.app.business.discord.model.payload.CreateServerResponse;
-import com.vuong.app.business.discord.model.payload.GetServersJoinRequest;
-import com.vuong.app.business.discord.model.payload.GetServersJoinResponse;
+import com.vuong.app.business.discord.model.payload.*;
 import com.vuong.app.business.discord.service.ServerService;
 import com.vuong.app.common.api.ResponseMsg;
 import com.vuong.app.common.api.ResponseObject;
+import com.vuong.app.exception.wrapper.ResourceNotFoundException;
 import com.vuong.app.grpc.service.ServerClientService;
 import com.vuong.app.security.UserPrincipal;
-import com.vuong.app.v1.discord.GrpcCreateServerRequest;
-import com.vuong.app.v1.discord.GrpcCreateServerResponse;
-import com.vuong.app.v1.discord.GrpcGetServersJoinRequest;
-import com.vuong.app.v1.discord.GrpcGetServersJoinResponse;
+import com.vuong.app.v1.discord.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -60,6 +57,30 @@ public class ServerServiceImpl implements ServerService {
                         .build())
                         .collect(Collectors.toUnmodifiableList()))
                 .build());
+    }
+
+    @Override
+    public ResponseObject getFirstServerJoin(UserPrincipal currentUser) {
+        GrpcGetFirstServerJoinResponse grpcResponse = this.serverClientService.getFirstServerJoin(GrpcGetFirstServerJoinRequest.newBuilder()
+                        .setProfileId(currentUser.getUserId())
+                        .build())
+                .orElseThrow(() -> new ResourceNotFoundException("server", "profileId", currentUser.getUserId()));
+
+        return new ResponseMsg("Sign up successfully!", HttpStatus.OK, GetFirstServerJoinResponse.builder()
+                .result(Server.builder()
+                        .serverId(grpcResponse.getResult().getServerId())
+                        .name(grpcResponse.getResult().getName())
+                        .imgUrl(grpcResponse.getResult().getImgUrl())
+                        .authorId(grpcResponse.getResult().getAuthorId())
+                        .createdAt(grpcResponse.getResult().getCreatedAt())
+                        .updatedAt(grpcResponse.getResult().getUpdatedAt())
+                        .build())
+                .build());
+    }
+
+    @Override
+    public ResponseObject getServerJoinByServerId(UserPrincipal currentUser, GetServerJoinByServerIdRequest request) {
+        return null;
     }
 
 

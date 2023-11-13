@@ -22,6 +22,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.Instant;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -56,6 +57,44 @@ public class ServerClientService {
             Metadata metadata = Status.trailersFromThrowable(ex);
             GrpcErrorResponse errorResponse = metadata.get(ProtoUtils.keyForProto(GrpcErrorResponse.getDefaultInstance()));
             log.error(errorResponse.getErrorCode() + " : " + errorResponse.getMessage());
+
+            throw new WTuxException(errorResponse);
+        }
+    }
+
+    public Optional<GrpcGetFirstServerJoinResponse> getFirstServerJoin(GrpcGetFirstServerJoinRequest request) {
+        try {
+            GrpcGetFirstServerJoinResponse response = this.serverServiceBlockingStub.getFirstServerJoin(request);
+
+            return Optional.of(response);
+
+        } catch (Exception ex) {
+            Metadata metadata = Status.trailersFromThrowable(ex);
+            GrpcErrorResponse errorResponse = metadata.get(ProtoUtils.keyForProto(GrpcErrorResponse.getDefaultInstance()));
+            log.error(errorResponse.getErrorCode() + " : " + errorResponse.getMessage());
+
+            if (errorResponse.getErrorCode().getNumber() == GrpcErrorCode.ERROR_CODE_NOT_FOUND_VALUE) {
+                return Optional.empty();
+            }
+
+            throw new WTuxException(errorResponse);
+        }
+    }
+
+    public Optional<GrpcGetServerJoinByServerIdResponse> getServerJoinByServerId(GrpcGetServerJoinByServerIdRequest request) {
+        try {
+            GrpcGetServerJoinByServerIdResponse response = this.serverServiceBlockingStub.getServerJoinByServerId(request);
+
+            return Optional.of(response);
+
+        } catch (Exception ex) {
+            Metadata metadata = Status.trailersFromThrowable(ex);
+            GrpcErrorResponse errorResponse = metadata.get(ProtoUtils.keyForProto(GrpcErrorResponse.getDefaultInstance()));
+            log.error(errorResponse.getErrorCode() + " : " + errorResponse.getMessage());
+
+            if (errorResponse.getErrorCode().getNumber() == GrpcErrorCode.ERROR_CODE_NOT_FOUND_VALUE) {
+                return Optional.empty();
+            }
 
             throw new WTuxException(errorResponse);
         }
