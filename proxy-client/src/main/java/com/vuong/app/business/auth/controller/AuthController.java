@@ -57,12 +57,12 @@ public class AuthController {
         return ResponseEntity.ok(this.authService.refeshToken(request, response));
     }
 
-    @GetMapping("/accountVerificationToken/{verificationToken}")
+    @PostMapping("/accountVerificationToken/{verificationToken}")
     public ResponseEntity<?> verifyAccount(@PathVariable String verificationToken) {
         return ResponseEntity.ok(this.authService.verificationCredential(false, verificationToken));
     }
 
-    @GetMapping("/accountVerificationOtp")
+    @PostMapping("/accountVerificationOtp")
     public ResponseEntity<?> verifyAccount(
             @RequestBody
             @NotNull(message = "*Input must not blank!**")

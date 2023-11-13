@@ -18,10 +18,10 @@ public class AppProperties {
     @Setter
     public static class Auth {
         private String accessTokenSecret;
-        private long accessTokenExpirationMsec;
+        private int accessTokenExpirationMsec;
 
         private String refreshTokenSecret;
-        private long refreshTokenExpirationMsec;
+        private int refreshTokenExpirationMsec;
 
         private String accessTokenCookieName;
         private String refreshTokenCookieName;

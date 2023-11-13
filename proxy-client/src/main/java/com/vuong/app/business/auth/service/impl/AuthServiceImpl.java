@@ -21,6 +21,7 @@ import com.vuong.app.util.CookieUtils;
 import com.vuong.app.util.ServletHelper;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -93,8 +94,8 @@ public class AuthServiceImpl implements AuthService {
                 .build();
         managerAuthSessionRepository.storeToken(tokenStore, authMetadata);
 
-        CookieUtils.addCookie(response, appProperties.getAuth().getAccessTokenCookieName(), CookieUtils.serialize(accessToken.getAccessToken()), (int) appProperties.getAuth().getAccessTokenExpirationMsec());
-        CookieUtils.addCookie(response, appProperties.getAuth().getRefreshTokenCookieName(), CookieUtils.serialize(refreshToken.getRefreshToken()), (int) appProperties.getAuth().getRefreshTokenExpirationMsec());
+        CookieUtils.addCookie(response, appProperties.getAuth().getAccessTokenCookieName(), CookieUtils.serialize(accessToken.getAccessToken()), appProperties.getAuth().getAccessTokenExpirationMsec());
+        CookieUtils.addCookie(response, appProperties.getAuth().getRefreshTokenCookieName(), CookieUtils.serialize(refreshToken.getRefreshToken()), appProperties.getAuth().getRefreshTokenExpirationMsec());
 
         return new ResponseMsg("Sign in successfully!", HttpStatus.OK);
     }
@@ -129,10 +130,14 @@ public class AuthServiceImpl implements AuthService {
 //                .userAgent(userAgent)
 //                .build();
 //        managerAuthSessionRepository.removeTokenByAuthMetadata(authMetadata);
-
+        CookieUtils.addCookie(response, "test", "test", 1000);
         CookieUtils.deleteCookie(request, response, appProperties.getAuth().getAccessTokenCookieName());
         CookieUtils.deleteCookie(request, response, appProperties.getAuth().getRefreshTokenCookieName());
 
+        response.addHeader(HttpHeaders.ACCESS_CONTROL_ALLOW_CREDENTIALS, Boolean.TRUE.toString());
+        response.addHeader(HttpHeaders.ACCESS_CONTROL_ALLOW_METHODS, "GET,PUT,POST,DELETE,UPDATE,OPTIONS");
+        response.addHeader(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, "http://localhost:3000,http://localhost:8080,http://localhost:8900");
+        response.addHeader(HttpHeaders.ACCESS_CONTROL_ALLOW_HEADERS, "X-Requested-With, X-HTTP-Method-Override, Content-Type, Accept");
         return new ResponseMsg("Log out successfully!", HttpStatus.OK);
     }
 

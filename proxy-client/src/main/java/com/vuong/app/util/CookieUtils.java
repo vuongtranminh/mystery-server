@@ -1,5 +1,7 @@
 package com.vuong.app.util;
 
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseCookie;
 import org.springframework.util.SerializationUtils;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
@@ -24,25 +26,42 @@ public class CookieUtils {
     }
 
     public static void addCookie(HttpServletResponse response, String name, String value, int maxAge) {
-        Cookie cookie = new Cookie(name, value);
-        cookie.setPath("/");
-        cookie.setHttpOnly(true);
-        cookie.setMaxAge(maxAge);
-        response.addCookie(cookie);
+//        Cookie cookie = new Cookie(name, value);
+//        cookie.setPath("/");
+//        cookie.setHttpOnly(true);
+//        cookie.setMaxAge(maxAge); // 0 is delete, -1 is session
+//        response.addCookie(cookie);
+        ResponseCookie cookie = ResponseCookie.from(name, value)
+//                .httpOnly(true)
+                .secure(false) // sercue true when https / env local not set cookie when true
+                .maxAge(maxAge)
+                .path("/")
+//                .sameSite("Lax")
+                .build();
+        response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
     }
 
     public static void deleteCookie(HttpServletRequest request, HttpServletResponse response, String name) {
-        Cookie[] cookies = request.getCookies();
-        if (cookies != null && cookies.length > 0) {
-            for (Cookie cookie: cookies) {
-                if (cookie.getName().equals(name)) {
-                    cookie.setValue("");
-                    cookie.setPath("/");
-                    cookie.setMaxAge(0);
-                    response.addCookie(cookie);
-                }
-            }
-        }
+//        Cookie[] cookies = request.getCookies();
+//        if (cookies != null && cookies.length > 0) {
+//            for (Cookie cookie: cookies) {
+//                if (cookie.getName().equals(name)) {
+//                    cookie.setValue("");
+//                    cookie.setPath("/");
+//                    cookie.setMaxAge(0);
+//                    response.addCookie(cookie);
+//                }
+//            }
+//        }
+        ResponseCookie cookie = ResponseCookie.from(name, "")
+//                .httpOnly(true)
+                .secure(false) // sercue true when https / env local not set cookie when true
+                .maxAge(0)
+                .path("/")
+//                .sameSite("Lax") // sameSite: None must be work when secure = true
+//                .domain("localhost")
+                .build();
+        response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
     }
 
     public static String serialize(Object object) {
