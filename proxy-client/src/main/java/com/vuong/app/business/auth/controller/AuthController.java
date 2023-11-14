@@ -3,6 +3,7 @@ package com.vuong.app.business.auth.controller;
 import com.vuong.app.business.auth.model.payload.*;
 import com.vuong.app.business.auth.service.AuthService;
 import com.vuong.app.common.api.ResponseMsg;
+import com.vuong.app.common.api.ResponseObject;
 import com.vuong.app.config.AppProperties;
 import com.vuong.app.security.CurrentUser;
 import com.vuong.app.security.TokenProvider;
@@ -88,4 +89,15 @@ public class AuthController {
     ) {
         return ResponseEntity.ok(this.authService.changeUserPassword(request));
     }
+
+    @PostMapping("/getAuthMetaData")
+    public ResponseEntity<?> getAuthMetaData(@CurrentUser UserPrincipal currentUser) {
+        return ResponseEntity.ok(this.authService.getAuthMetaData(currentUser));
+    }
+
+    @PostMapping("/removeAuthMetaData")
+    public ResponseEntity<?> removeAuthMetaData(HttpServletRequest request, @CurrentUser UserPrincipal currentUser) {
+        return ResponseEntity.ok(this.authService.removeAuthMetaData(request, currentUser));
+    }
+
 }

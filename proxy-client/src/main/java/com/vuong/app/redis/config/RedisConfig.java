@@ -12,6 +12,8 @@ import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
 
+import java.util.Map;
+
 @Configuration
 @RequiredArgsConstructor
 public class RedisConfig {
@@ -40,8 +42,8 @@ public class RedisConfig {
     }
 
     @Bean(REDIS_TEMPLATE_MANAGER_AUTH_SESSION_BEAN)
-    public RedisTemplate<String, TokenStore> redisTemplateManagerAuthSession(RedisConnectionFactory connectionFactory) {
-        RedisTemplate<String, TokenStore> template = new RedisTemplate<>();
+    public RedisTemplate<String, Map<String, TokenStore>> redisTemplateManagerAuthSession(RedisConnectionFactory connectionFactory) {
+        RedisTemplate<String, Map<String, TokenStore>> template = new RedisTemplate<>();
         template.setConnectionFactory(connectionFactory);
 
         return template;

@@ -34,6 +34,7 @@ import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -108,9 +109,6 @@ public class AuthServiceImpl implements AuthService {
         if (existsUserByEmailResponse.isExists()) {
             throw new BadRequestException("Email address already in use.");
         }
-//        if(this.existsByEmail(signUpRequest.getEmail())) {
-//            throw new BadRequestException("Email address already in use.");
-//        }
 
         CreateUserLocalResponse createUserLocalResponse = this.authClientService.createUserLocal(CreateUserLocalRequest.builder()
                 .name(signUpRequest.getName())
@@ -125,12 +123,23 @@ public class AuthServiceImpl implements AuthService {
     public ResponseObject logout(HttpServletRequest request, HttpServletResponse response) {
         String userAgent = ServletHelper.getUserAgent(request);
 
-//        AuthMetadata authMetadata = AuthMetadata.builder()
-//                .userId(currentUser.getUserId())
-//                .userAgent(userAgent)
-//                .build();
-//        managerAuthSessionRepository.removeTokenByAuthMetadata(authMetadata);
-        CookieUtils.addCookie(response, "test", "test", 1000);
+        String oldRefreshToken = CookieUtils.getCookie(request, appProperties.getAuth().getRefreshTokenCookieName())
+                .map(cookie -> CookieUtils.deserialize(cookie, String.class))
+                .orElse(null);
+
+        if (StringUtils.isBlank(oldRefreshToken)) {
+            return new ExceptionMsg("Refresh token not found", HttpStatus.NOT_FOUND);
+        }
+
+        String userId = tokenProvider.extractUserIdFromRefreshToken(oldRefreshToken);
+
+        AuthMetadata authMetadata = AuthMetadata.builder()
+                .userId(userId)
+                .userAgent(userAgent)
+                .build();
+
+        managerAuthSessionRepository.removeTokenByAuthMetadata(userId, authMetadata);
+
         CookieUtils.deleteCookie(request, response, appProperties.getAuth().getAccessTokenCookieName());
         CookieUtils.deleteCookie(request, response, appProperties.getAuth().getRefreshTokenCookieName());
 
@@ -152,8 +161,6 @@ public class AuthServiceImpl implements AuthService {
         }
 
         if (managerAuthSessionRepository.hasRefreshToken(oldRefreshToken) || !tokenProvider.validateRefreshToken(oldRefreshToken)) { // pass is expiresAt before now
-//            CookieUtils.deleteCookie(request, response, appProperties.getAuth().getAccessTokenCookieName());
-//            CookieUtils.deleteCookie(request, response, appProperties.getAuth().getRefreshTokenCookieName());
             return new ExceptionMsg("Invalid refresh token", HttpStatus.BAD_REQUEST);
         }
 
@@ -177,8 +184,8 @@ public class AuthServiceImpl implements AuthService {
                 .build();
         managerAuthSessionRepository.storeToken(tokenStore, authMetadata);
 
-        CookieUtils.addCookie(response, appProperties.getAuth().getAccessTokenCookieName(), CookieUtils.serialize(accessToken.getAccessToken()), (int) appProperties.getAuth().getAccessTokenExpirationMsec());
-        CookieUtils.addCookie(response, appProperties.getAuth().getRefreshTokenCookieName(), CookieUtils.serialize(refreshToken.getRefreshToken()), (int) appProperties.getAuth().getRefreshTokenExpirationMsec());
+        CookieUtils.addCookie(response, appProperties.getAuth().getAccessTokenCookieName(), CookieUtils.serialize(accessToken.getAccessToken()), appProperties.getAuth().getAccessTokenExpirationMsec());
+        CookieUtils.addCookie(response, appProperties.getAuth().getRefreshTokenCookieName(), CookieUtils.serialize(refreshToken.getRefreshToken()), appProperties.getAuth().getRefreshTokenExpirationMsec());
 
         return new ResponseMsg("Provide new access token successfully!", HttpStatus.OK);
     }
@@ -214,5 +221,20 @@ public class AuthServiceImpl implements AuthService {
                 .newPassword(passwordEncoder.encode(request.getNewPassword()))
                 .build());
         return new ResponseMsg("Change password successfully!", HttpStatus.OK);
+    }
+
+    @Override
+    public ResponseObject getAuthMetaData(UserPrincipal currentUser) {
+        List<AuthMetadata> result = this.managerAuthSessionRepository.getAuthMetaData(currentUser.getUserId());
+        return new ResponseMsg("success", HttpStatus.OK, result);
+    }
+
+    @Override
+    public ResponseObject removeAuthMetaData(HttpServletRequest request, UserPrincipal currentUser) {
+        String userAgent = ServletHelper.getUserAgent(request);
+
+        this.managerAuthSessionRepository.removeAuthMetaData(currentUser.getUserId(), userAgent);
+
+        return new ResponseMsg("remove AuthMetaData successfully!", HttpStatus.OK);
     }
 }

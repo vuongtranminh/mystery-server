@@ -1,8 +1,10 @@
 package com.vuong.app.business.discord.controller;
 
 import com.vuong.app.business.discord.model.payload.CreateServerRequest;
+import com.vuong.app.business.discord.model.payload.GetServerJoinByServerIdRequest;
 import com.vuong.app.business.discord.model.payload.GetServersJoinRequest;
 import com.vuong.app.business.discord.service.ServerService;
+import com.vuong.app.common.api.ResponseObject;
 import com.vuong.app.security.CurrentUser;
 import com.vuong.app.security.UserPrincipal;
 import lombok.RequiredArgsConstructor;
@@ -31,4 +33,13 @@ public class ServerController {
         return ResponseEntity.ok(this.serverService.getServersJoin(currentUser, request));
     }
 
+    @PostMapping("/getFirstServerJoin")
+    public ResponseEntity<?> getFirstServerJoin(@CurrentUser UserPrincipal currentUser) {
+        return ResponseEntity.ok(this.serverService.getFirstServerJoin(currentUser));
+    }
+
+    @PostMapping("/getServerJoinByServerId")
+    public ResponseEntity<?> getServerJoinByServerId(@CurrentUser UserPrincipal currentUser, @Valid @RequestBody GetServerJoinByServerIdRequest request) {
+        return ResponseEntity.ok(this.serverService.getServerJoinByServerId(currentUser, request));
+    }
 }

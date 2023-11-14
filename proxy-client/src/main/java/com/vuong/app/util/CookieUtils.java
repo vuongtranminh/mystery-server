@@ -3,6 +3,8 @@ package com.vuong.app.util;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.util.SerializationUtils;
+import org.springframework.web.util.WebUtils;
+
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -12,27 +14,13 @@ import java.util.Optional;
 public class CookieUtils {
 
     public static Optional<Cookie> getCookie(HttpServletRequest request, String name) {
-        Cookie[] cookies = request.getCookies();
-
-        if (cookies != null && cookies.length > 0) {
-            for (Cookie cookie : cookies) {
-                if (cookie.getName().equals(name)) {
-                    return Optional.of(cookie);
-                }
-            }
-        }
-
-        return Optional.empty();
+        Cookie cookie = WebUtils.getCookie(request, name);
+        return Optional.of(cookie);
     }
 
-    public static void addCookie(HttpServletResponse response, String name, String value, int maxAge) {
-//        Cookie cookie = new Cookie(name, value);
-//        cookie.setPath("/");
-//        cookie.setHttpOnly(true);
-//        cookie.setMaxAge(maxAge); // 0 is delete, -1 is session
-//        response.addCookie(cookie);
+    public static void addCookie(HttpServletResponse response, String name, String value, long maxAge) {
         ResponseCookie cookie = ResponseCookie.from(name, value)
-//                .httpOnly(true)
+                .httpOnly(true)
                 .secure(false) // sercue true when https / env local not set cookie when true
                 .maxAge(maxAge)
                 .path("/")
@@ -42,19 +30,8 @@ public class CookieUtils {
     }
 
     public static void deleteCookie(HttpServletRequest request, HttpServletResponse response, String name) {
-//        Cookie[] cookies = request.getCookies();
-//        if (cookies != null && cookies.length > 0) {
-//            for (Cookie cookie: cookies) {
-//                if (cookie.getName().equals(name)) {
-//                    cookie.setValue("");
-//                    cookie.setPath("/");
-//                    cookie.setMaxAge(0);
-//                    response.addCookie(cookie);
-//                }
-//            }
-//        }
         ResponseCookie cookie = ResponseCookie.from(name, "")
-//                .httpOnly(true)
+                .httpOnly(true)
                 .secure(false) // sercue true when https / env local not set cookie when true
                 .maxAge(0)
                 .path("/")
