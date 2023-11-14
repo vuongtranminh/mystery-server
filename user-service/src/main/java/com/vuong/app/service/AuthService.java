@@ -340,4 +340,8 @@ public class AuthService extends AuthServiceGrpc.AuthServiceImplBase {
             mysteryJdbc.closePreparedStatement(pst);
         }
     }
+
+    // auth_info (id, refresh_token, refresh_token_expire, user_id, last_logged_in, remote_addr, user_agent, status, access_token)
+    // create new add access_token to redis
+    // status: đã dùng, không dùng => nếu đã dùng => xoá auth_info, xoá access_token
 }
