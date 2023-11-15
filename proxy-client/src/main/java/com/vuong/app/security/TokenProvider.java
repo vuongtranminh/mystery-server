@@ -6,8 +6,10 @@ import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.MacAlgorithm;
 import lombok.*;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
+import javax.crypto.Mac;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 import java.time.Instant;
@@ -22,18 +24,20 @@ public class TokenProvider {
 
     private final AppProperties appProperties;
     private MacAlgorithm algAccessToken;
-    private SecretKey keyAccessToken;
+    private final SecretKey keyAccessToken;
     private MacAlgorithm algRefreshToken;
-    private SecretKey keyRefreshToken;
+    private final SecretKey keyRefreshToken;
 
-    public TokenProvider(AppProperties appProperties) {
+    public TokenProvider(AppProperties appProperties,
+                         @Qualifier("keyAccessToken") SecretKey keyAccessToken,
+                         @Qualifier("keyRefreshToken") SecretKey keyRefreshToken) {
         this.appProperties = appProperties;
 
         this.algAccessToken = Jwts.SIG.HS512;
-        this.keyAccessToken = algAccessToken.key().build();
+        this.keyAccessToken = keyAccessToken;
 
         this.algRefreshToken = Jwts.SIG.HS512;
-        this.keyRefreshToken = algRefreshToken.key().build();
+        this.keyRefreshToken = keyRefreshToken;
     }
 
     public AccessToken generateAccessToken(String userId) {

@@ -1,12 +1,14 @@
 package com.vuong.app.config;
 
 import com.vuong.app.security.CustomUserDetailsService;
+import com.vuong.app.security.KeyUtils;
 import com.vuong.app.security.RestAuthenticationEntryPoint;
 import com.vuong.app.security.TokenAuthenticationFilter;
 import com.vuong.app.security.oauth2.CustomOAuth2UserService;
 import com.vuong.app.security.oauth2.HttpCookieOAuth2AuthorizationRequestRepository;
 import com.vuong.app.security.oauth2.OAuth2AuthenticationFailureHandler;
 import com.vuong.app.security.oauth2.OAuth2AuthenticationSuccessHandler;
+import io.jsonwebtoken.security.MacAlgorithm;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -25,6 +27,7 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import javax.crypto.SecretKey;
 import java.util.Arrays;
 
 @Configuration
@@ -48,6 +51,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     private final HttpCookieOAuth2AuthorizationRequestRepository httpCookieOAuth2AuthorizationRequestRepository;
 
     private final TokenAuthenticationFilter tokenAuthenticationFilter;
+
+    private final KeyUtils keyUtils;
 
     @Bean
     CorsConfigurationSource corsConfigurationSource() {
@@ -88,6 +93,16 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     @Override
     public AuthenticationManager authenticationManagerBean() throws Exception {
         return super.authenticationManagerBean();
+    }
+
+    @Bean("keyAccessToken")
+    public SecretKey keyAccessToken() {
+        return keyUtils.getAccessTokenKey();
+    }
+
+    @Bean("keyRefreshToken")
+    public SecretKey keyRefreshToken() {
+        return keyUtils.getRefreshTokenKey();
     }
 
     @Override

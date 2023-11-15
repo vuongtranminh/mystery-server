@@ -341,7 +341,117 @@ public class AuthService extends AuthServiceGrpc.AuthServiceImplBase {
         }
     }
 
-    // auth_info (id, refresh_token, refresh_token_expire, user_id, last_logged_in, remote_addr, user_agent, status, access_token)
+    // auth_info (id, token_family, refresh_token, refresh_token_expire, user_id, last_logged_in, remote_addr, user_agent, status, access_token)
+    // id: uuid, token_family: uuid
+    // 1 user tối đa 2 token_family
     // create new add access_token to redis
     // status: đã dùng, không dùng => nếu đã dùng => xoá auth_info, xoá access_token
+
+    /**
+     * (Title) Refresh Token Automatic Reuse Detection and Revoke Refresh Tokens
+     *
+     * How could we handle a situation where there is a race condition between a legitimate user and a malicious one? For example:
+     *
+     * 🐱 Legitimate User has 🔄 Refresh Token 1 and 🔑 Access Token 1.
+     *
+     * 😈 Malicious User manages to steal 🔄 Refresh Token 1 from 🐱 Legitimate User.
+     *
+     * 🐱 Legitimate User uses 🔄 Refresh Token 1 to get a new refresh-access token pair.
+     *
+     * The 🚓 Auth0 Authorization Server returns 🔄 Refresh Token 2 and 🔑 Access Token 2 to 🐱 Legitimate User.
+     *
+     * 😈 Malicious User then attempts to use 🔄 Refresh Token 1 to get a new access token. Pure evil!
+     *
+     * What do you think should happen next? Would 😈 Malicious User manage to get a new access token?
+     *
+     * This is what happens when your identity platform has 🤖 Automatic Reuse Detection:
+     *
+     * The 🚓 Auth0 Authorization Server has been keeping track of all the refresh tokens descending from the original refresh token. That is, it has created a "token family".
+     *
+     * The 🚓 Auth0 Authorization Server recognizes that someone is reusing 🔄 Refresh Token 1 and immediately invalidates the refresh token family, including 🔄 Refresh Token 2.
+     *
+     * The 🚓 Auth0 Authorization Server returns an Access Denied response to 😈 Malicious User.
+     *
+     * 🔑 Access Token 2 expires, and 🐱 Legitimate User attempts to use 🔄 Refresh Token 2 to request a new refresh-access token pair.
+     *
+     * The 🚓 Auth0 Authorization Server returns an Access Denied response to 🐱 Legitimate User.
+     *
+     * The 🚓 Auth0 Authorization Server requires re-authentication to get new access and refresh tokens.
+     *
+     * It's critical for the most recently-issued refresh token to get immediately invalidated when a previously-used refresh token is sent to the authorization server. This prevents any refresh tokens in the same token family from being used to get new access tokens.
+     *
+     * This protection mechanism works regardless of whether the legitimate or malicious user is able to exchange 🔄 Refresh Token 1 for a new refresh-access token pair before the other. Without enforcing sender-constraint, the authorization server can't know which actor is legitimate or malicious in the event of a replay attack.
+     *
+     * Automatic reuse detection is a key component of a refresh token rotation strategy. The server has already invalidated the refresh token that has already been used. However, since the authorization server has no way of knowing if the legitimate user is holding the most current refresh token, it invalidates the whole token family just to be safe.
+     */
+
+    // Refresh Token Automatic Reuse Detection and Revoke Refresh Tokens
+
+    /**
+     * for new Login
+     * count = select count(token_family) from tbl_auth_info where user_id = userId group by token_family
+     * if (count = 2) tối đa 2 thiết bị
+     *
+     * id = UUID
+     * token_family = UUID
+     * last_logged_in = now
+     * status = READY
+     * insert into tbl_auth_info(id, token_family, refresh_token, refresh_token_expire, user_id, last_logged_in, remote_addr, user_agent, status, access_token) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+     * redis.save(accessToken)
+     *
+     * notify new device for user_id via email
+     */
+
+    /**
+     * for logout
+     * authInfo = select * from tbl_auth_info where refresh_token = refreshToken;
+     * if (!authInfo) {
+     *     return
+     * }
+     *
+     * redis.delete(authInfo.accessToken)
+     *
+     * delete tbl_auth_info where token_family = authInfo.tokenFamily
+     */
+
+    /**
+     *
+     * provider accessToken by refreshToken
+     * authInfo = select * from tbl_auth_info where refresh_token = refreshToken and refresh_token_expire > now;
+     *
+     * if (!authInfo) {
+     *      return error refreshToken
+     * }
+     *
+     * if (authInfo.status == USED) {
+     *     revokeAuthInfos = select * from tbl_auth_info where token_family = authInfo.tokenFamily
+     *     for (AuthInfo revokeAuthInfo : revokeAuthInfos) {
+     *         redis.delete(revokeAuthInfo.accessToken)
+     *     }
+     *
+     *     delete tbl_auth_info where token_family = authInfo.tokenFamily;
+     *
+     *     return lỗi -> đăng nhập lại
+     * }
+     *
+     * update tbl_auth_info set status = USED where refresh_token = refreshToken
+     * id = UUID
+     * token_family = authInfo.tokenFamily
+     * last_logged_in = authInfo.lastLoggedIn
+     * refresh_token_expire = authInfo.refreshTokenExpire - now
+     * status = READY
+     * newAuthInfo = insert into tbl_auth_info(id, token_family, refresh_token, refresh_token_expire, user_id, last_logged_in, remote_addr, user_agent, status, access_token) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+     *
+     * return newAuthInfo
+     */
+
+    /**
+     * crontab 12h
+     *
+     * delete tbl_auth_info where refresh_token_expire < now
+     */
+
+    // insert into tbl_auth_info(id, token_family, refresh_token, refresh_token_expire, user_id, last_logged_in, remote_addr, user_agent, status, access_token) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+
+    // Reuse Detection
 }

@@ -26,3 +26,10 @@ logging:
     root: INFO
     org.springframework.web: DEBUG
     io.lettuce: DEBUG
+
+app:
+  auth:
+    access-token:
+      path: ${ACCESS_TOKEN_KEY_PATH}
+    refresh-token:
+      path: ${REFRESH_TOKEN_KEY_PATH}

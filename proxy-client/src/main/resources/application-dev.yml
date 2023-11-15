@@ -63,3 +63,6 @@ app:
       - myiosapp://oauth2/redirect
     authorizedRedirectSuccessUri: http://localhost:3000
     authorizedRedirectFailureUri: http://localhost:3000/sign-in
+
+ACCESS_TOKEN_KEY_PATH: "access-token-key/access-token-private.key"
+REFRESH_TOKEN_KEY_PATH: "refresh-token-key/access-token-private.key"
