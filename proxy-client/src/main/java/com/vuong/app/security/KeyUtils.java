@@ -24,10 +24,10 @@ public class KeyUtils {
 
     private final Environment environment;
 
-    @Value("${access-token.path}")
+    @Value("${app.auth.access-token.path}")
     private String accessTokenKeyPath;
 
-    @Value("${refresh-token.path}")
+    @Value("${app.auth.refresh-token.path}")
     private String refreshTokenKeyPath;
 
     private SecretKey accessTokenKey;
@@ -68,7 +68,7 @@ public class KeyUtils {
             }
         }
 
-        File directory = new File(keyPath);
+        File directory = new File("token-key");
         if (!directory.exists()) {
             directory.mkdirs();
         }

@@ -67,14 +67,12 @@ public class ServerServiceImpl implements ServerService {
                 .orElseThrow(() -> new ResourceNotFoundException("server", "profileId", currentUser.getUserId()));
 
         return new ResponseMsg("Sign up successfully!", HttpStatus.OK, GetFirstServerJoinResponse.builder()
-                .result(Server.builder()
-                        .serverId(grpcResponse.getResult().getServerId())
-                        .name(grpcResponse.getResult().getName())
-                        .imgUrl(grpcResponse.getResult().getImgUrl())
-                        .authorId(grpcResponse.getResult().getAuthorId())
-                        .createdAt(grpcResponse.getResult().getCreatedAt())
-                        .updatedAt(grpcResponse.getResult().getUpdatedAt())
-                        .build())
+                .serverId(grpcResponse.getResult().getServerId())
+                .name(grpcResponse.getResult().getName())
+                .imgUrl(grpcResponse.getResult().getImgUrl())
+                .authorId(grpcResponse.getResult().getAuthorId())
+                .createdAt(grpcResponse.getResult().getCreatedAt())
+                .updatedAt(grpcResponse.getResult().getUpdatedAt())
                 .build());
     }
 
@@ -87,14 +85,12 @@ public class ServerServiceImpl implements ServerService {
                 .orElseThrow(() -> new ResourceNotFoundException("server", "serverId", request.getServerId()));
 
         return new ResponseMsg("Sign up successfully!", HttpStatus.OK, GetServerJoinByServerIdResponse.builder()
-                .result(Server.builder()
-                        .serverId(grpcResponse.getResult().getServerId())
-                        .name(grpcResponse.getResult().getName())
-                        .imgUrl(grpcResponse.getResult().getImgUrl())
-                        .authorId(grpcResponse.getResult().getAuthorId())
-                        .createdAt(grpcResponse.getResult().getCreatedAt())
-                        .updatedAt(grpcResponse.getResult().getUpdatedAt())
-                        .build())
+                .serverId(grpcResponse.getResult().getServerId())
+                .name(grpcResponse.getResult().getName())
+                .imgUrl(grpcResponse.getResult().getImgUrl())
+                .authorId(grpcResponse.getResult().getAuthorId())
+                .createdAt(grpcResponse.getResult().getCreatedAt())
+                .updatedAt(grpcResponse.getResult().getUpdatedAt())
                 .build());
     }
 

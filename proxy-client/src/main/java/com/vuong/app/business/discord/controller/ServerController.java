@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 import javax.validation.Valid;
 
 @RestController
-@RequestMapping("/api/v1/server")
+@RequestMapping("/api/v1/discord-service/servers")
 @RequiredArgsConstructor
 public class ServerController {
 

@@ -11,5 +11,10 @@ import lombok.NoArgsConstructor;
 @Data
 @Builder
 public class GetServerJoinByServerIdResponse {
-    private Server result;
+    private String serverId;
+    private String name;
+    private String imgUrl;
+    private String authorId;
+    private String createdAt;
+    private String updatedAt;
 }

@@ -138,7 +138,7 @@ public class AuthServiceImpl implements AuthService {
                 .userAgent(userAgent)
                 .build();
 
-        managerAuthSessionRepository.removeTokenByAuthMetadata(userId, authMetadata);
+//        managerAuthSessionRepository.removeTokenByAuthMetadata(userId, authMetadata);
 
         CookieUtils.deleteCookie(request, response, appProperties.getAuth().getAccessTokenCookieName());
         CookieUtils.deleteCookie(request, response, appProperties.getAuth().getRefreshTokenCookieName());

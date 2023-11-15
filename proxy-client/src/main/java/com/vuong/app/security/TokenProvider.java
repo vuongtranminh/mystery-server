@@ -6,14 +6,10 @@ import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.MacAlgorithm;
 import lombok.*;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
-import javax.crypto.Mac;
 import javax.crypto.SecretKey;
-import javax.crypto.spec.SecretKeySpec;
 import java.time.Instant;
-import java.util.Base64;
 import java.util.Date;
 import java.util.UUID;
 import java.util.function.Function;
@@ -23,21 +19,21 @@ import java.util.function.Function;
 public class TokenProvider {
 
     private final AppProperties appProperties;
+    private final KeyUtils keyUtils;
     private MacAlgorithm algAccessToken;
-    private final SecretKey keyAccessToken;
+    private SecretKey keyAccessToken;
     private MacAlgorithm algRefreshToken;
-    private final SecretKey keyRefreshToken;
+    private SecretKey keyRefreshToken;
 
-    public TokenProvider(AppProperties appProperties,
-                         @Qualifier("keyAccessToken") SecretKey keyAccessToken,
-                         @Qualifier("keyRefreshToken") SecretKey keyRefreshToken) {
+    public TokenProvider(AppProperties appProperties, KeyUtils keyUtils) {
         this.appProperties = appProperties;
+        this.keyUtils = keyUtils;
 
         this.algAccessToken = Jwts.SIG.HS512;
-        this.keyAccessToken = keyAccessToken;
+        this.keyAccessToken = keyUtils.getAccessTokenKey();
 
         this.algRefreshToken = Jwts.SIG.HS512;
-        this.keyRefreshToken = keyRefreshToken;
+        this.keyRefreshToken = keyUtils.getRefreshTokenKey();
     }
 
     public AccessToken generateAccessToken(String userId) {

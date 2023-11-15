@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 import javax.validation.Valid;
 
 @RestController
-@RequestMapping("/api/v1/channel")
+@RequestMapping("/api/v1/discord-service/channels")
 @RequiredArgsConstructor
 public class ChannelController {
 

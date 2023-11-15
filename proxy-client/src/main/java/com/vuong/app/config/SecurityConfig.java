@@ -52,8 +52,6 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
     private final TokenAuthenticationFilter tokenAuthenticationFilter;
 
-    private final KeyUtils keyUtils;
-
     @Bean
     CorsConfigurationSource corsConfigurationSource() {
 
@@ -93,16 +91,6 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     @Override
     public AuthenticationManager authenticationManagerBean() throws Exception {
         return super.authenticationManagerBean();
-    }
-
-    @Bean("keyAccessToken")
-    public SecretKey keyAccessToken() {
-        return keyUtils.getAccessTokenKey();
-    }
-
-    @Bean("keyRefreshToken")
-    public SecretKey keyRefreshToken() {
-        return keyUtils.getRefreshTokenKey();
     }
 
     @Override

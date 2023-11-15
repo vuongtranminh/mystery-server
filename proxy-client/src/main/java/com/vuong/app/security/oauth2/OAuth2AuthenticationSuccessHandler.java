@@ -84,7 +84,7 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
                 .remoteAddr(remoteAddr)
                 .lastLoggedIn(Instant.now())
                 .build();
-        managerAuthSessionRepository.storeToken(tokenStore, authMetadata);
+//        managerAuthSessionRepository.storeToken(tokenStore, authMetadata);
 
         log.warn("LOG TOKEN INIT: " + accessToken.getAccessToken());
 
