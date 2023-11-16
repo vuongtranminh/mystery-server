@@ -13,5 +13,5 @@ import lombok.NoArgsConstructor;
 public class CreateChannelRequest {
     private String serverId;
     private String name;
-    private ChannelType type;
+    private int type;
 }

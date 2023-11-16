@@ -11,5 +11,10 @@ import lombok.NoArgsConstructor;
 @Data
 @Builder
 public class GetChannelByChannelIdResponse {
-    private Channel result;
+    private String channelId;
+    private String name;
+    private int type;
+    private String serverId;
+    private String createdAt;
+    private String updatedAt;
 }

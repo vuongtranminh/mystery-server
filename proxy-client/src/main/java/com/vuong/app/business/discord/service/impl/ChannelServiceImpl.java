@@ -2,6 +2,7 @@ package com.vuong.app.business.discord.service.impl;
 
 import com.vuong.app.business.Meta;
 import com.vuong.app.business.discord.model.Channel;
+import com.vuong.app.business.discord.model.ChannelType;
 import com.vuong.app.business.discord.model.payload.*;
 import com.vuong.app.business.discord.service.ChannelService;
 import com.vuong.app.common.api.ResponseMsg;
@@ -30,7 +31,7 @@ public class ChannelServiceImpl implements ChannelService {
                 .setProfileId(currentUser.getUserId())
                 .setServerId(request.getServerId())
                 .setName(request.getName())
-                .setType(GrpcChannelType.forNumber(request.getType().getNumber()))
+                .setType(GrpcChannelType.forNumber(request.getType()))
                 .build());
 
         return new ResponseMsg("Sign up successfully!", HttpStatus.OK, CreateChannelResponse.builder()
@@ -71,13 +72,12 @@ public class ChannelServiceImpl implements ChannelService {
                 .build()).orElseThrow(() -> new ResourceNotFoundException("channel", "serverId", request.getServerId()));
 
         return new ResponseMsg("Sign up successfully!", HttpStatus.OK, GetChannelGeneralByServerIdResponse.builder()
-                .result(Channel.builder()
-                        .channelId(grpcResponse.getResult().getChannelId())
-                        .name(grpcResponse.getResult().getName())
-                        .serverId(grpcResponse.getResult().getServerId())
-                        .createdAt(grpcResponse.getResult().getCreatedAt())
-                        .updatedAt(grpcResponse.getResult().getUpdatedAt())
-                        .build())
+                .channelId(grpcResponse.getResult().getChannelId())
+                .name(grpcResponse.getResult().getName())
+                .type(ChannelType.forNumber(grpcResponse.getResult().getType().getNumber()).getNumber())
+                .serverId(grpcResponse.getResult().getServerId())
+                .createdAt(grpcResponse.getResult().getCreatedAt())
+                .updatedAt(grpcResponse.getResult().getUpdatedAt())
                 .build());
     }
 
@@ -89,13 +89,12 @@ public class ChannelServiceImpl implements ChannelService {
                 .build()).orElseThrow(() -> new ResourceNotFoundException("channel", "channelId", request.getChannelId()));
 
         return new ResponseMsg("Sign up successfully!", HttpStatus.OK, GetChannelByChannelIdResponse.builder()
-                .result(Channel.builder()
-                        .channelId(grpcResponse.getResult().getChannelId())
-                        .name(grpcResponse.getResult().getName())
-                        .serverId(grpcResponse.getResult().getServerId())
-                        .createdAt(grpcResponse.getResult().getCreatedAt())
-                        .updatedAt(grpcResponse.getResult().getUpdatedAt())
-                        .build())
+                .channelId(grpcResponse.getResult().getChannelId())
+                .name(grpcResponse.getResult().getName())
+                .type(ChannelType.forNumber(grpcResponse.getResult().getType().getNumber()).getNumber())
+                .serverId(grpcResponse.getResult().getServerId())
+                .createdAt(grpcResponse.getResult().getCreatedAt())
+                .updatedAt(grpcResponse.getResult().getUpdatedAt())
                 .build());
     }
 
@@ -113,6 +112,7 @@ public class ChannelServiceImpl implements ChannelService {
                 .content(grpcResponse.getContentList().stream().map(grpcChannel -> Channel.builder()
                         .channelId(grpcChannel.getChannelId())
                         .name(grpcChannel.getName())
+                        .type(ChannelType.forNumber(grpcChannel.getType().getNumber()).getNumber())
                         .serverId(grpcChannel.getServerId())
                         .createdAt(grpcChannel.getCreatedAt())
                         .updatedAt(grpcChannel.getUpdatedAt())

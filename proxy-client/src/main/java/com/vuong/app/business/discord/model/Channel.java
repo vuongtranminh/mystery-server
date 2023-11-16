@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
 public class Channel {
     private String channelId;
     private String name;
-    private ChannelType type;
+    private int type;
     private String serverId;
     private String createdAt;
     private String updatedAt;

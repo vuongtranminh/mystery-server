@@ -28,7 +28,7 @@ public class MemberService extends MemberServiceGrpc.MemberServiceImplBase {
     @Override
     public void getMembersByServerId(GrpcGetMembersByServerIdRequest request, StreamObserver<GrpcGetMembersByServerIdResponse> responseObserver) {
         String isMemberQuery = "exists (select 1 from tbl_member as m1 where m1.profile_id = ? and m1.server_id = ?)";
-        String countQuery = "select count(m.id) from tbl_member as m where m.server_id = ? and " + isMemberQuery;
+        String countQuery = "select count(m.id) from tbl_member as m where m.server_id = ? and m.profile_id <> ? and " + isMemberQuery;
 
         String memberProfileQuery = "select " +
                 "ms.id as member_id, p.id as profile_id, ms.role as member_role, " +
@@ -52,7 +52,8 @@ public class MemberService extends MemberServiceGrpc.MemberServiceImplBase {
             pst1 = con.prepareStatement(countQuery);
             pst1.setString(1, request.getServerId());
             pst1.setString(2, request.getProfileId());
-            pst1.setString(3, request.getServerId());
+            pst1.setString(3, request.getProfileId());
+            pst1.setString(4, request.getServerId());
             rs1 = pst1.executeQuery();
 
             long totalElements = 0;

@@ -64,15 +64,13 @@ public class MemberServiceImpl implements MemberService {
                 .orElseThrow(() -> new ResourceNotFoundException("member", "serverId", request.getServerId()));
 
         return new ResponseMsg("Sign up successfully!", HttpStatus.OK, GetMemberByServerIdResponse.builder()
-                .result(MemberProfile.builder()
-                        .memberId(grpcResponse.getResult().getMemberId())
-                        .role(MemberRole.forNumber(grpcResponse.getResult().getRole().getNumber()))
-                        .serverId(grpcResponse.getResult().getServerId())
-                        .joinAt(grpcResponse.getResult().getJoinAt())
-                        .profileId(grpcResponse.getResult().getProfileId())
-                        .name(grpcResponse.getResult().getName())
-                        .avtUrl(grpcResponse.getResult().getAvtUrl())
-                        .build())
+                .memberId(grpcResponse.getResult().getMemberId())
+                .role(MemberRole.forNumber(grpcResponse.getResult().getRole().getNumber()))
+                .serverId(grpcResponse.getResult().getServerId())
+                .joinAt(grpcResponse.getResult().getJoinAt())
+                .profileId(grpcResponse.getResult().getProfileId())
+                .name(grpcResponse.getResult().getName())
+                .avtUrl(grpcResponse.getResult().getAvtUrl())
                 .build());
     }
 }

@@ -34,7 +34,7 @@ public class ChannelService extends ChannelServiceGrpc.ChannelServiceImplBase {
     public void createChannel(GrpcCreateChannelRequest request, StreamObserver<GrpcCreateChannelResponse> responseObserver) {
         // server delete is member delete and channel delete
         String isPermissionQuery = "select 1 from tbl_member as m where m.server_id = ? and m.profile_id = ? and m.role in (?, ?)";
-        String insertChannelQuery = "insert into tbl_channel(id, name, type, server_id, created_at, updated_at) values(?, ?, ?, ?, ?, ?, ?)";
+        String insertChannelQuery = "insert into tbl_channel(id, name, type, server_id, created_at, updated_at, updated_by) values(?, ?, ?, ?, ?, ?, ?)";
         // note: insert not working with where
 
         Connection con = null;
@@ -70,6 +70,8 @@ public class ChannelService extends ChannelServiceGrpc.ChannelServiceImplBase {
             }
 
             String channelId = UUID.randomUUID().toString();
+            String createdAt = Instant.now().toString();
+            String updatedAt = createdAt;
 
             pst2 = con.prepareStatement(insertChannelQuery);
 
@@ -77,8 +79,9 @@ public class ChannelService extends ChannelServiceGrpc.ChannelServiceImplBase {
             pst2.setString(2, request.getName());
             pst2.setInt(3, request.getType().getNumber());
             pst2.setString(4, request.getServerId());
-            pst2.setString(5, Instant.now().toString());
-            pst2.setString(6, Instant.now().toString());
+            pst2.setString(5, createdAt);
+            pst2.setString(6, updatedAt);
+            pst2.setString(7, request.getProfileId());
 
             int result = pst2.executeUpdate();
 
@@ -89,6 +92,7 @@ public class ChannelService extends ChannelServiceGrpc.ChannelServiceImplBase {
             responseObserver.onNext(response);
             responseObserver.onCompleted();
         } catch (SQLException ex) {
+            ex.printStackTrace();
             mysteryJdbc.doRollback();
         } finally {
             mysteryJdbc.closeResultSet(rs);
@@ -159,6 +163,7 @@ public class ChannelService extends ChannelServiceGrpc.ChannelServiceImplBase {
             responseObserver.onNext(response);
             responseObserver.onCompleted();
         } catch (SQLException ex) {
+            ex.printStackTrace();
             mysteryJdbc.doRollback();
         } finally {
             mysteryJdbc.closePreparedStatement(pst);
