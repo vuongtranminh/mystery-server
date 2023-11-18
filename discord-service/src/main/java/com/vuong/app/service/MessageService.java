@@ -568,16 +568,6 @@ public class MessageService extends MessageServiceGrpc.MessageServiceImplBase {
             rs3 = pst3.executeQuery();
 
             while (rs3.next()) {
-                GrpcMemberProfile memberProfile = GrpcMemberProfile.newBuilder()
-                        .setMemberId(rs1.getString(9))
-                        .setRole(GrpcMemberRole.forNumber(rs1.getInt(10)))
-                        .setServerId(rs1.getString(11))
-                        .setJoinAt(rs1.getString(12))
-                        .setProfileId(rs1.getString(13))
-                        .setName(rs1.getString(14))
-                        .setAvtUrl(rs1.getString(15))
-                        .build();
-
                 GrpcMessage.Builder builderMessage = GrpcMessage.newBuilder();
                 builderMessage.setMessageId(rs3.getString(1));
                 if (rs3.getString(2) != null) {
@@ -595,6 +585,16 @@ public class MessageService extends MessageServiceGrpc.MessageServiceImplBase {
                 if (rs3.getString(8) != null) {
                     builderMessage.setDeletedBy(rs3.getString(8));
                 }
+
+                GrpcMemberProfile memberProfile = GrpcMemberProfile.newBuilder()
+                        .setMemberId(rs3.getString(9))
+                        .setRole(GrpcMemberRole.forNumber(rs3.getInt(10)))
+                        .setServerId(rs3.getString(11))
+                        .setJoinAt(rs3.getString(12))
+                        .setProfileId(rs3.getString(13))
+                        .setName(rs3.getString(14))
+                        .setAvtUrl(rs3.getString(15))
+                        .build();
                 builderMessage.setAuthor(memberProfile);
 
                 GrpcMessage message = builderMessage.build();

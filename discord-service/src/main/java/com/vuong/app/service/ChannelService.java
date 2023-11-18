@@ -102,25 +102,46 @@ public class ChannelService extends ChannelServiceGrpc.ChannelServiceImplBase {
 
     @Override
     public void updateChannel(GrpcUpdateChannelRequest request, StreamObserver<GrpcUpdateChannelResponse> responseObserver) {
-        String isPermissionQuery = "exists (select 1 from tbl_member as m where m.server_id = (select tbl_channel.server_id from tbl_channel where tbl_channel.id = ?) and m.profile_id = ? and m.role in (?, ?))";
-        String updateChannelQuery = "update tbl_channel set name = ? where id = ? and name <> ? and " + isPermissionQuery;
+        // You can't specify target table 'tbl_channel' for update in FROM clause
+        String isPermissionQuery = "select 1 from tbl_member where tbl_member.server_id = (select tbl_channel.server_id from tbl_channel where tbl_channel.id = ?) and tbl_member.profile_id = ? and tbl_member.role in (?, ?)";
+        String updateChannelQuery = "update tbl_channel set name = ? where id = ? and name <> ?";
 
         Connection con = null;
-        PreparedStatement pst = null;
+        PreparedStatement pst1 = null;
+        PreparedStatement pst2 = null;
+        ResultSet rs1 = null;
 
         try {
             con = mysteryJdbc.getConnection();
 
-            pst = con.prepareStatement(updateChannelQuery);
-            pst.setString(1, request.getName());
-            pst.setString(2, request.getChannelId());
-            pst.setString(3, "general");
-            pst.setString(4, request.getChannelId());
-            pst.setString(5, request.getProfileId());
-            pst.setInt(6, GrpcMemberRole.MEMBER_ROLE_ADMIN_VALUE);
-            pst.setInt(7, GrpcMemberRole.MEMBER_ROLE_MODERATOR_VALUE);
+            pst1 = con.prepareStatement(isPermissionQuery);
+            pst1.setString(1, request.getChannelId());
+            pst1.setString(2, request.getProfileId());
+            pst1.setInt(3, GrpcMemberRole.MEMBER_ROLE_ADMIN_VALUE);
+            pst1.setInt(4, GrpcMemberRole.MEMBER_ROLE_MODERATOR_VALUE);
 
-            int result = pst.executeUpdate();
+            rs1 = pst1.executeQuery();
+            boolean hasPermission = mysteryJdbc.hasResult(rs1);
+            if (!hasPermission) {
+                Metadata metadata = new Metadata();
+                Metadata.Key<GrpcErrorResponse> responseKey = ProtoUtils.keyForProto(GrpcErrorResponse.getDefaultInstance());
+                GrpcErrorCode errorCode = GrpcErrorCode.ERROR_CODE_PERMISSION_DENIED;
+                GrpcErrorResponse errorResponse = GrpcErrorResponse.newBuilder()
+                        .setErrorCode(errorCode)
+                        .setMessage("not permistion")
+                        .build();
+                // pass the error object via metadata
+                metadata.put(responseKey, errorResponse);
+                responseObserver.onError(Status.NOT_FOUND.asRuntimeException(metadata));
+                return;
+            }
+
+            pst2 = con.prepareStatement(updateChannelQuery);
+            pst2.setString(1, request.getName());
+            pst2.setString(2, request.getChannelId());
+            pst2.setString(3, "general");
+
+            int result = pst2.executeUpdate();
 
             GrpcUpdateChannelResponse response = GrpcUpdateChannelResponse.newBuilder()
                     .setChannelId(request.getChannelId())
@@ -129,32 +150,54 @@ public class ChannelService extends ChannelServiceGrpc.ChannelServiceImplBase {
             responseObserver.onNext(response);
             responseObserver.onCompleted();
         } catch (SQLException ex) {
+            ex.printStackTrace();
             mysteryJdbc.doRollback();
         } finally {
-            mysteryJdbc.closePreparedStatement(pst);
+            mysteryJdbc.closeResultSet(rs1);
+            mysteryJdbc.closePreparedStatement(pst1, pst2);
         }
     }
 
     @Override
     public void deleteChannel(GrpcDeleteChannelRequest request, StreamObserver<GrpcDeleteChannelResponse> responseObserver) {
-        String isPermissionQuery = "exists (select 1 from tbl_member as m where m.server_id = (select tbl_channel.server_id from tbl_channel where tbl_channel.id = ?) and m.profile_id = ? and m.role in (?, ?))";
-        String deleteChannelQuery = "delete tbl_channel where id = ? and name <> ? and " + isPermissionQuery;
+        String isPermissionQuery = "select 1 from tbl_member where tbl_member.server_id = (select tbl_channel.server_id from tbl_channel where tbl_channel.id = ?) and tbl_member.profile_id = ? and tbl_member.role in (?, ?)";
+        String deleteChannelQuery = "delete from tbl_channel where tbl_channel.id = ? and tbl_channel.name <> ?";
 
         Connection con = null;
-        PreparedStatement pst = null;
+        PreparedStatement pst1 = null;
+        PreparedStatement pst2 = null;
+        ResultSet rs1 = null;
 
         try {
             con = mysteryJdbc.getConnection();
 
-            pst = con.prepareStatement(deleteChannelQuery);
-            pst.setString(1, request.getChannelId());
-            pst.setString(2, "general");
-            pst.setString(3, request.getChannelId());
-            pst.setString(4, request.getProfileId());
-            pst.setInt(5, GrpcMemberRole.MEMBER_ROLE_ADMIN_VALUE);
-            pst.setInt(6, GrpcMemberRole.MEMBER_ROLE_MODERATOR_VALUE);
+            pst1 = con.prepareStatement(isPermissionQuery);
+            pst1.setString(1, request.getChannelId());
+            pst1.setString(2, request.getProfileId());
+            pst1.setInt(3, GrpcMemberRole.MEMBER_ROLE_ADMIN_VALUE);
+            pst1.setInt(4, GrpcMemberRole.MEMBER_ROLE_MODERATOR_VALUE);
 
-            int result = pst.executeUpdate();
+            rs1 = pst1.executeQuery();
+            boolean hasPermission = mysteryJdbc.hasResult(rs1);
+            if (!hasPermission) {
+                Metadata metadata = new Metadata();
+                Metadata.Key<GrpcErrorResponse> responseKey = ProtoUtils.keyForProto(GrpcErrorResponse.getDefaultInstance());
+                GrpcErrorCode errorCode = GrpcErrorCode.ERROR_CODE_PERMISSION_DENIED;
+                GrpcErrorResponse errorResponse = GrpcErrorResponse.newBuilder()
+                        .setErrorCode(errorCode)
+                        .setMessage("not permistion")
+                        .build();
+                // pass the error object via metadata
+                metadata.put(responseKey, errorResponse);
+                responseObserver.onError(Status.NOT_FOUND.asRuntimeException(metadata));
+                return;
+            }
+
+            pst2 = con.prepareStatement(deleteChannelQuery);
+            pst2.setString(1, request.getChannelId());
+            pst2.setString(2, "general");
+
+            int result = pst2.executeUpdate();
 
             GrpcDeleteChannelResponse response = GrpcDeleteChannelResponse.newBuilder()
                     .setDeleted(true)
@@ -166,7 +209,8 @@ public class ChannelService extends ChannelServiceGrpc.ChannelServiceImplBase {
             ex.printStackTrace();
             mysteryJdbc.doRollback();
         } finally {
-            mysteryJdbc.closePreparedStatement(pst);
+            mysteryJdbc.closeResultSet(rs1);
+            mysteryJdbc.closePreparedStatement(pst1, pst2);
         }
     }
 

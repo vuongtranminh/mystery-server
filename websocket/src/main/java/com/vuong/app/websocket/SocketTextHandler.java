@@ -1,6 +1,11 @@
 package com.vuong.app.websocket;
 
+import com.vuong.app.grpc.ServerClientService;
 import com.vuong.app.redis.RedisMessageSubscriber;
+import com.vuong.app.v1.discord.GrpcGetServerJoinByServerIdRequest;
+import com.vuong.app.v1.discord.GrpcGetServerJoinByServerIdResponse;
+import com.vuong.app.v1.discord.GrpcGetServerJoinIdsRequest;
+import com.vuong.app.v1.discord.GrpcGetServerJoinIdsResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.socket.*;
@@ -8,6 +13,7 @@ import org.springframework.web.socket.handler.AbstractWebSocketHandler;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -16,19 +22,25 @@ public class SocketTextHandler extends AbstractWebSocketHandler {
 
     private final WebSocketSessionManager webSocketSessionManager;
     private final RedisMessageSubscriber subscriber;
+    private final ServerClientService serverClientService;
 
-    public SocketTextHandler(RedisMessageSubscriber subscriber) {
+    public SocketTextHandler(RedisMessageSubscriber subscriber, ServerClientService serverClientService) {
         this.webSocketSessionManager = WebSocketSessionManager.getInstance();
         this.subscriber = subscriber;
+        this.serverClientService = serverClientService;
     }
 
     @Override
     public void afterConnectionEstablished(WebSocketSession session) {
         this.webSocketSessionManager.addWebSocketSession(session);
         String userId = WebSocketHelper.getUserIdFromSessionAttribute(session);
-        List<String> serversId = List.of("b8ae3f8e-3931-49f8-8982-df057c68eeab");
-        serversId.forEach(serverId -> {
+        GrpcGetServerJoinIdsResponse response = this.serverClientService.getServerJoinIds(GrpcGetServerJoinIdsRequest.newBuilder()
+                        .setProfileId(userId)
+                .build());
+        List<String> serversId = new ArrayList<>();
+        response.getResultList().stream().forEach(serverId -> {
             this.webSocketSessionManager.addWebSocketSessionToChannel(serverId, session);
+            serversId.add(serverId);
         });
         this.subscriber.subscribe(serversId);
     }

@@ -1,4 +1,10 @@
 
-grpc:
-  server:
-    port: 8080
+server:
+  port: 8080
+
+app:
+  auth:
+    accessTokenCookieName: accessToken
+
+ACCESS_TOKEN_KEY_PATH: "token-key/access-token-private.key"
+REFRESH_TOKEN_KEY_PATH: "token-key/refresh-token-private.key"

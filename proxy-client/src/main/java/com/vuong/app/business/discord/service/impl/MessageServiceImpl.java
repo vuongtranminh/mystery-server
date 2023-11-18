@@ -25,12 +25,19 @@ public class MessageServiceImpl implements MessageService {
 
     @Override
     public ResponseObject createMessage(UserPrincipal currentUser, CreateMessageRequest request) {
-        GrpcCreateMessageResponse grpcResponse = this.messageClientService.createMessage(GrpcCreateMessageRequest.newBuilder()
-                .setContent(request.getContent())
-                .setFileUrl(request.getFileUrl())
-                .setChannelId(request.getChannelId())
-                .setProfileId(currentUser.getUserId())
-                .build());
+        GrpcCreateMessageRequest.Builder requestBuilder = GrpcCreateMessageRequest.newBuilder();
+
+        if (request.getContent() != null) {
+            requestBuilder.setContent(request.getContent());
+        }
+        if (request.getFileUrl() != null) {
+            requestBuilder.setFileUrl(request.getFileUrl());
+        }
+
+        requestBuilder.setChannelId(request.getChannelId());
+        requestBuilder.setProfileId(currentUser.getUserId());
+
+        GrpcCreateMessageResponse grpcResponse = this.messageClientService.createMessage(requestBuilder.build());
 
         return new ResponseMsg("Sign up successfully!", HttpStatus.OK, CreateMessageResponse.builder()
                 .messageId(grpcResponse.getMessageId())
@@ -84,7 +91,7 @@ public class MessageServiceImpl implements MessageService {
                         .deletedBy(grpcMessage.getDeletedBy())
                         .author(MemberProfile.builder()
                                 .memberId(grpcMessage.getAuthor().getMemberId())
-                                .role(MemberRole.forNumber(grpcMessage.getAuthor().getRole().getNumber()))
+                                .role(grpcMessage.getAuthor().getRole().getNumber())
                                 .serverId(grpcMessage.getAuthor().getServerId())
                                 .joinAt(grpcMessage.getAuthor().getJoinAt())
                                 .profileId(grpcMessage.getAuthor().getProfileId())

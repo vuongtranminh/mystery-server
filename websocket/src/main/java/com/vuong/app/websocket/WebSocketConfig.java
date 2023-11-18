@@ -19,11 +19,15 @@ import java.util.Map;
 public class WebSocketConfig implements WebSocketConfigurer {
 
     private final SocketTextHandler socketTextHandler;
+    private final WebSocketAuthInterceptor webSocketAuthInterceptor;
 
     @Override
     public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
-        registry.addHandler(this.socketTextHandler, "/myHandler/*")
-                .addInterceptors(getParametersInterceptors())
+//        registry.addHandler(this.socketTextHandler, "/mystery/*")
+//                .addInterceptors(webSocketAuthInterceptor)
+//                .setAllowedOrigins("*");
+        registry.addHandler(this.socketTextHandler, "/mystery")
+                .addInterceptors(webSocketAuthInterceptor)
                 .setAllowedOrigins("*");
     }
 
@@ -31,22 +35,4 @@ public class WebSocketConfig implements WebSocketConfigurer {
 //    public WebSocketHandler myHandler() {
 //        return new SocketTextHandler();
 //    }
-
-    @Bean
-    public HandshakeInterceptor getParametersInterceptors() {
-        return new HandshakeInterceptor() {
-            @Override
-            public boolean beforeHandshake(ServerHttpRequest request, ServerHttpResponse response, WebSocketHandler wsHandler, Map<String, Object> attributes) throws Exception {
-                String path = request.getURI().getPath();
-                String userId = WebSocketHelper.getUserIdFromUrl(path);
-                attributes.put(WebSocketHelper.userIdKey, userId);
-                return true;
-            }
-
-            @Override
-            public void afterHandshake(ServerHttpRequest request, ServerHttpResponse response, WebSocketHandler wsHandler, Exception exception) {
-
-            }
-        };
-    }
 }

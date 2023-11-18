@@ -33,7 +33,7 @@ public class RedisConfig {
 //    DefaultMessageDelegate listener() {
 //        return new DefaultMessageDelegate();
 //    }
-
+//
 //    @Bean
 //    MessageListenerAdapter messageListenerAdapter() {
 //        return new MessageListenerAdapter(listener, "handleMessage");

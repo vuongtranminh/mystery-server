@@ -55,9 +55,18 @@ message GrpcGetServerJoinByServerIdResponse {
   GrpcServer result = 1;
 }
 
+message GrpcGetServerJoinIdsRequest {
+  string profile_id = 1;
+}
+
+message GrpcGetServerJoinIdsResponse {
+  repeated string result = 1;
+}
+
 service ServerService {
   rpc createServer(GrpcCreateServerRequest) returns (GrpcCreateServerResponse);
   rpc getServersJoin(GrpcGetServersJoinRequest) returns (GrpcGetServersJoinResponse);
   rpc getFirstServerJoin(GrpcGetFirstServerJoinRequest) returns (GrpcGetFirstServerJoinResponse);
   rpc getServerJoinByServerId(GrpcGetServerJoinByServerIdRequest) returns (GrpcGetServerJoinByServerIdResponse);
+  rpc getServerJoinIds(GrpcGetServerJoinIdsRequest) returns (GrpcGetServerJoinIdsResponse);
 }

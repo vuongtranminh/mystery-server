@@ -1,6 +1,5 @@
-package com.vuong.app.business.discord.model;
+package com.vuong.app.doman;
 
-import com.vuong.app.business.discord.model.MemberRole;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

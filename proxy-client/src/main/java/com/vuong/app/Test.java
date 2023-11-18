@@ -9,10 +9,12 @@ import io.jsonwebtoken.security.MacAlgorithm;
 
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
+import java.util.Optional;
 import java.util.UUID;
 
 public class Test {
     public static void main(String[] args) {
+        Optional<String> optional = Optional.of("abb");
         MacAlgorithm algRefreshToken = Jwts.SIG.HS512;
         SecretKey keyRefreshToken = algRefreshToken.key().build();
 

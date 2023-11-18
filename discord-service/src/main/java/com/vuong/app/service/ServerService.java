@@ -333,4 +333,36 @@ public class ServerService extends ServerServiceGrpc.ServerServiceImplBase {
             mysteryJdbc.closePreparedStatement(pst);
         }
     }
+
+    @Override
+    public void getServerJoinIds(GrpcGetServerJoinIdsRequest request, StreamObserver<GrpcGetServerJoinIdsResponse> responseObserver) {
+        String serverJoinIdsQuery = "select tbl_member.server_id from tbl_member where tbl_member.profile_id = ?";
+
+        Connection con = null;
+        PreparedStatement pst = null;
+        ResultSet rs = null;
+
+        try {
+            con = mysteryJdbc.getConnection();
+
+            pst = con.prepareStatement(serverJoinIdsQuery);
+            pst.setString(1, request.getProfileId());
+            rs = pst.executeQuery();
+
+            GrpcGetServerJoinIdsResponse.Builder builder = GrpcGetServerJoinIdsResponse.newBuilder();
+
+            while (rs.next()) {
+                builder.addResult(rs.getString(1));
+            }
+
+            responseObserver.onNext(builder.build());
+            responseObserver.onCompleted();
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+        } finally {
+            mysteryJdbc.closeResultSet(rs);
+            mysteryJdbc.closePreparedStatement(pst);
+        }
+    }
+
 }

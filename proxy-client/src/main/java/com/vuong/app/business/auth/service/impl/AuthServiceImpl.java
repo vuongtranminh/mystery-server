@@ -160,9 +160,13 @@ public class AuthServiceImpl implements AuthService {
             return new ExceptionMsg("Refresh token not found", HttpStatus.NOT_FOUND);
         }
 
-        if (managerAuthSessionRepository.hasRefreshToken(oldRefreshToken) || !tokenProvider.validateRefreshToken(oldRefreshToken)) { // pass is expiresAt before now
+        if (!tokenProvider.validateRefreshToken(oldRefreshToken)) { // pass is expiresAt before now
             return new ExceptionMsg("Invalid refresh token", HttpStatus.BAD_REQUEST);
         }
+
+//        if (managerAuthSessionRepository.hasRefreshToken(oldRefreshToken) || !tokenProvider.validateRefreshToken(oldRefreshToken)) { // pass is expiresAt before now
+//            return new ExceptionMsg("Invalid refresh token", HttpStatus.BAD_REQUEST);
+//        }
 
         TokenProvider.RefreshToken refreshToken = tokenProvider.generateRefreshToken(oldRefreshToken);
         // update refresh token to status used
@@ -182,7 +186,7 @@ public class AuthServiceImpl implements AuthService {
                 .remoteAddr(remoteAddr)
                 .lastLoggedIn(Instant.now())
                 .build();
-        managerAuthSessionRepository.storeToken(tokenStore, authMetadata);
+//        managerAuthSessionRepository.storeToken(tokenStore, authMetadata);
 
         CookieUtils.addCookie(response, appProperties.getAuth().getAccessTokenCookieName(), CookieUtils.serialize(accessToken.getAccessToken()), appProperties.getAuth().getAccessTokenExpirationMsec());
         CookieUtils.addCookie(response, appProperties.getAuth().getRefreshTokenCookieName(), CookieUtils.serialize(refreshToken.getRefreshToken()), appProperties.getAuth().getRefreshTokenExpirationMsec());

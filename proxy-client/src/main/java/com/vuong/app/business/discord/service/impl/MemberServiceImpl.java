@@ -44,7 +44,7 @@ public class MemberServiceImpl implements MemberService {
                 .meta(Meta.parse(grpcResponse.getMeta()))
                 .content(grpcResponse.getContentList().stream().map(grpcMemberProfile -> MemberProfile.builder()
                         .memberId(grpcMemberProfile.getMemberId())
-                        .role(MemberRole.forNumber(grpcMemberProfile.getRole().getNumber()))
+                        .role(grpcMemberProfile.getRole().getNumber())
                         .serverId(grpcMemberProfile.getServerId())
                         .joinAt(grpcMemberProfile.getJoinAt())
                         .profileId(grpcMemberProfile.getProfileId())

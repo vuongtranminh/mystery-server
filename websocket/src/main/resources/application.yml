@@ -5,13 +5,6 @@ spring:
   profiles:
     active:
       - dev
-  kafka:
-    bootstrap-servers: localhost:9092
-    template:
-      default-topic: userTopic
-    producer:
-      key-serializer: org.apache.kafka.common.serialization.StringSerializer
-      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
   redis:
     password: test
     data:
@@ -25,3 +18,16 @@ logging:
   logback:
     rollingpolicy:
       clean-history-on-start: true
+
+app:
+  auth:
+    access-token:
+      path: ${ACCESS_TOKEN_KEY_PATH}
+    refresh-token:
+      path: ${REFRESH_TOKEN_KEY_PATH}
+
+grpc:
+  client:
+    grpc-discord-service:
+      address: static://localhost:8800
+      negotiationType: plaintext
