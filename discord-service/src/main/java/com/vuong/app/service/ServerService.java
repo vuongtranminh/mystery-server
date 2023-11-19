@@ -365,4 +365,87 @@ public class ServerService extends ServerServiceGrpc.ServerServiceImplBase {
         }
     }
 
+    @Override
+    public void joinServerByInviteCode(GrpcJoinServerByInviteCodeRequest request, StreamObserver<GrpcJoinServerByInviteCodeResponse> responseObserver) {
+        String existJoinServerQuery = "select tbl_server.id " +
+                "from tbl_server inner join tbl_member " +
+                "on tbl_server.id = tbl_member.id " +
+                "where tbl_server.invite_code = ? and tbl_member.profile_id = ?";
+
+//        String joinServerQuery = "insert into tbl_member(id, role, profile_id, server_id, join_at) " +
+//                "select ?, ?, ?, tbl_server.id, ? from tbl_server where tbl_server.invite_code = ?";
+        String serverIdQuery = "select tbl_server.id from tbl_server where tbl_server.invite_code = ?";
+        String joinServerQuery = "insert into tbl_member(id, role, profile_id, server_id, join_at) values (?, ?, ?, ?, ?)";
+
+        Connection con = null;
+        PreparedStatement pst1 = null;
+        PreparedStatement pst2 = null;
+        PreparedStatement pst3 = null;
+        ResultSet rs1 = null;
+        ResultSet rs2 = null;
+
+        try {
+            con = mysteryJdbc.getConnection();
+
+            pst1 = con.prepareStatement(existJoinServerQuery);
+            pst1.setString(1, request.getInviteCode());
+            pst1.setString(2, request.getProfileId());
+            rs1 = pst1.executeQuery();
+
+            String serverId = null;
+            GrpcJoinServerByInviteCodeResponse.Builder builder = GrpcJoinServerByInviteCodeResponse.newBuilder();
+            while (rs1.next()) {
+                serverId = rs1.getString(1);
+            }
+
+            if (serverId != null) {
+                builder.setServerId(serverId);
+                responseObserver.onNext(builder.build());
+                responseObserver.onCompleted();
+            }
+
+            pst2 = con.prepareStatement(serverIdQuery);
+            pst2.setString(1, request.getInviteCode());
+            rs2 = pst2.executeQuery();
+
+            while (rs2.next()) {
+                serverId = rs2.getString(1);
+            }
+
+            if (serverId == null) {
+                Metadata metadata = new Metadata();
+                Metadata.Key<GrpcErrorResponse> responseKey = ProtoUtils.keyForProto(GrpcErrorResponse.getDefaultInstance());
+                GrpcErrorCode errorCode = GrpcErrorCode.ERROR_CODE_NOT_FOUND;
+                GrpcErrorResponse errorResponse = GrpcErrorResponse.newBuilder()
+                        .setErrorCode(errorCode)
+                        .setMessage("not found server with invite code")
+                        .build();
+                // pass the error object via metadata
+                metadata.put(responseKey, errorResponse);
+                responseObserver.onError(Status.NOT_FOUND.asRuntimeException(metadata));
+                return;
+            }
+
+            String memberId = UUID.randomUUID().toString();
+            pst3 = con.prepareStatement(joinServerQuery);
+            pst3.setString(1, memberId);
+            pst3.setInt(2, GrpcMemberRole.MEMBER_ROLE_GUEST_VALUE);
+            pst3.setString(3, request.getProfileId());
+            pst3.setString(4, serverId);
+            pst3.setString(5, Instant.now().toString());
+
+            int result = pst3.executeUpdate();
+
+            builder.setServerId(serverId);
+
+            responseObserver.onNext(builder.build());
+            responseObserver.onCompleted();
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+            mysteryJdbc.doRollback();
+        } finally {
+            mysteryJdbc.closeResultSet(rs1, rs2);
+            mysteryJdbc.closePreparedStatement(pst1, pst2, pst3);
+        }
+    }
 }

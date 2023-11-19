@@ -3,10 +3,7 @@ package com.vuong.app.websocket;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.socket.WebSocketSession;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 @Slf4j
 public class WebSocketSessionManager {
@@ -15,10 +12,12 @@ public class WebSocketSessionManager {
 
     private final Map<String, WebSocketSession> webSocketSessionByUserId;
     private final Map<String, Set<WebSocketSession>> webSocketSessionByChannel;
+    private final Map<String, List<String>> managerServerIdsByUserId;
 
     private WebSocketSessionManager() {
         this.webSocketSessionByUserId = new HashMap<>();
         this.webSocketSessionByChannel = new HashMap<>();
+        this.managerServerIdsByUserId = new HashMap<>();
     }
 
     public static WebSocketSessionManager getInstance() {
@@ -78,4 +77,16 @@ public class WebSocketSessionManager {
         return this.webSocketSessionByUserId.get(userId);
     }
 
+
+    public void addServerIdsByUserId(String userId, List<String> serverIds) {
+        this.managerServerIdsByUserId.put(userId, serverIds);
+    }
+
+    public void removeServerIdsByUserId(String userId) {
+        this.managerServerIdsByUserId.remove(userId);
+    }
+
+    public List<String> getServerIdsByUserId(String userId) {
+        return this.managerServerIdsByUserId.get(userId);
+    }
 }

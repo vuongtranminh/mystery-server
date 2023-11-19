@@ -13,7 +13,7 @@ import lombok.NoArgsConstructor;
 @Builder
 public class GetMemberByServerIdResponse {
     private String memberId;
-    private MemberRole role;
+    private Integer role;
     private String serverId;
     private String joinAt;
     private String profileId;

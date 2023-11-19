@@ -13,6 +13,7 @@ public class Server {
     private String serverId;
     private String name;
     private String imgUrl;
+    private String inviteCode;
     private String authorId;
     private String createdAt;
     private String updatedAt;

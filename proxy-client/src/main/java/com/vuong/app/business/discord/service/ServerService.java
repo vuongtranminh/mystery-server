@@ -3,8 +3,13 @@ package com.vuong.app.business.discord.service;
 import com.vuong.app.business.discord.model.payload.CreateServerRequest;
 import com.vuong.app.business.discord.model.payload.GetServerJoinByServerIdRequest;
 import com.vuong.app.business.discord.model.payload.GetServersJoinRequest;
+import com.vuong.app.business.discord.model.payload.JoinServerByInviteCodeRequest;
 import com.vuong.app.common.api.ResponseObject;
 import com.vuong.app.security.UserPrincipal;
+import com.vuong.app.v1.discord.GrpcJoinServerByInviteCodeRequest;
+import com.vuong.app.v1.discord.GrpcJoinServerByInviteCodeResponse;
+
+import java.util.Optional;
 
 public interface ServerService {
     ResponseObject createServer(UserPrincipal currentUser, CreateServerRequest request);
@@ -14,4 +19,6 @@ public interface ServerService {
     ResponseObject getFirstServerJoin(UserPrincipal currentUser);
 
     ResponseObject getServerJoinByServerId(UserPrincipal currentUser, GetServerJoinByServerIdRequest request);
+
+    ResponseObject joinServerByInviteCode(UserPrincipal currentUser, JoinServerByInviteCodeRequest request);
 }

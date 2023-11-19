@@ -51,6 +51,7 @@ public class ServerServiceImpl implements ServerService {
                         .serverId(grpcServer.getServerId())
                         .name(grpcServer.getName())
                         .imgUrl(grpcServer.getImgUrl())
+                        .inviteCode(grpcServer.getInviteCode())
                         .authorId(grpcServer.getAuthorId())
                         .createdAt(grpcServer.getCreatedAt())
                         .updatedAt(grpcServer.getUpdatedAt())
@@ -70,6 +71,7 @@ public class ServerServiceImpl implements ServerService {
                 .serverId(grpcResponse.getResult().getServerId())
                 .name(grpcResponse.getResult().getName())
                 .imgUrl(grpcResponse.getResult().getImgUrl())
+                .inviteCode(grpcResponse.getResult().getInviteCode())
                 .authorId(grpcResponse.getResult().getAuthorId())
                 .createdAt(grpcResponse.getResult().getCreatedAt())
                 .updatedAt(grpcResponse.getResult().getUpdatedAt())
@@ -88,9 +90,23 @@ public class ServerServiceImpl implements ServerService {
                 .serverId(grpcResponse.getResult().getServerId())
                 .name(grpcResponse.getResult().getName())
                 .imgUrl(grpcResponse.getResult().getImgUrl())
+                .inviteCode(grpcResponse.getResult().getInviteCode())
                 .authorId(grpcResponse.getResult().getAuthorId())
                 .createdAt(grpcResponse.getResult().getCreatedAt())
                 .updatedAt(grpcResponse.getResult().getUpdatedAt())
+                .build());
+    }
+
+    @Override
+    public ResponseObject joinServerByInviteCode(UserPrincipal currentUser, JoinServerByInviteCodeRequest request) {
+        GrpcJoinServerByInviteCodeResponse grpcResponse = this.serverClientService.joinServerByInviteCode(GrpcJoinServerByInviteCodeRequest.newBuilder()
+                        .setProfileId(currentUser.getUserId())
+                        .setInviteCode(request.getInviteCode())
+                        .build())
+                .orElseThrow(() -> new ResourceNotFoundException("server", "inviteCode", request.getInviteCode()));
+
+        return new ResponseMsg("Sign up successfully!", HttpStatus.OK, JoinServerByInviteCodeResponse.builder()
+                .serverId(grpcResponse.getServerId())
                 .build());
     }
 

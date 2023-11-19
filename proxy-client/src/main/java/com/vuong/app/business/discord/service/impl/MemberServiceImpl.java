@@ -65,7 +65,7 @@ public class MemberServiceImpl implements MemberService {
 
         return new ResponseMsg("Sign up successfully!", HttpStatus.OK, GetMemberByServerIdResponse.builder()
                 .memberId(grpcResponse.getResult().getMemberId())
-                .role(MemberRole.forNumber(grpcResponse.getResult().getRole().getNumber()))
+                .role(grpcResponse.getResult().getRole().getNumber())
                 .serverId(grpcResponse.getResult().getServerId())
                 .joinAt(grpcResponse.getResult().getJoinAt())
                 .profileId(grpcResponse.getResult().getProfileId())

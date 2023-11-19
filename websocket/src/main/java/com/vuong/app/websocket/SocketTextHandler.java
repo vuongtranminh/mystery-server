@@ -42,6 +42,7 @@ public class SocketTextHandler extends AbstractWebSocketHandler {
             this.webSocketSessionManager.addWebSocketSessionToChannel(serverId, session);
             serversId.add(serverId);
         });
+        this.webSocketSessionManager.addServerIdsByUserId(userId, serversId);
         this.subscriber.subscribe(serversId);
     }
 
@@ -49,10 +50,12 @@ public class SocketTextHandler extends AbstractWebSocketHandler {
     public void afterConnectionClosed(WebSocketSession session, CloseStatus status) {
         this.webSocketSessionManager.removeWebSocketSession(session);
         String userId = WebSocketHelper.getUserIdFromSessionAttribute(session);
-        List<String> serversId = List.of("b8ae3f8e-3931-49f8-8982-df057c68eeab");
+
+        List<String> serversId = this.webSocketSessionManager.getServerIdsByUserId(userId);
         serversId.forEach(serverId -> {
             this.webSocketSessionManager.removeWebSocketSessionToChannel(serverId, session);
         });
+        this.webSocketSessionManager.removeServerIdsByUserId(userId);
         this.subscriber.unsubscribe(serversId);
     }
 
