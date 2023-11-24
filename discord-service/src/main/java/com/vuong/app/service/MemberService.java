@@ -179,4 +179,8 @@ public class MemberService extends MemberServiceGrpc.MemberServiceImplBase {
             mysteryJdbc.closePreparedStatement(pst);
         }
     }
+
+    // member_role = tbl_server_role.id
+    // tbl_server_role (id, name, server_id, created_at, updated_at, permistion_point) // permistion point check like linux
+    // tbl_server_permistion (hệ thống cài đặt)
 }
