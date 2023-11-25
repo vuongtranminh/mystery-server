@@ -76,11 +76,11 @@ public class AuthService extends AuthServiceGrpc.AuthServiceImplBase {
 
             GrpcCreateUserSocialResponse response = GrpcCreateUserSocialResponse.newBuilder().setUserId(userId).build();
 
-            this.kafKaProducerService.sendMessage("create-user-key", CreateUserEvent.builder()
-                    .userId(userId)
-                    .name(request.getName())
-                    .avtUrl(request.getAvtUrl())
-                    .build());
+//            this.kafKaProducerService.sendMessage("create-user-key", CreateUserEvent.builder()
+//                    .userId(userId)
+//                    .name(request.getName())
+//                    .avtUrl(request.getAvtUrl())
+//                    .build());
 
             responseObserver.onNext(response);
             responseObserver.onCompleted();
@@ -153,10 +153,10 @@ public class AuthService extends AuthServiceGrpc.AuthServiceImplBase {
                     .setUserId(userId)
                     .build();
 
-            this.kafKaProducerService.sendMessage("create-user-key", CreateUserEvent.builder()
-                    .userId(userId)
-                    .name(request.getName())
-                    .build());
+//            this.kafKaProducerService.sendMessage("create-user-key", CreateUserEvent.builder()
+//                    .userId(userId)
+//                    .name(request.getName())
+//                    .build());
 
             responseObserver.onNext(response);
             responseObserver.onCompleted();
@@ -187,20 +187,7 @@ public class AuthService extends AuthServiceGrpc.AuthServiceImplBase {
 
             rs = pst.executeQuery();
 
-            GrpcUserPrincipal.Builder builder = GrpcUserPrincipal.newBuilder();
-            boolean hasResult = false;
-
-            while (rs.next()) {
-                hasResult = true;
-                builder.setUserId(rs.getString(1));
-                builder.setEmail(rs.getString(2));
-
-                if (rs.getString(3) != null) {
-                    builder.setPassword(rs.getString(3));
-                }
-            }
-
-            if (!hasResult) {
+            if (!mysteryJdbc.hasResult(rs)) {
                 Metadata metadata = new Metadata();
                 Metadata.Key<GrpcErrorResponse> responseKey = ProtoUtils.keyForProto(GrpcErrorResponse.getDefaultInstance());
                 GrpcErrorCode errorCode = GrpcErrorCode.ERROR_CODE_NOT_FOUND;
@@ -212,6 +199,17 @@ public class AuthService extends AuthServiceGrpc.AuthServiceImplBase {
                 metadata.put(responseKey, errorResponse);
                 responseObserver.onError(Status.NOT_FOUND.asRuntimeException(metadata));
                 return;
+            }
+
+            GrpcUserPrincipal.Builder builder = GrpcUserPrincipal.newBuilder();
+
+            while (rs.next()) {
+                builder.setUserId(rs.getString(1));
+                builder.setEmail(rs.getString(2));
+
+                if (rs.getString(3) != null) {
+                    builder.setPassword(rs.getString(3));
+                }
             }
 
             GrpcUserPrincipal userPrincipal = builder.build();
@@ -252,7 +250,7 @@ public class AuthService extends AuthServiceGrpc.AuthServiceImplBase {
 
             rs = pst.executeQuery();
 
-            if (!rs.next()) {
+            if (!mysteryJdbc.hasResult(rs)) {
                 Metadata metadata = new Metadata();
                 Metadata.Key<GrpcErrorResponse> responseKey = ProtoUtils.keyForProto(GrpcErrorResponse.getDefaultInstance());
                 GrpcErrorCode errorCode = GrpcErrorCode.ERROR_CODE_NOT_FOUND;

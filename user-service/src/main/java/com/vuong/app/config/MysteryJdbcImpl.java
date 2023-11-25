@@ -67,6 +67,14 @@ public class MysteryJdbcImpl implements MysteryJdbc {
         }
     }
 
+    @Override
+    public boolean hasResult(ResultSet rs) throws SQLException {
+        if (!rs.isBeforeFirst() ) {
+            return false;
+        }
+        return true;
+    }
+
     private void closePreparedStatement(PreparedStatement pst) {
         if (pst != null) {
             try {

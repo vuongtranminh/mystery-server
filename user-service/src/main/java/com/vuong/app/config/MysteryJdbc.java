@@ -21,4 +21,6 @@ public interface MysteryJdbc {
 
     void setAutoCommit(boolean autoCommit);
 
+    boolean hasResult(ResultSet rs) throws SQLException;
+
 }
