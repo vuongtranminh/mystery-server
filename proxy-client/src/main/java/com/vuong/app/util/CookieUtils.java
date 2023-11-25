@@ -22,8 +22,7 @@ public class CookieUtils {
         return Optional.of(cookie);
     }
 
-    public static void addCookie(HttpServletResponse response, String name, String value, long maxAgeMicroseconds) {
-        long maxAgeSeconds = TimeUnit.MILLISECONDS.toSeconds(maxAgeMicroseconds);
+    public static void addCookie(HttpServletResponse response, String name, String value, long maxAgeSeconds) {
         ResponseCookie cookie = ResponseCookie.from(name, value)
                 .httpOnly(true)
                 .secure(false) // sercue true when https / env local not set cookie when true

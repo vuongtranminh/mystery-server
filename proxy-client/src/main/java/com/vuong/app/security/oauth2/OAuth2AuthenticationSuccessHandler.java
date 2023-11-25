@@ -26,6 +26,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.time.Instant;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
 import static com.vuong.app.security.oauth2.HttpCookieOAuth2AuthorizationRequestRepository.REDIRECT_URI_PARAM_COOKIE_NAME;
 
@@ -88,8 +89,8 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
 
         log.warn("LOG TOKEN INIT: " + accessToken.getAccessToken());
 
-        CookieUtils.addCookie(response, appProperties.getAuth().getAccessTokenCookieName(), CookieUtils.serialize(accessToken.getAccessToken()), appProperties.getAuth().getAccessTokenExpirationMsec());
-        CookieUtils.addCookie(response, appProperties.getAuth().getRefreshTokenCookieName(), CookieUtils.serialize(refreshToken.getRefreshToken()), appProperties.getAuth().getRefreshTokenExpirationMsec());
+        CookieUtils.addCookie(response, appProperties.getAuth().getAccessTokenCookieName(), CookieUtils.serialize(accessToken.getAccessToken()), TimeUnit.MILLISECONDS.toSeconds(appProperties.getAuth().getAccessTokenExpirationMsec()));
+        CookieUtils.addCookie(response, appProperties.getAuth().getRefreshTokenCookieName(), CookieUtils.serialize(refreshToken.getRefreshToken()), TimeUnit.MILLISECONDS.toSeconds(appProperties.getAuth().getRefreshTokenExpirationMsec()));
 
 //        return UriComponentsBuilder.fromUriString("http://localhost:3000")
 //                .queryParam("token", token)

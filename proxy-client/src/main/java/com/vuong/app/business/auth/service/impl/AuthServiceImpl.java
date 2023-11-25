@@ -36,6 +36,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
 @Service
 @RequiredArgsConstructor
@@ -93,10 +94,10 @@ public class AuthServiceImpl implements AuthService {
                 .remoteAddr(remoteAddr)
                 .lastLoggedIn(Instant.now())
                 .build();
-        managerAuthSessionRepository.storeToken(tokenStore, authMetadata);
+//        managerAuthSessionRepository.storeToken(tokenStore, authMetadata);
 
-        CookieUtils.addCookie(response, appProperties.getAuth().getAccessTokenCookieName(), CookieUtils.serialize(accessToken.getAccessToken()), appProperties.getAuth().getAccessTokenExpirationMsec());
-        CookieUtils.addCookie(response, appProperties.getAuth().getRefreshTokenCookieName(), CookieUtils.serialize(refreshToken.getRefreshToken()), appProperties.getAuth().getRefreshTokenExpirationMsec());
+        CookieUtils.addCookie(response, appProperties.getAuth().getAccessTokenCookieName(), CookieUtils.serialize(accessToken.getAccessToken()), TimeUnit.MILLISECONDS.toSeconds(appProperties.getAuth().getAccessTokenExpirationMsec()));
+        CookieUtils.addCookie(response, appProperties.getAuth().getRefreshTokenCookieName(), CookieUtils.serialize(refreshToken.getRefreshToken()), TimeUnit.MILLISECONDS.toSeconds(appProperties.getAuth().getRefreshTokenExpirationMsec()));
 
         return new ResponseMsg("Sign in successfully!", HttpStatus.OK);
     }
@@ -188,8 +189,8 @@ public class AuthServiceImpl implements AuthService {
                 .build();
 //        managerAuthSessionRepository.storeToken(tokenStore, authMetadata);
 
-        CookieUtils.addCookie(response, appProperties.getAuth().getAccessTokenCookieName(), CookieUtils.serialize(accessToken.getAccessToken()), appProperties.getAuth().getAccessTokenExpirationMsec());
-        CookieUtils.addCookie(response, appProperties.getAuth().getRefreshTokenCookieName(), CookieUtils.serialize(refreshToken.getRefreshToken()), appProperties.getAuth().getRefreshTokenExpirationMsec());
+        CookieUtils.addCookie(response, appProperties.getAuth().getAccessTokenCookieName(), CookieUtils.serialize(accessToken.getAccessToken()), TimeUnit.MILLISECONDS.toSeconds(appProperties.getAuth().getAccessTokenExpirationMsec()));
+        CookieUtils.addCookie(response, appProperties.getAuth().getRefreshTokenCookieName(), CookieUtils.serialize(refreshToken.getRefreshToken()), TimeUnit.MILLISECONDS.toSeconds(appProperties.getAuth().getRefreshTokenExpirationMsec()));
 
         return new ResponseMsg("Provide new access token successfully!", HttpStatus.OK);
     }
