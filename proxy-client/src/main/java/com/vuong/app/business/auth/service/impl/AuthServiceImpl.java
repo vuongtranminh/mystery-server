@@ -140,8 +140,8 @@ public class AuthServiceImpl implements AuthService {
 
 //        managerAuthSessionRepository.removeTokenByAuthMetadata(userId, authMetadata);
 
-        CookieUtils.deleteCookie(request, response, appProperties.getAuth().getAccessTokenCookieName());
-        CookieUtils.deleteCookie(request, response, appProperties.getAuth().getRefreshTokenCookieName());
+        CookieUtils.deleteCookie(response, appProperties.getAuth().getAccessTokenCookieName());
+        CookieUtils.deleteCookie(response, appProperties.getAuth().getRefreshTokenCookieName());
 
         response.addHeader(HttpHeaders.ACCESS_CONTROL_ALLOW_CREDENTIALS, Boolean.TRUE.toString());
         response.addHeader(HttpHeaders.ACCESS_CONTROL_ALLOW_METHODS, "GET,PUT,POST,DELETE,UPDATE,OPTIONS");

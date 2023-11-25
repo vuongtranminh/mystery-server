@@ -10,6 +10,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.util.Base64;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
 public class CookieUtils {
 
@@ -21,18 +22,19 @@ public class CookieUtils {
         return Optional.of(cookie);
     }
 
-    public static void addCookie(HttpServletResponse response, String name, String value, long maxAge) {
+    public static void addCookie(HttpServletResponse response, String name, String value, long maxAgeMicroseconds) {
+        long maxAgeSeconds = TimeUnit.MILLISECONDS.toSeconds(maxAgeMicroseconds);
         ResponseCookie cookie = ResponseCookie.from(name, value)
                 .httpOnly(true)
                 .secure(false) // sercue true when https / env local not set cookie when true
-                .maxAge(maxAge)
+                .maxAge(maxAgeSeconds)
                 .path("/")
 //                .sameSite("Lax")
                 .build();
         response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
     }
 
-    public static void deleteCookie(HttpServletRequest request, HttpServletResponse response, String name) {
+    public static void deleteCookie(HttpServletResponse response, String name) {
         ResponseCookie cookie = ResponseCookie.from(name, "")
                 .httpOnly(true)
                 .secure(false) // sercue true when https / env local not set cookie when true
