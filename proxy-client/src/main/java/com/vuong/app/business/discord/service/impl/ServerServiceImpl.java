@@ -110,6 +110,19 @@ public class ServerServiceImpl implements ServerService {
                 .build());
     }
 
+    @Override
+    public ResponseObject leaveServer(UserPrincipal currentUser, LeaveServerRequest request) {
+        GrpcLeaveServerResponse grpcResponse = this.serverClientService.leaveServer(GrpcLeaveServerRequest.newBuilder()
+                        .setProfileId(currentUser.getUserId())
+                        .setServerId(request.getServerId())
+                        .build())
+                .orElse(null);
+        if (grpcResponse != null) {
+            // public redis leaver member
+        }
+        return new ResponseMsg("Leave server successfully!", HttpStatus.OK);
+    }
+
 
 //    private final ServerClientService serverClientService;
 

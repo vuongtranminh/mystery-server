@@ -119,4 +119,23 @@ public class ServerClientService {
         }
     }
 
+    public Optional<GrpcLeaveServerResponse> leaveServer(GrpcLeaveServerRequest request) {
+        try {
+            GrpcLeaveServerResponse response = this.serverServiceBlockingStub.leaveServer(request);
+
+            return Optional.of(response);
+
+        } catch (Exception ex) {
+            Metadata metadata = Status.trailersFromThrowable(ex);
+            GrpcErrorResponse errorResponse = metadata.get(ProtoUtils.keyForProto(GrpcErrorResponse.getDefaultInstance()));
+            log.error(errorResponse.getErrorCode() + " : " + errorResponse.getMessage());
+
+            if (errorResponse.getErrorCode().getNumber() == GrpcErrorCode.ERROR_CODE_NOT_FOUND_VALUE) {
+                return Optional.empty();
+            }
+
+            throw new WTuxException(errorResponse);
+        }
+    }
+
 }

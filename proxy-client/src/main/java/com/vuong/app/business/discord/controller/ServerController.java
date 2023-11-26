@@ -1,9 +1,6 @@
 package com.vuong.app.business.discord.controller;
 
-import com.vuong.app.business.discord.model.payload.CreateServerRequest;
-import com.vuong.app.business.discord.model.payload.GetServerJoinByServerIdRequest;
-import com.vuong.app.business.discord.model.payload.GetServersJoinRequest;
-import com.vuong.app.business.discord.model.payload.JoinServerByInviteCodeRequest;
+import com.vuong.app.business.discord.model.payload.*;
 import com.vuong.app.business.discord.service.ServerService;
 import com.vuong.app.common.api.ResponseObject;
 import com.vuong.app.security.CurrentUser;
@@ -47,5 +44,10 @@ public class ServerController {
     @PostMapping("/joinServerByInviteCode")
     public ResponseEntity<?> joinServerByInviteCode(@CurrentUser UserPrincipal currentUser, @Valid @RequestBody JoinServerByInviteCodeRequest request) {
         return ResponseEntity.ok(this.serverService.joinServerByInviteCode(currentUser, request));
+    }
+
+    @PostMapping("/leaveServer")
+    public ResponseEntity<?> leaveServer(@CurrentUser UserPrincipal currentUser, @Valid @RequestBody LeaveServerRequest request) {
+        return ResponseEntity.ok(this.serverService.leaveServer(currentUser, request));
     }
 }

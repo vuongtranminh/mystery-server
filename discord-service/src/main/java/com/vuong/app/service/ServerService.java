@@ -448,4 +448,62 @@ public class ServerService extends ServerServiceGrpc.ServerServiceImplBase {
             mysteryJdbc.closePreparedStatement(pst1, pst2, pst3);
         }
     }
+
+    @Override
+    public void leaveServer(GrpcLeaveServerRequest request, StreamObserver<GrpcLeaveServerResponse> responseObserver) {
+        String memberIdQuery = "select tbl_member.id from tbl_member where tbl_member.server_id = ? and tbl_member.profile_id = ? and tbl_member.role <> ?";
+
+        String leaveServerQuery = "delete from tbl_member where tbl_member.id = ?";
+
+        Connection con = null;
+        PreparedStatement pst1 = null;
+        PreparedStatement pst2 = null;
+        ResultSet rs = null;
+
+        try {
+            con = mysteryJdbc.getConnection();
+
+            pst1 = con.prepareStatement(memberIdQuery);
+            pst1.setString(1, request.getServerId());
+            pst1.setString(2, request.getProfileId());
+            pst1.setInt(3, GrpcMemberRole.MEMBER_ROLE_ADMIN_VALUE);
+            rs = pst1.executeQuery();
+
+            if (!mysteryJdbc.hasResult(rs)) {
+                Metadata metadata = new Metadata();
+                Metadata.Key<GrpcErrorResponse> responseKey = ProtoUtils.keyForProto(GrpcErrorResponse.getDefaultInstance());
+                GrpcErrorCode errorCode = GrpcErrorCode.ERROR_CODE_NOT_FOUND;
+                GrpcErrorResponse errorResponse = GrpcErrorResponse.newBuilder()
+                        .setErrorCode(errorCode)
+                        .setMessage("not found member")
+                        .build();
+                // pass the error object via metadata
+                metadata.put(responseKey, errorResponse);
+                responseObserver.onError(Status.NOT_FOUND.asRuntimeException(metadata));
+                return;
+            }
+
+            String memberId = null;
+            while (rs.next()) {
+                memberId = rs.getString(1);
+            }
+
+            pst2 = con.prepareStatement(leaveServerQuery);
+            pst2.setString(1, memberId);
+            int result = pst2.executeUpdate();
+
+            GrpcLeaveServerResponse response = GrpcLeaveServerResponse.newBuilder()
+                    .setMemberId(memberId)
+                    .build();
+
+            responseObserver.onNext(response);
+            responseObserver.onCompleted();
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+            mysteryJdbc.doRollback();
+        } finally {
+            mysteryJdbc.closeResultSet(rs);
+            mysteryJdbc.closePreparedStatement(pst1, pst2);
+        }
+    }
 }

@@ -72,6 +72,15 @@ message GrpcJoinServerByInviteCodeResponse {
   string server_id = 1;
 }
 
+message GrpcLeaveServerRequest {
+  string profile_id = 1;
+  string server_id = 2;
+}
+
+message GrpcLeaveServerResponse {
+  string member_id = 1;
+}
+
 service ServerService {
   rpc createServer(GrpcCreateServerRequest) returns (GrpcCreateServerResponse);
   rpc getServersJoin(GrpcGetServersJoinRequest) returns (GrpcGetServersJoinResponse);
@@ -79,4 +88,5 @@ service ServerService {
   rpc getServerJoinByServerId(GrpcGetServerJoinByServerIdRequest) returns (GrpcGetServerJoinByServerIdResponse);
   rpc getServerJoinIds(GrpcGetServerJoinIdsRequest) returns (GrpcGetServerJoinIdsResponse);
   rpc joinServerByInviteCode(GrpcJoinServerByInviteCodeRequest) returns (GrpcJoinServerByInviteCodeResponse);
+  rpc leaveServer(GrpcLeaveServerRequest) returns (GrpcLeaveServerResponse);
 }
