@@ -1,6 +1,6 @@
 -- MySQL dump 10.13  Distrib 8.0.34, for Win64 (x86_64)
 --
--- Host: localhost    Database: user
+-- Host: localhost    Database: user_service
 -- ------------------------------------------------------
 -- Server version	8.1.0
 
@@ -72,7 +72,7 @@ CREATE TABLE `tbl_user` (
 
 LOCK TABLES `tbl_user` WRITE;
 /*!40000 ALTER TABLE `tbl_user` DISABLE KEYS */;
-INSERT INTO `tbl_user` VALUES ('43bad83a-f707-4d81-b4b9-518547f81468','Vương Trần Minh','https://lh3.googleusercontent.com/a/ACg8ocKnRSL5AnBetx3kKYy6sXvgm6V0Xvmc-gjVjj9EbvrwSw=s96-c',NULL,'tranminhvuong.visedu@gmail.com',NULL,1,3,'103348227149081346395','2023-10-31T14:49:21.160428700Z','2023-10-31T14:49:21.160428700Z');
+INSERT INTO `tbl_user` VALUES ('03248087-3549-440e-a72d-e5d3ffbff855','Tran Minh Vuong',NULL,NULL,'user1@gmail.com','$2a$10$VzcGDBdxeswH7IcPfY9iMuukdYV9caRH9qxVnjPqmU1T3vbVvo0Im',0,1,NULL,'2023-11-25T09:35:15.621175100Z','2023-11-25T09:35:15.621175100Z'),('1e005db4-ae17-4d16-8f79-7bf86d7a3ce0','Tran Minh Vuong',NULL,NULL,'user@gmail.com','$2a$10$.NcT9ykn/0Gkfoo2X/qsPOVs9vyAochz2LQrmVhiITJpY7AZ5GAF2',0,1,NULL,'2023-11-24T18:14:35.596085100Z','2023-11-24T18:14:35.596085100Z'),('8fe552d5-aca2-4258-8bf2-258c0d5a9aad','Vương Trần Minh','https://lh3.googleusercontent.com/a/ACg8ocKnRSL5AnBetx3kKYy6sXvgm6V0Xvmc-gjVjj9EbvrwSw=s96-c','','tranminhvuong.visedu@gmail.com',NULL,1,3,'103348227149081346395','2023-11-17T15:15:22.448197400Z','2023-11-17T15:15:22.448197400Z'),('c2f308f9-3adb-4aa4-a0bb-e2a310e91a4a','Vương Trần Minh','https://lh3.googleusercontent.com/a/ACg8ocKFNod4UJ1bDZuYGjCYEF3g3vMfCWdw5g6N-vyG6VkQkA=s96-c','','vuongtranminh.hn@gmail.com',NULL,1,3,'107154026591532393327','2023-11-19T13:24:36.048277Z','2023-11-19T13:24:36.048277Z');
 /*!40000 ALTER TABLE `tbl_user` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -84,7 +84,7 @@ DROP TABLE IF EXISTS `tbl_verification_credential`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `tbl_verification_credential` (
-  `id` int NOT NULL,
+  `id` varchar(250) NOT NULL,
   `verification_token` varchar(250) NOT NULL,
   `verification_otp` varchar(250) NOT NULL,
   `expire_date` varchar(250) NOT NULL,
@@ -99,6 +99,7 @@ CREATE TABLE `tbl_verification_credential` (
 
 LOCK TABLES `tbl_verification_credential` WRITE;
 /*!40000 ALTER TABLE `tbl_verification_credential` DISABLE KEYS */;
+INSERT INTO `tbl_verification_credential` VALUES ('03248087-3549-440e-a72d-e5d3ffbff855','c920ba27-1dbc-4bc7-a27c-75abf7e95462','891302','2023-11-26T09:35:15.720684400Z'),('1e005db4-ae17-4d16-8f79-7bf86d7a3ce0','cda7560d-cb74-42a6-90ae-91952748b421','626414','2023-11-25T18:14:44.564902Z');
 /*!40000 ALTER TABLE `tbl_verification_credential` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
@@ -111,4 +112,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2023-10-31 23:33:14
+-- Dump completed on 2023-11-27  0:43:08
