@@ -9,6 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.connection.Message;
 import org.springframework.data.redis.connection.MessageListener;
 import org.springframework.stereotype.Service;
+import org.springframework.web.socket.BinaryMessage;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 
@@ -65,7 +66,8 @@ public class RedisMessageListener implements MessageListener {
         wss.forEach(ws -> {
             synchronized (ws) {
                 try {
-                    ws.sendMessage(new TextMessage(body));
+//                    ws.sendMessage(new TextMessage(body));
+                    ws.sendMessage(new BinaryMessage(message.getBody()));
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
