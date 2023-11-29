@@ -463,7 +463,7 @@ public class MessageService extends MessageServiceGrpc.MessageServiceImplBase {
 
     @Override
     public void getMessagesByChannelId(GrpcGetMessagesByChannelIdRequest request, StreamObserver<GrpcGetMessagesByChannelIdResponse> responseObserver) {
-        String isMemberQuery = "select 1 " +
+        String memberQuery = "select tbl_member.server_id " +
                 "from tbl_member " +
                 "where tbl_member.profile_id = ? and tbl_member.server_id = (select tbl_channel.server_id from tbl_channel where tbl_channel.id = ?)";
 
@@ -485,8 +485,9 @@ public class MessageService extends MessageServiceGrpc.MessageServiceImplBase {
                 "            inner join tbl_profile " +
                 "            on tbl_message.created_by = tbl_profile.id " +
                 "            left join tbl_member " +
-                "            on tbl_profile.id = tbl_member.profile_id " +
+                "            on tbl_message.created_by = tbl_member.profile_id " +
                 "            where tbl_message.channel_id = ? " +
+                "            and tbl_member.server_id = ? " +
                 "            order by tbl_message.created_at desc " +
                 "            limit ? offset ?;";
 
@@ -503,15 +504,13 @@ public class MessageService extends MessageServiceGrpc.MessageServiceImplBase {
         try {
             con = mysteryJdbc.getConnection();
 
-            pst1 = con.prepareStatement(isMemberQuery);
+            pst1 = con.prepareStatement(memberQuery);
             pst1.setString(1, request.getProfileId());
             pst1.setString(2, request.getChannelId());
 
             rs1 = pst1.executeQuery();
 
-            boolean isMember = rs1.next();
-
-            if (!isMember) { // no permistion
+            if (!mysteryJdbc.hasResult(rs1)) { // no permistion
                 Metadata metadata = new Metadata();
                 Metadata.Key<GrpcErrorResponse> responseKey = ProtoUtils.keyForProto(GrpcErrorResponse.getDefaultInstance());
                 GrpcErrorCode errorCode = GrpcErrorCode.ERROR_CODE_NOT_FOUND;
@@ -523,6 +522,12 @@ public class MessageService extends MessageServiceGrpc.MessageServiceImplBase {
                 metadata.put(responseKey, errorResponse);
                 responseObserver.onError(Status.NOT_FOUND.asRuntimeException(metadata));
                 return;
+            }
+
+            String serverId = null;
+
+            while (rs1.next()) {
+                serverId = rs1.getString(1);
             }
 
             pst2 = con.prepareStatement(countQuery);
@@ -562,8 +567,9 @@ public class MessageService extends MessageServiceGrpc.MessageServiceImplBase {
 
             pst3 = con.prepareStatement(messagesQuery);
             pst3.setString(1, request.getChannelId());
-            pst3.setInt(2, request.getPageSize());
-            pst3.setInt(3, request.getPageNumber() * request.getPageSize());
+            pst3.setString(2, serverId);
+            pst3.setInt(3, request.getPageSize());
+            pst3.setInt(4, request.getPageNumber() * request.getPageSize());
 
             rs3 = pst3.executeQuery();
 
@@ -586,16 +592,18 @@ public class MessageService extends MessageServiceGrpc.MessageServiceImplBase {
                     builderMessage.setDeletedBy(rs3.getString(8));
                 }
 
-                GrpcMemberProfile memberProfile = GrpcMemberProfile.newBuilder()
-                        .setMemberId(rs3.getString(9))
-                        .setRole(GrpcMemberRole.forNumber(rs3.getInt(10)))
-                        .setServerId(rs3.getString(11))
-                        .setJoinAt(rs3.getString(12))
-                        .setProfileId(rs3.getString(13))
-                        .setName(rs3.getString(14))
-                        .setAvtUrl(rs3.getString(15))
-                        .build();
-                builderMessage.setAuthor(memberProfile);
+                GrpcMemberProfile.Builder authorBuilder = GrpcMemberProfile.newBuilder();
+
+                authorBuilder.setMemberId(rs3.getString(9));
+                authorBuilder.setRole(GrpcMemberRole.forNumber(rs3.getInt(10)));
+                authorBuilder.setServerId(rs3.getString(11));
+                authorBuilder.setJoinAt(rs3.getString(12));
+                authorBuilder.setProfileId(rs3.getString(13));
+                authorBuilder.setName(rs3.getString(14));
+                if (rs3.getString(15) != null) {
+                    authorBuilder.setAvtUrl(rs3.getString(15));
+                }
+                builderMessage.setAuthor(authorBuilder.build());
 
                 GrpcMessage message = builderMessage.build();
 

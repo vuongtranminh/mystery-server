@@ -14,6 +14,7 @@ import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.Base64;
 import java.util.Set;
 
@@ -61,13 +62,18 @@ public class RedisMessageListener implements MessageListener {
         String body = event.toString();
 
         log.info("got the message on redis "+ channel + " and "+ body);
+        byte[] bytes = ByteBuffer.allocate(4).putInt(35).array();
+        byte[] data = ByteBuffer.allocate(bytes.length + message.getBody().length)
+                .put(bytes)
+                .put(message.getBody())
+                .array();
         // send message to channel subcribe
         Set<WebSocketSession> wss = this.webSocketSessionManager.getWebSocketSessionsByChannel(channel);
         wss.forEach(ws -> {
             synchronized (ws) {
                 try {
 //                    ws.sendMessage(new TextMessage(body));
-                    ws.sendMessage(new BinaryMessage(message.getBody()));
+                    ws.sendMessage(new BinaryMessage(data));
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
