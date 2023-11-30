@@ -1,10 +1,14 @@
 package com.vuong.app.service;
 
 import com.vuong.app.config.MysteryJdbc;
+import com.vuong.app.redis.MessagePublisher;
 import com.vuong.app.v1.GrpcErrorCode;
 import com.vuong.app.v1.GrpcErrorResponse;
 import com.vuong.app.v1.GrpcMeta;
 import com.vuong.app.v1.discord.*;
+import com.vuong.app.v1.event.GrpcEvent;
+import com.vuong.app.v1.event.GrpcMemberEvent;
+import com.vuong.app.v1.event.GrpcMessageEvent;
 import io.grpc.Metadata;
 import io.grpc.Status;
 import io.grpc.protobuf.ProtoUtils;
@@ -29,6 +33,7 @@ import java.util.UUID;
 public class ServerService extends ServerServiceGrpc.ServerServiceImplBase {
 
     private final MysteryJdbc mysteryJdbc;
+    private final MessagePublisher messagePublisher;
 
     @Override
     public void createServer(GrpcCreateServerRequest request, StreamObserver<GrpcCreateServerResponse> responseObserver) {
@@ -435,6 +440,19 @@ public class ServerService extends ServerServiceGrpc.ServerServiceImplBase {
             pst3.setString(5, Instant.now().toString());
 
             int result = pst3.executeUpdate();
+
+            GrpcMemberEvent.GrpcAddMemberEvent grpcAddMemberEvent = GrpcMemberEvent.GrpcAddMemberEvent.newBuilder()
+                    .build();
+
+            GrpcMemberEvent grpcMemberEvent = GrpcMemberEvent.newBuilder()
+                    .setAddMemberEvent(grpcAddMemberEvent)
+                    .build();
+
+            GrpcEvent grpcEvent = GrpcEvent.newBuilder()
+                    .setMemberEvent(grpcMemberEvent)
+                    .build();
+
+            this.messagePublisher.publish(serverId, grpcEvent);
 
             builder.setServerId(serverId);
 

@@ -8,17 +8,6 @@ option java_outer_classname = "MessageProto";
 import "common.proto";
 import "discord/member.proto";
 
-enum GrpcMessageEventType {
-  MESSAGE_EVENT_TYPE_UNSPECIFIED = 0;
-  MESSAGE_EVENT_TYPE_ADD = 1;
-  MESSAGE_EVENT_TYPE_EDIT = 2;
-}
-
-message GrpcMessageEvent {
-  GrpcMessageEventType type = 1;
-  GrpcMessage message = 2;
-}
-
 message GrpcMessage {
   string message_id = 1;
   optional string content = 2;

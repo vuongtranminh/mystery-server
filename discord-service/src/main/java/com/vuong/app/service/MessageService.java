@@ -7,6 +7,8 @@ import com.vuong.app.v1.GrpcErrorCode;
 import com.vuong.app.v1.GrpcErrorResponse;
 import com.vuong.app.v1.GrpcMeta;
 import com.vuong.app.v1.discord.*;
+import com.vuong.app.v1.event.GrpcEvent;
+import com.vuong.app.v1.event.GrpcMessageEvent;
 import io.grpc.Metadata;
 import io.grpc.Status;
 import io.grpc.protobuf.ProtoUtils;
@@ -53,12 +55,12 @@ public class MessageService extends MessageServiceGrpc.MessageServiceImplBase {
 
             rs1 = pst1.executeQuery();
 
-            GrpcMemberProfile memberProfile = null;
+            GrpcMessageEvent.GrpcMemberProfile memberProfile = null;
 
             while (rs1.next()) { // no permistion
-                memberProfile = GrpcMemberProfile.newBuilder()
+                memberProfile = GrpcMessageEvent.GrpcMemberProfile.newBuilder()
                         .setMemberId(rs1.getString(1))
-                        .setRole(GrpcMemberRole.forNumber(rs1.getInt(2)))
+                        .setRole(GrpcMessageEvent.GrpcMemberRole.forNumber(rs1.getInt(2)))
                         .setServerId(rs1.getString(3))
                         .setJoinAt(rs1.getString(4))
                         .setProfileId(rs1.getString(5))
@@ -96,7 +98,7 @@ public class MessageService extends MessageServiceGrpc.MessageServiceImplBase {
 
             int result = pst2.executeUpdate();
 
-            GrpcMessage.Builder builder = GrpcMessage.newBuilder();
+            GrpcMessageEvent.GrpcMessage.Builder builder = GrpcMessageEvent.GrpcMessage.newBuilder();
             builder.setMessageId(messageId);
             if (request.hasContent()) {
                 builder.setContent(request.getContent());
@@ -109,14 +111,18 @@ public class MessageService extends MessageServiceGrpc.MessageServiceImplBase {
             builder.setUpdatedAt(updatedAt);
             builder.setAuthor(memberProfile);
 
-            GrpcMessage message = builder.build();
+            GrpcMessageEvent.GrpcMessage grpcMessage = builder.build();
 
-            GrpcMessageEvent messageEvent = GrpcMessageEvent.newBuilder()
-                    .setType(GrpcMessageEventType.MESSAGE_EVENT_TYPE_ADD)
-                    .setMessage(message)
+            GrpcMessageEvent grpcMessageEvent = GrpcMessageEvent.newBuilder()
+                    .setType(GrpcMessageEvent.GrpcMessageEventType.MESSAGE_EVENT_TYPE_ADD)
+                    .setData(grpcMessage)
                     .build();
 
-            this.messagePublisher.publish(memberProfile.getServerId(), messageEvent);
+            GrpcEvent grpcEvent = GrpcEvent.newBuilder()
+                    .setMessageEvent(grpcMessageEvent)
+                    .build();
+
+            this.messagePublisher.publish(memberProfile.getServerId(), grpcEvent);
 
             GrpcCreateMessageResponse response = GrpcCreateMessageResponse.newBuilder()
                     .setMessageId(messageId)
@@ -182,8 +188,8 @@ public class MessageService extends MessageServiceGrpc.MessageServiceImplBase {
 
             rs1 = pst1.executeQuery();
 
-            GrpcMessage.Builder builder = GrpcMessage.newBuilder();
-            GrpcMemberProfile.Builder memberProfileBuilder = GrpcMemberProfile.newBuilder();
+            GrpcMessageEvent.GrpcMessage.Builder builder = GrpcMessageEvent.GrpcMessage.newBuilder();
+            GrpcMessageEvent.GrpcMemberProfile.Builder memberProfileBuilder = GrpcMessageEvent.GrpcMemberProfile.newBuilder();
             boolean hasResult = false;
 
             while (rs1.next()) { // no permistion
@@ -198,7 +204,7 @@ public class MessageService extends MessageServiceGrpc.MessageServiceImplBase {
                 builder.setUpdatedAt(rs1.getString(6));
 
                 memberProfileBuilder.setMemberId(rs1.getString(7));
-                memberProfileBuilder.setRole(GrpcMemberRole.forNumber(rs1.getInt(8)));
+                memberProfileBuilder.setRole(GrpcMessageEvent.GrpcMemberRole.forNumber(rs1.getInt(8)));
                 memberProfileBuilder.setServerId(rs1.getString(9));
                 memberProfileBuilder.setJoinAt(rs1.getString(10));
                 memberProfileBuilder.setProfileId(rs1.getString(11));
@@ -206,7 +212,7 @@ public class MessageService extends MessageServiceGrpc.MessageServiceImplBase {
                 memberProfileBuilder.setAvtUrl(rs1.getString(13));
             }
 
-            GrpcMemberProfile memberProfile = memberProfileBuilder.build();
+            GrpcMessageEvent.GrpcMemberProfile memberProfile = memberProfileBuilder.build();
             builder.setAuthor(memberProfile);
 
             if (!hasResult) {
@@ -232,14 +238,18 @@ public class MessageService extends MessageServiceGrpc.MessageServiceImplBase {
 
             int result = pst2.executeUpdate();
 
-            GrpcMessage message = builder.build();
+            GrpcMessageEvent.GrpcMessage grpcMessage = builder.build();
 
-            GrpcMessageEvent messageEvent = GrpcMessageEvent.newBuilder()
-                    .setType(GrpcMessageEventType.MESSAGE_EVENT_TYPE_EDIT)
-                    .setMessage(message)
+            GrpcMessageEvent grpcMessageEvent = GrpcMessageEvent.newBuilder()
+                    .setType(GrpcMessageEvent.GrpcMessageEventType.MESSAGE_EVENT_TYPE_EDIT)
+                    .setData(grpcMessage)
                     .build();
 
-            this.messagePublisher.publish(memberProfile.getServerId(), messageEvent);
+            GrpcEvent grpcEvent = GrpcEvent.newBuilder()
+                    .setMessageEvent(grpcMessageEvent)
+                    .build();
+
+            this.messagePublisher.publish(memberProfile.getServerId(), grpcEvent);
 
             GrpcUpdateMessageResponse response = GrpcUpdateMessageResponse.newBuilder()
                     .setMessageId(request.getMessageId())
@@ -337,8 +347,8 @@ public class MessageService extends MessageServiceGrpc.MessageServiceImplBase {
                 return;
             }
 
-            GrpcMessage.Builder builder = GrpcMessage.newBuilder();
-            GrpcMemberProfile.Builder memberProfileBuilder = GrpcMemberProfile.newBuilder();
+            GrpcMessageEvent.GrpcMessage.Builder builder = GrpcMessageEvent.GrpcMessage.newBuilder();
+            GrpcMessageEvent.GrpcMemberProfile.Builder memberProfileBuilder = GrpcMessageEvent.GrpcMemberProfile.newBuilder();
             String serverId = null;
             String memberOwnerMessageId = null;
 
@@ -351,7 +361,7 @@ public class MessageService extends MessageServiceGrpc.MessageServiceImplBase {
                 memberOwnerMessageId = rs1.getString(6);
 
                 if (rs1.getString(7) != null) {
-                    memberProfileBuilder.setRole(GrpcMemberRole.forNumber(rs1.getInt(7)));
+                    memberProfileBuilder.setRole(GrpcMessageEvent.GrpcMemberRole.forNumber(rs1.getInt(7)));
                 }
                 if (rs1.getString(8) != null) {
                     memberProfileBuilder.setServerId(rs1.getString(8));
@@ -366,9 +376,7 @@ public class MessageService extends MessageServiceGrpc.MessageServiceImplBase {
                 }
             }
 
-            GrpcMemberProfile memberProfile = memberProfileBuilder.build();
-
-            GrpcMessage message = builder.build();
+            GrpcMessageEvent.GrpcMemberProfile memberProfile = memberProfileBuilder.build();
 
             boolean isOwner = memberOwnerMessageId != null && memberProfile.getProfileId().equals(request.getProfileId());
             boolean isPermission = false;
@@ -415,14 +423,18 @@ public class MessageService extends MessageServiceGrpc.MessageServiceImplBase {
             builder.setDeletedAt(deletedAt);
             builder.setDeletedBy(request.getProfileId());
 
-            GrpcMessage grpcMessage = builder.build();
+            GrpcMessageEvent.GrpcMessage grpcMessage = builder.build();
 
-            GrpcMessageEvent messageEvent = GrpcMessageEvent.newBuilder()
-                    .setType(GrpcMessageEventType.MESSAGE_EVENT_TYPE_ADD)
-                    .setMessage(grpcMessage)
+            GrpcMessageEvent grpcMessageEvent = GrpcMessageEvent.newBuilder()
+                    .setType(GrpcMessageEvent.GrpcMessageEventType.MESSAGE_EVENT_TYPE_EDIT)
+                    .setData(grpcMessage)
                     .build();
 
-            this.messagePublisher.publish(serverId, messageEvent);
+            GrpcEvent grpcEvent = GrpcEvent.newBuilder()
+                    .setMessageEvent(grpcMessageEvent)
+                    .build();
+
+            this.messagePublisher.publish(memberProfile.getServerId(), grpcEvent);
 
             GrpcDeleteMessageResponse response = GrpcDeleteMessageResponse.newBuilder()
                     .setDeleted(true)

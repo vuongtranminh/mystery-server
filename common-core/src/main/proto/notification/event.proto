@@ -1,0 +1,99 @@
+syntax = "proto3";
+
+package vuong.app.v1.discord;
+option java_package = "com.vuong.app.v1.event";
+option java_multiple_files = true;
+option java_outer_classname = "EventProto";
+
+import "discord/member.proto";
+import "discord/message.proto";
+
+message GrpcEvent {
+  oneof event {
+    GrpcMessageEvent message_event = 1;
+    GrpcMemberEvent member_event = 2;
+  }
+}
+
+message GrpcMessageEvent {
+
+  enum GrpcMessageEventType {
+    MESSAGE_EVENT_TYPE_UNSPECIFIED = 0;
+    MESSAGE_EVENT_TYPE_ADD = 1;
+    MESSAGE_EVENT_TYPE_EDIT = 2;
+  }
+
+  enum GrpcMemberRole {
+    MEMBER_ROLE_UNSPECIFIED = 0;
+    MEMBER_ROLE_ADMIN = 1;
+    MEMBER_ROLE_MODERATOR = 2;
+    MEMBER_ROLE_GUEST = 3;
+  }
+
+  message GrpcMemberProfile {
+    optional string member_id = 1;
+    optional GrpcMemberRole role = 2;
+    optional string server_id = 3;
+    optional string join_at = 4;
+    string profile_id = 5;
+    string name = 6;
+    optional string avt_url = 7;
+  }
+
+  message GrpcMessage {
+    string message_id = 1;
+    optional string content = 2;
+    optional string file_url = 3;
+    string channel_id = 4;
+    string created_at = 5;
+    string updated_at = 6;
+    optional string deleted_at = 7;
+    optional string deleted_by = 8;
+    GrpcMemberProfile author = 9;
+  }
+
+  GrpcMessageEventType type = 1;
+  GrpcMessage data = 2;
+}
+
+message GrpcMemberEvent {
+  enum GrpcMemberEventType {
+    MEMBER_EVENT_TYPE_UNSPECIFIED = 0;
+    MEMBER_EVENT_TYPE_ADD = 1;
+    MEMBER_EVENT_TYPE_EDIT = 2;
+    MEMBER_EVENT_DELETE = 3;
+  }
+
+  enum GrpcMemberRole {
+    MEMBER_ROLE_UNSPECIFIED = 0;
+    MEMBER_ROLE_ADMIN = 1;
+    MEMBER_ROLE_MODERATOR = 2;
+    MEMBER_ROLE_GUEST = 3;
+  }
+
+  message GrpcAddMemberEvent {
+    string member_id = 1;
+    GrpcMemberRole role = 2;
+    string server_id = 3;
+    string join_at = 4;
+    string profile_id = 5;
+    string name = 6;
+    optional string avt_url = 7;
+  }
+
+  message GrpcEditMemberEvent {
+    string member_id = 1;
+    GrpcMemberRole role = 2;
+  }
+
+  message GrpcDeleteMemberEvent {
+    string member_id = 1;
+  }
+
+  GrpcMemberEventType type = 1;
+  oneof data {
+    GrpcAddMemberEvent add_member_event = 2;
+    GrpcEditMemberEvent edit_member_event = 3;
+    GrpcDeleteMemberEvent delete_member_event = 4;
+  }
+}
