@@ -1,7 +1,5 @@
 package com.vuong.app.redis;
 
-import com.vuong.app.doman.MemberProfile;
-import com.vuong.app.doman.MessageEvent;
 import com.vuong.app.redis.serializer.ProtobufSerializer;
 import com.vuong.app.v1.event.GrpcEvent;
 import com.vuong.app.websocket.WebSocketSessionManager;
@@ -10,12 +8,9 @@ import org.springframework.data.redis.connection.Message;
 import org.springframework.data.redis.connection.MessageListener;
 import org.springframework.stereotype.Service;
 import org.springframework.web.socket.BinaryMessage;
-import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 
 import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.util.Base64;
 import java.util.Set;
 
 @Service
