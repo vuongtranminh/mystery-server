@@ -20,8 +20,8 @@ public class RedisMessageListener implements MessageListener {
     private final WebSocketSessionManager webSocketSessionManager;
     private final ProtobufSerializer<GrpcEvent> serializer;
 
-    public RedisMessageListener() {
-        this.webSocketSessionManager = WebSocketSessionManager.getInstance();
+    public RedisMessageListener(WebSocketSessionManager webSocketSessionManager) {
+        this.webSocketSessionManager = webSocketSessionManager;
         this.serializer = new ProtobufSerializer<>(GrpcEvent.class);
     }
 
@@ -67,9 +67,10 @@ public class RedisMessageListener implements MessageListener {
 //                .put(message.getBody())
 //                .array();
         // send message to channel subcribe
-        Set<WebSocketSession> wss = this.webSocketSessionManager.getWebSocketSessionsByChannel(channel);
-        wss.forEach(ws -> {
-            synchronized (ws) {
+        Set<String> userIds = this.webSocketSessionManager.getUserIdsListenerServer(channel);
+        userIds.forEach(userId -> {
+            synchronized (userId) {
+                WebSocketSession ws = this.webSocketSessionManager.getWebSocketSession(userId);
                 try {
 //                    ws.sendMessage(new TextMessage(body));
                     ws.sendMessage(new BinaryMessage(message.getBody()));
