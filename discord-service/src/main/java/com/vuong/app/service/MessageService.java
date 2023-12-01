@@ -157,25 +157,31 @@ public class MessageService extends MessageServiceGrpc.MessageServiceImplBase {
 
     @Override
     public void updateMessage(GrpcUpdateMessageRequest request, StreamObserver<GrpcUpdateMessageResponse> responseObserver) {
-// owner message
+        // owner message
         String messagesQuery = "select " +
-                "            tbl_message.id, tbl_message.content, tbl_message.file_url, tbl_message.channel_id, tbl_message.created_at, tbl_message.updated_at, " +
-                "            tbl_member.id, tbl_member.role, tbl_member.server_id, tbl_member.join_at, " +
+                "            tbl_message.id, tbl_message.channel_id, tbl_message.created_at, tbl_message.updated_at, " +
+                "            tbl_channel.server_id, " +
                 "            tbl_profile.id, tbl_profile.name, tbl_profile.avt_url " +
                 "            from tbl_message " +
+                "            inner join tbl_channel " +
+                "            on tbl_message.channel_id = tbl_channel.id " +
                 "            inner join tbl_profile " +
                 "            on tbl_message.created_by = tbl_profile.id " +
-                "            inner join tbl_member " +
-                "            on tbl_profile.id = tbl_member.profile_id " +
                 "            where tbl_message.id = ? " +
-                "            and tbl_message.deleted_at is null " +
-                "            and tbl_profile.id = ?;";
+                "            and tbl_message.deleted_at is null";
+
+        String memberOwnerMessageQuery = "select " +
+                "            tbl_member.id, tbl_member.role, tbl_member.server_id, tbl_member.join_at " +
+                "            from tbl_member " +
+                "            where tbl_member.profile_id = ? " +
+                "            and tbl_member.server_id = ?";
 
         String updateMesageQuery = "update tbl_message set content = ?, updated_at = ? where tbl_message.id = ?";
 
         Connection con = null;
         PreparedStatement pst1 = null;
         PreparedStatement pst2 = null;
+        PreparedStatement pst3 = null;
         ResultSet rs1 = null;
         ResultSet rs2 = null;
 
@@ -184,44 +190,16 @@ public class MessageService extends MessageServiceGrpc.MessageServiceImplBase {
 
             pst1 = con.prepareStatement(messagesQuery);
             pst1.setString(1, request.getMessageId());
-            pst1.setString(2, request.getProfileId());
 
             rs1 = pst1.executeQuery();
 
-            GrpcMessageEvent.GrpcMessage.Builder builder = GrpcMessageEvent.GrpcMessage.newBuilder();
-            GrpcMessageEvent.GrpcMemberProfile.Builder memberProfileBuilder = GrpcMessageEvent.GrpcMemberProfile.newBuilder();
-            boolean hasResult = false;
-
-            while (rs1.next()) { // no permistion
-                hasResult = true;
-                builder.setMessageId(rs1.getString(1));
-                builder.setContent(rs1.getString(2));
-                if (rs1.getString(3) != null) {
-                    builder.setFileUrl(rs1.getString(3));
-                }
-                builder.setChannelId(rs1.getString(4));
-                builder.setCreatedAt(rs1.getString(5));
-                builder.setUpdatedAt(rs1.getString(6));
-
-                memberProfileBuilder.setMemberId(rs1.getString(7));
-                memberProfileBuilder.setRole(GrpcMessageEvent.GrpcMemberRole.forNumber(rs1.getInt(8)));
-                memberProfileBuilder.setServerId(rs1.getString(9));
-                memberProfileBuilder.setJoinAt(rs1.getString(10));
-                memberProfileBuilder.setProfileId(rs1.getString(11));
-                memberProfileBuilder.setName(rs1.getString(12));
-                memberProfileBuilder.setAvtUrl(rs1.getString(13));
-            }
-
-            GrpcMessageEvent.GrpcMemberProfile memberProfile = memberProfileBuilder.build();
-            builder.setAuthor(memberProfile);
-
-            if (!hasResult) {
+            if (!mysteryJdbc.hasResult(rs1)) {
                 Metadata metadata = new Metadata();
                 Metadata.Key<GrpcErrorResponse> responseKey = ProtoUtils.keyForProto(GrpcErrorResponse.getDefaultInstance());
                 GrpcErrorCode errorCode = GrpcErrorCode.ERROR_CODE_NOT_FOUND;
                 GrpcErrorResponse errorResponse = GrpcErrorResponse.newBuilder()
                         .setErrorCode(errorCode)
-                        .setMessage("not exists channel")
+                        .setMessage("not has message by messageId")
                         .build();
                 // pass the error object via metadata
                 metadata.put(responseKey, errorResponse);
@@ -229,14 +207,85 @@ public class MessageService extends MessageServiceGrpc.MessageServiceImplBase {
                 return;
             }
 
+            GrpcMessageEvent.GrpcMessage.Builder builder = GrpcMessageEvent.GrpcMessage.newBuilder();
+            GrpcMessageEvent.GrpcMemberProfile.Builder memberProfileBuilder = GrpcMessageEvent.GrpcMemberProfile.newBuilder();
+            String serverId = null;
+            String profileIdOwnerMessage = null;
+
+            while (rs1.next()) {
+                builder.setMessageId(rs1.getString(1));
+                builder.setChannelId(rs1.getString(2));
+                builder.setCreatedAt(rs1.getString(3));
+                builder.setUpdatedAt(rs1.getString(4));
+                serverId = rs1.getString(5);
+                profileIdOwnerMessage = rs1.getString(6);
+                memberProfileBuilder.setProfileId(profileIdOwnerMessage);
+                memberProfileBuilder.setName(rs1.getString(7));
+                if (rs1.getString(8) != null) {
+                    memberProfileBuilder.setAvtUrl(rs1.getString(8));
+                }
+            }
+
+            boolean isOwnerAction = profileIdOwnerMessage.equals(request.getProfileId());
+
             String updatedAt = Instant.now().toString();
 
-            pst2 = con.prepareStatement(updateMesageQuery);
-            pst2.setString(1, request.getContent());
-            pst2.setString(2, updatedAt);
-            pst2.setString(3, request.getMessageId());
+            if (!isOwnerAction) {
+                Metadata metadata = new Metadata();
+                Metadata.Key<GrpcErrorResponse> responseKey = ProtoUtils.keyForProto(GrpcErrorResponse.getDefaultInstance());
+                GrpcErrorCode errorCode = GrpcErrorCode.ERROR_CODE_PERMISSION_DENIED;
+                GrpcErrorResponse errorResponse = GrpcErrorResponse.newBuilder()
+                        .setErrorCode(errorCode)
+                        .setMessage("not permission")
+                        .build();
+                // pass the error object via metadata
+                metadata.put(responseKey, errorResponse);
+                responseObserver.onError(Status.PERMISSION_DENIED.asRuntimeException(metadata));
+                return;
+            }
 
-            int result = pst2.executeUpdate();
+            pst2 = con.prepareStatement(memberOwnerMessageQuery);
+            pst2.setString(1, profileIdOwnerMessage);
+            pst2.setString(2, serverId);
+
+            rs2 = pst2.executeQuery();
+
+            boolean isMember = mysteryJdbc.hasResult(rs2);
+
+            if (!isMember) {
+                Metadata metadata = new Metadata();
+                Metadata.Key<GrpcErrorResponse> responseKey = ProtoUtils.keyForProto(GrpcErrorResponse.getDefaultInstance());
+                GrpcErrorCode errorCode = GrpcErrorCode.ERROR_CODE_PERMISSION_DENIED;
+                GrpcErrorResponse errorResponse = GrpcErrorResponse.newBuilder()
+                        .setErrorCode(errorCode)
+                        .setMessage("not permission")
+                        .build();
+                // pass the error object via metadata
+                metadata.put(responseKey, errorResponse);
+                responseObserver.onError(Status.PERMISSION_DENIED.asRuntimeException(metadata));
+                return;
+            }
+
+            while (rs2.next()) {
+                memberProfileBuilder.setMemberId(rs2.getString(1));
+                memberProfileBuilder.setRole(GrpcMessageEvent.GrpcMemberRole.forNumber(rs2.getInt(2)));
+                memberProfileBuilder.setServerId(rs2.getString(3));
+                memberProfileBuilder.setJoinAt(rs2.getString(4));
+            }
+
+            pst3 = con.prepareStatement(updateMesageQuery);
+            pst3.setString(1, request.getContent());
+            pst3.setString(2, updatedAt);
+            pst3.setString(3, request.getMessageId());
+
+            int result = pst3.executeUpdate();
+
+            GrpcMessageEvent.GrpcMemberProfile memberProfile = memberProfileBuilder.build();
+
+            builder.setContent(request.getContent());
+            builder.setAuthor(memberProfile);
+            builder.setUpdatedAt(updatedAt);
+            builder.setDeletedBy(request.getProfileId());
 
             GrpcMessageEvent.GrpcMessage grpcMessage = builder.build();
 
@@ -249,7 +298,7 @@ public class MessageService extends MessageServiceGrpc.MessageServiceImplBase {
                     .setMessageEvent(grpcMessageEvent)
                     .build();
 
-            this.messagePublisher.publish(memberProfile.getServerId(), grpcEvent);
+            this.messagePublisher.publish(serverId, grpcEvent);
 
             GrpcUpdateMessageResponse response = GrpcUpdateMessageResponse.newBuilder()
                     .setMessageId(request.getMessageId())
@@ -257,11 +306,12 @@ public class MessageService extends MessageServiceGrpc.MessageServiceImplBase {
 
             responseObserver.onNext(response);
             responseObserver.onCompleted();
+
         } catch (SQLException ex) {
             mysteryJdbc.doRollback();
         } finally {
             mysteryJdbc.closeResultSet(rs1, rs2);
-            mysteryJdbc.closePreparedStatement(pst1, pst2);
+            mysteryJdbc.closePreparedStatement(pst1, pst2, pst3);
         }
     }
 
@@ -294,36 +344,66 @@ public class MessageService extends MessageServiceGrpc.MessageServiceImplBase {
         String messagesQuery = "select " +
                 "            tbl_message.id, tbl_message.channel_id, tbl_message.created_at, tbl_message.updated_at, " +
                 "            tbl_channel.server_id, " +
-                "            tbl_member.id, tbl_member.role, tbl_member.server_id, tbl_member.join_at, " +
                 "            tbl_profile.id, tbl_profile.name, tbl_profile.avt_url " +
                 "            from tbl_message " +
                 "            inner join tbl_channel " +
                 "            on tbl_message.channel_id = tbl_channel.id " +
                 "            inner join tbl_profile " +
                 "            on tbl_message.created_by = tbl_profile.id " +
-                "            left join tbl_member " +
-                "            on tbl_profile.id = tbl_member.profile_id " +
                 "            where tbl_message.id = ? " +
-                "            and tbl_message.deleted_at is null;";
+                "            and tbl_message.deleted_at is null";
 
-        // else check member with profileId has permistion delete
-        String getMemberQuery = "select " +
+        String memberOwnerMessageQuery = "select " +
+                "            tbl_member.id, tbl_member.role, tbl_member.server_id, tbl_member.join_at " +
+                "            from tbl_member " +
+                "            where tbl_member.profile_id = ? " +
+                "            and tbl_member.server_id = ?";
+
+        String memberPermissionQuery = "select " +
                 "            tbl_member.id, tbl_member.role, tbl_member.server_id, tbl_member.join_at, " +
                 "            tbl_profile.id, tbl_profile.name, tbl_profile.avt_url " +
                 "            from tbl_member " +
                 "            inner join tbl_profile " +
                 "            on tbl_member.profile_id = tbl_profile.id " +
-                "            where tbl_profile.id = ? " +
+                "            where tbl_member.profile_id = ? " +
                 "            and tbl_member.server_id = ? " +
                 "            and tbl_member.role in (?, ?);";
+
+//        String messagesQuery = "select " +
+//                "            tbl_message.id, tbl_message.channel_id, tbl_message.created_at, tbl_message.updated_at, " +
+//                "            tbl_channel.server_id, " +
+//                "            tbl_member.id, tbl_member.role, tbl_member.server_id, tbl_member.join_at, " +
+//                "            tbl_profile.id, tbl_profile.name, tbl_profile.avt_url " +
+//                "            from tbl_message " +
+//                "            inner join tbl_channel " +
+//                "            on tbl_message.channel_id = tbl_channel.id " +
+//                "            inner join tbl_profile " +
+//                "            on tbl_message.created_by = tbl_profile.id " +
+//                "            left join tbl_member " +
+//                "            on tbl_message.created_by = tbl_member.profile_id " +
+//                "            where tbl_message.id = ? " +
+//                "            and tbl_message.deleted_at is null;";
+
+        // else check member with profileId has permistion delete
+//        String getMemberQuery = "select " +
+//                "            tbl_member.id, tbl_member.role, tbl_member.server_id, tbl_member.join_at, " +
+//                "            tbl_profile.id, tbl_profile.name, tbl_profile.avt_url " +
+//                "            from tbl_member " +
+//                "            inner join tbl_profile " +
+//                "            on tbl_member.profile_id = tbl_profile.id " +
+//                "            where tbl_profile.id = ? " +
+//                "            and tbl_member.server_id = ? " +
+//                "            and tbl_member.role in (?, ?);";
         String updateMessageQuery = "update tbl_message set deleted_at = ?, deleted_by = ? where tbl_message.id = ?";
 
         Connection con = null;
         PreparedStatement pst1 = null;
         PreparedStatement pst2 = null;
         PreparedStatement pst3 = null;
+        PreparedStatement pst4 = null;
         ResultSet rs1 = null;
         ResultSet rs2 = null;
+        ResultSet rs3 = null;
 
         try {
             con = mysteryJdbc.getConnection();
@@ -334,68 +414,116 @@ public class MessageService extends MessageServiceGrpc.MessageServiceImplBase {
             rs1 = pst1.executeQuery();
 
             if (!mysteryJdbc.hasResult(rs1)) {
-                Metadata metadata = new Metadata();
-                Metadata.Key<GrpcErrorResponse> responseKey = ProtoUtils.keyForProto(GrpcErrorResponse.getDefaultInstance());
-                GrpcErrorCode errorCode = GrpcErrorCode.ERROR_CODE_NOT_FOUND;
-                GrpcErrorResponse errorResponse = GrpcErrorResponse.newBuilder()
-                        .setErrorCode(errorCode)
-                        .setMessage("not found")
+                GrpcDeleteMessageResponse response = GrpcDeleteMessageResponse.newBuilder()
+                        .setDeleted(true)
                         .build();
-                // pass the error object via metadata
-                metadata.put(responseKey, errorResponse);
-                responseObserver.onError(Status.NOT_FOUND.asRuntimeException(metadata));
+
+                responseObserver.onNext(response);
+                responseObserver.onCompleted();
                 return;
             }
 
             GrpcMessageEvent.GrpcMessage.Builder builder = GrpcMessageEvent.GrpcMessage.newBuilder();
             GrpcMessageEvent.GrpcMemberProfile.Builder memberProfileBuilder = GrpcMessageEvent.GrpcMemberProfile.newBuilder();
             String serverId = null;
-            String memberOwnerMessageId = null;
+            String profileIdOwnerMessage = null;
 
-            while (rs1.next()) { // no permistion
+            while (rs1.next()) {
                 builder.setMessageId(rs1.getString(1));
                 builder.setChannelId(rs1.getString(2));
                 builder.setCreatedAt(rs1.getString(3));
                 builder.setUpdatedAt(rs1.getString(4));
-                serverId = rs2.getString(5);
-                memberOwnerMessageId = rs1.getString(6);
-
-                if (rs1.getString(7) != null) {
-                    memberProfileBuilder.setRole(GrpcMessageEvent.GrpcMemberRole.forNumber(rs1.getInt(7)));
-                }
+                serverId = rs1.getString(5);
+                profileIdOwnerMessage = rs1.getString(6);
+                memberProfileBuilder.setProfileId(profileIdOwnerMessage);
+                memberProfileBuilder.setName(rs1.getString(7));
                 if (rs1.getString(8) != null) {
-                    memberProfileBuilder.setServerId(rs1.getString(8));
-                }
-                if (rs1.getString(9) != null) {
-                    memberProfileBuilder.setJoinAt(rs1.getString(9));
-                }
-                memberProfileBuilder.setProfileId(rs1.getString(10));
-                memberProfileBuilder.setName(rs1.getString(11));
-                if (rs1.getString(12) != null) {
-                    memberProfileBuilder.setAvtUrl(rs1.getString(12));
+                    memberProfileBuilder.setAvtUrl(rs1.getString(8));
                 }
             }
 
-            GrpcMessageEvent.GrpcMemberProfile memberProfile = memberProfileBuilder.build();
+            boolean isOwnerAction = profileIdOwnerMessage.equals(request.getProfileId());
 
-            boolean isOwner = memberOwnerMessageId != null && memberProfile.getProfileId().equals(request.getProfileId());
-            boolean isPermission = false;
+            String deletedAt = Instant.now().toString();
 
-            if (!isOwner) {
-                pst2 = con.prepareStatement(getMemberQuery);
-                pst2.setString(1, request.getProfileId());
+            if (isOwnerAction) {
+                pst2 = con.prepareStatement(memberOwnerMessageQuery);
+                pst2.setString(1, profileIdOwnerMessage);
                 pst2.setString(2, serverId);
-                pst2.setInt(3, GrpcMemberRole.MEMBER_ROLE_ADMIN_VALUE);
-                pst2.setInt(4, GrpcMemberRole.MEMBER_ROLE_MODERATOR_VALUE);
 
                 rs2 = pst2.executeQuery();
 
-                isPermission = mysteryJdbc.hasResult(rs2);
+                boolean isMember = mysteryJdbc.hasResult(rs2);
+
+                if (!isMember) {
+                    Metadata metadata = new Metadata();
+                    Metadata.Key<GrpcErrorResponse> responseKey = ProtoUtils.keyForProto(GrpcErrorResponse.getDefaultInstance());
+                    GrpcErrorCode errorCode = GrpcErrorCode.ERROR_CODE_PERMISSION_DENIED;
+                    GrpcErrorResponse errorResponse = GrpcErrorResponse.newBuilder()
+                            .setErrorCode(errorCode)
+                            .setMessage("not permission")
+                            .build();
+                    // pass the error object via metadata
+                    metadata.put(responseKey, errorResponse);
+                    responseObserver.onError(Status.PERMISSION_DENIED.asRuntimeException(metadata));
+                    return;
+                }
+
+                while (rs2.next()) {
+                    memberProfileBuilder.setMemberId(rs2.getString(1));
+                    memberProfileBuilder.setRole(GrpcMessageEvent.GrpcMemberRole.forNumber(rs2.getInt(2)));
+                    memberProfileBuilder.setServerId(rs2.getString(3));
+                    memberProfileBuilder.setJoinAt(rs2.getString(4));
+                }
+
+                pst4 = con.prepareStatement(updateMessageQuery);
+                pst4.setString(1, deletedAt);
+                pst4.setString(2, request.getProfileId());
+                pst4.setString(3, request.getMessageId());
+
+                int result = pst4.executeUpdate();
+
+                GrpcMessageEvent.GrpcMemberProfile memberProfile = memberProfileBuilder.build();
+
+                builder.setContent("This message has been deleted.");
+                builder.setAuthor(memberProfile);
+                builder.setDeletedAt(deletedAt);
+                builder.setDeletedBy(request.getProfileId());
+
+                GrpcMessageEvent.GrpcMessage grpcMessage = builder.build();
+
+                GrpcMessageEvent grpcMessageEvent = GrpcMessageEvent.newBuilder()
+                        .setType(GrpcMessageEvent.GrpcMessageEventType.MESSAGE_EVENT_TYPE_EDIT)
+                        .setData(grpcMessage)
+                        .build();
+
+                GrpcEvent grpcEvent = GrpcEvent.newBuilder()
+                        .setMessageEvent(grpcMessageEvent)
+                        .build();
+
+                this.messagePublisher.publish(serverId, grpcEvent);
+
+                GrpcDeleteMessageResponse response = GrpcDeleteMessageResponse.newBuilder()
+                        .setDeleted(true)
+                        .build();
+
+                responseObserver.onNext(response);
+                responseObserver.onCompleted();
+
+                return;
             }
 
-            boolean canDelete = isOwner || isPermission;
+            pst3 = con.prepareStatement(memberPermissionQuery);
+            pst3.setString(1, request.getProfileId());
+            pst3.setString(2, serverId);
+            pst3.setInt(3, GrpcMemberRole.MEMBER_ROLE_ADMIN_VALUE);
+            pst3.setInt(4, GrpcMemberRole.MEMBER_ROLE_MODERATOR_VALUE);
 
-            if (!canDelete) {
+            rs3 = pst3.executeQuery();
+
+            boolean isPermission = mysteryJdbc.hasResult(rs3);
+
+            if (!isPermission) {
                 Metadata metadata = new Metadata();
                 Metadata.Key<GrpcErrorResponse> responseKey = ProtoUtils.keyForProto(GrpcErrorResponse.getDefaultInstance());
                 GrpcErrorCode errorCode = GrpcErrorCode.ERROR_CODE_PERMISSION_DENIED;
@@ -409,14 +537,14 @@ public class MessageService extends MessageServiceGrpc.MessageServiceImplBase {
                 return;
             }
 
-            String deletedAt = Instant.now().toString();
+            pst4 = con.prepareStatement(updateMessageQuery);
+            pst4.setString(1, deletedAt);
+            pst4.setString(2, request.getProfileId());
+            pst4.setString(3, request.getMessageId());
 
-            pst3 = con.prepareStatement(updateMessageQuery);
-            pst3.setString(1, deletedAt);
-            pst3.setString(2, memberProfile.getProfileId());
-            pst3.setString(3, request.getMessageId());
+            int result = pst4.executeUpdate();
 
-            int result = pst3.executeUpdate();
+            GrpcMessageEvent.GrpcMemberProfile memberProfile = memberProfileBuilder.build();
 
             builder.setContent("This message has been deleted.");
             builder.setAuthor(memberProfile);
@@ -434,7 +562,7 @@ public class MessageService extends MessageServiceGrpc.MessageServiceImplBase {
                     .setMessageEvent(grpcMessageEvent)
                     .build();
 
-            this.messagePublisher.publish(memberProfile.getServerId(), grpcEvent);
+            this.messagePublisher.publish(serverId, grpcEvent);
 
             GrpcDeleteMessageResponse response = GrpcDeleteMessageResponse.newBuilder()
                     .setDeleted(true)
@@ -443,10 +571,11 @@ public class MessageService extends MessageServiceGrpc.MessageServiceImplBase {
             responseObserver.onNext(response);
             responseObserver.onCompleted();
         } catch (SQLException ex) {
+            ex.printStackTrace();
             mysteryJdbc.doRollback();
         } finally {
-            mysteryJdbc.closeResultSet(rs1, rs2);
-            mysteryJdbc.closePreparedStatement(pst1, pst2, pst3);
+            mysteryJdbc.closeResultSet(rs1, rs2, rs3);
+            mysteryJdbc.closePreparedStatement(pst1, pst2, pst3, pst4);
         }
     }
 
@@ -499,7 +628,7 @@ public class MessageService extends MessageServiceGrpc.MessageServiceImplBase {
                 "            left join tbl_member " +
                 "            on tbl_message.created_by = tbl_member.profile_id " +
                 "            where tbl_message.channel_id = ? " +
-                "            and tbl_member.server_id = ? " +
+                "            and tbl_member.server_id is null or tbl_member.server_id = ? " +
                 "            order by tbl_message.created_at desc " +
                 "            limit ? offset ?;";
 
@@ -606,10 +735,12 @@ public class MessageService extends MessageServiceGrpc.MessageServiceImplBase {
 
                 GrpcMemberProfile.Builder authorBuilder = GrpcMemberProfile.newBuilder();
 
-                authorBuilder.setMemberId(rs3.getString(9));
-                authorBuilder.setRole(GrpcMemberRole.forNumber(rs3.getInt(10)));
-                authorBuilder.setServerId(rs3.getString(11));
-                authorBuilder.setJoinAt(rs3.getString(12));
+                if (rs3.getString(9) != null) {
+                    authorBuilder.setMemberId(rs3.getString(9));
+                    authorBuilder.setRole(GrpcMemberRole.forNumber(rs3.getInt(10)));
+                    authorBuilder.setServerId(rs3.getString(11));
+                    authorBuilder.setJoinAt(rs3.getString(12));
+                }
                 authorBuilder.setProfileId(rs3.getString(13));
                 authorBuilder.setName(rs3.getString(14));
                 if (rs3.getString(15) != null) {
