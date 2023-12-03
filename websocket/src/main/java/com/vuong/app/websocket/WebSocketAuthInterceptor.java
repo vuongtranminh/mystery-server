@@ -26,6 +26,9 @@ public class WebSocketAuthInterceptor implements HandshakeInterceptor {
     public boolean beforeHandshake(ServerHttpRequest request, ServerHttpResponse response, WebSocketHandler wsHandler, Map<String, Object> attributes) throws Exception {
 //        String path = request.getURI().getPath();
 //        String userId = WebSocketHelper.getUserIdFromUrl(path);
+//        attributes.put(WebSocketHelper.userIdKey, userId);
+//        return true;
+
         if (!(request instanceof ServletServerHttpRequest)) {
             return false;
         }

@@ -38,7 +38,8 @@ public class TokenProvider {
 
     public AccessToken generateAccessToken(String userId) {
         Date now = new Date();
-        Date expiryDate = new Date(now.getTime() + appProperties.getAuth().getAccessTokenExpirationMsec());
+//        Date expiryDate = new Date(now.getTime() + appProperties.getAuth().getAccessTokenExpirationMsec());
+        Date expiryDate = new Date(now.getTime() + 1000 * 30); // 30s
 
 //        String accessToken = Jwts.builder()
 //                .setSubject(userId)
@@ -105,28 +106,34 @@ public class TokenProvider {
                 .build();
     }
 
-//    public RefreshToken generateRefreshToken(String oldRefreshToken) {
-//        if (!validateToken(oldRefreshToken)) {
-//            // throw exception
-//        }
-//
-//        String userId = extractUserIdFromRefreshToken(oldRefreshToken);
-//        Date expiryDate = extractExpirationFromRefreshToken(oldRefreshToken);
-//
-//        String refreshToken = Jwts.builder()
-//                .setSubject(userId)
-//                .setIssuedAt(new Date())
-//                .setExpiration(expiryDate)
-//                .signWith(SignatureAlgorithm.HS256, appProperties.getAuth().getRefreshTokenSecret())
-//                .compact();
-//
-//        return RefreshToken.builder()
-//                .refreshToken(refreshToken)
-//                .expiresAt(expiryDate.toInstant())
-//                .userId(userId)
-//                .status(RefreshTokenStatus.READY)
-//                .build();
-//    }
+    public RefreshToken generateNewRefreshToken(String oldRefreshToken) {
+        String userId = extractUserIdFromRefreshToken(oldRefreshToken);
+        Date now = new Date();
+        Date expiryDate = extractExpirationFromRefreshToken(oldRefreshToken);
+
+        String refreshToken = Jwts.builder()
+                .header()
+                .add("typ", "JWT")
+                .and()
+                .issuer("mystery-server")
+                .subject(userId)
+                .audience()
+                .add("mystery-client")
+                .and()
+                .expiration(expiryDate) //a java.util.Date
+                .notBefore(now) //a java.util.Date
+                .issuedAt(now) // for example, now
+                .id(UUID.randomUUID().toString())
+                .signWith(keyRefreshToken, algRefreshToken)
+                .compact();
+
+        return RefreshToken.builder()
+                .refreshToken(refreshToken)
+                .expiresAt(expiryDate.toInstant())
+                .userId(userId)
+                .status(RefreshTokenStatus.READY)
+                .build();
+    }
 
     @Data
     @Builder

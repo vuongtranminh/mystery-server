@@ -71,6 +71,7 @@ public class SocketTextHandler extends AbstractWebSocketHandler {
 //        this.webSocketSessionManager.removeServerIdsByUserId(userId);
 //        this.subscriber.unsubscribe(serversId);
         String userId = WebSocketHelper.getUserIdFromSessionAttribute(session);
+        log.info("UserIdFromSessionAttribute: {}", userId);
         this.webSocketSessionManager.removeWebSocketSession(userId);
         Set<String> serversId = this.webSocketSessionManager.getServerIds(userId);
         serversId.forEach(serverId -> {

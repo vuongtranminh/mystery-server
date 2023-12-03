@@ -169,7 +169,7 @@ public class AuthServiceImpl implements AuthService {
 //            return new ExceptionMsg("Invalid refresh token", HttpStatus.BAD_REQUEST);
 //        }
 
-        TokenProvider.RefreshToken refreshToken = tokenProvider.generateRefreshToken(oldRefreshToken);
+        TokenProvider.RefreshToken refreshToken = tokenProvider.generateNewRefreshToken(oldRefreshToken);
         // update refresh token to status used
         TokenProvider.AccessToken accessToken = tokenProvider.generateAccessToken(refreshToken.getUserId());
 
@@ -191,6 +191,11 @@ public class AuthServiceImpl implements AuthService {
 
         CookieUtils.addCookie(response, appProperties.getAuth().getAccessTokenCookieName(), CookieUtils.serialize(accessToken.getAccessToken()), TimeUnit.MILLISECONDS.toSeconds(appProperties.getAuth().getAccessTokenExpirationMsec()));
         CookieUtils.addCookie(response, appProperties.getAuth().getRefreshTokenCookieName(), CookieUtils.serialize(refreshToken.getRefreshToken()), TimeUnit.MILLISECONDS.toSeconds(appProperties.getAuth().getRefreshTokenExpirationMsec()));
+
+        response.addHeader(HttpHeaders.ACCESS_CONTROL_ALLOW_CREDENTIALS, Boolean.TRUE.toString());
+        response.addHeader(HttpHeaders.ACCESS_CONTROL_ALLOW_METHODS, "GET,PUT,POST,DELETE,UPDATE,OPTIONS");
+        response.addHeader(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, "http://localhost:3000,http://localhost:8080,http://localhost:8900");
+        response.addHeader(HttpHeaders.ACCESS_CONTROL_ALLOW_HEADERS, "X-Requested-With, X-HTTP-Method-Override, Content-Type, Accept");
 
         return new ResponseMsg("Provide new access token successfully!", HttpStatus.OK);
     }

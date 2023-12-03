@@ -67,10 +67,13 @@ public class RedisMessageListener implements MessageListener {
 //                .put(message.getBody())
 //                .array();
         // send message to channel subcribe
+        log.info("onMessage: {}", channel);
         Set<String> userIds = this.webSocketSessionManager.getUserIdsListenerServer(channel);
+        log.info("UserIdsListenerServer: {}", userIds);
         userIds.forEach(userId -> {
             synchronized (userId) {
                 WebSocketSession ws = this.webSocketSessionManager.getWebSocketSession(userId);
+                log.info("check ws: {}", ws.getId());
                 try {
 //                    ws.sendMessage(new TextMessage(body));
                     ws.sendMessage(new BinaryMessage(message.getBody()));
