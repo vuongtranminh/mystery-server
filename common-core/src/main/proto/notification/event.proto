@@ -82,12 +82,14 @@ message GrpcMemberEvent {
   }
 
   message GrpcEditMemberEvent {
-    string member_id = 1;
-    GrpcMemberRole role = 2;
+    string server_id = 1;
+    string member_id = 2;
+    GrpcMemberRole role = 3;
   }
 
   message GrpcDeleteMemberEvent {
-    string member_id = 1;
+    string server_id = 1;
+    string member_id = 2;
   }
 
   GrpcMemberEventType type = 1;
