@@ -39,7 +39,7 @@ public class TokenProvider {
     public AccessToken generateAccessToken(String userId) {
         Date now = new Date();
 //        Date expiryDate = new Date(now.getTime() + appProperties.getAuth().getAccessTokenExpirationMsec());
-        Date expiryDate = new Date(now.getTime() + 1000 * 30); // 30s
+        Date expiryDate = new Date(now.getTime() + 1000 * 60); // 30s
 
 //        String accessToken = Jwts.builder()
 //                .setSubject(userId)
