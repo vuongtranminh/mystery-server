@@ -511,6 +511,7 @@ public class ServerService extends ServerServiceGrpc.ServerServiceImplBase {
             int result = pst2.executeUpdate();
 
             GrpcMemberEvent.GrpcDeleteMemberEvent grpcDeleteMemberEvent = GrpcMemberEvent.GrpcDeleteMemberEvent.newBuilder()
+                    .setServerId(request.getServerId())
                     .setMemberId(memberId)
                     .build();
 
