@@ -17,6 +17,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -34,51 +35,37 @@ public class SocketTextHandler extends AbstractWebSocketHandler {
 
     @Override
     public void afterConnectionEstablished(WebSocketSession session) {
-//        this.webSocketSessionManager.addWebSocketSession(session);
-//        String userId = WebSocketHelper.getUserIdFromSessionAttribute(session);
-//        GrpcGetServerJoinIdsResponse response = this.serverClientService.getServerJoinIds(GrpcGetServerJoinIdsRequest.newBuilder()
-//                        .setProfileId(userId)
-//                .build());
-//        List<String> serversId = new ArrayList<>();
-//        response.getResultList().stream().forEach(serverId -> {
-//            this.webSocketSessionManager.addWebSocketSessionToChannel(serverId, session);
-//            serversId.add(serverId);
-//        });
-//        this.webSocketSessionManager.addServerIdsByUserId(userId, serversId);
         String userId = WebSocketHelper.getUserIdFromSessionAttribute(session);
-        this.webSocketSessionManager.addWebSocketSession(userId, session);
         GrpcGetServerJoinIdsResponse response = this.serverClientService.getServerJoinIds(GrpcGetServerJoinIdsRequest.newBuilder()
                 .setProfileId(userId)
                 .build());
         Set<String> serversId = new HashSet<>();
         response.getResultList().stream().forEach(serverId -> {
-            this.webSocketSessionManager.addUserIdListenerServer(serverId, userId);
+            this.webSocketSessionManager.addWs(WebSocket.builder()
+                    .session(session)
+                    .userId(userId)
+                    .serverId(serverId)
+                    .build());
             serversId.add(serverId);
         });
-        this.webSocketSessionManager.addServerIds(userId, serversId);
-        this.subscriber.subscribe(serversId);
+//        this.subscriber.subscribe(serversId);
     }
 
     @Override
     public void afterConnectionClosed(WebSocketSession session, CloseStatus status) {
-//        this.webSocketSessionManager.removeWebSocketSession(session);
 //        String userId = WebSocketHelper.getUserIdFromSessionAttribute(session);
-//
-//        List<String> serversId = this.webSocketSessionManager.getServerIdsByUserId(userId);
+//        log.info("UserIdFromSessionAttribute: {}", userId);
+//        this.webSocketSessionManager.removeWebSocketSession(userId, session);
+//        Set<String> serversId = this.webSocketSessionManager.getServerIds(userId);
 //        serversId.forEach(serverId -> {
-//            this.webSocketSessionManager.removeWebSocketSessionToChannel(serverId, session);
+//            this.webSocketSessionManager.removeUserIdListenerServer(serverId, userId);
 //        });
-//        this.webSocketSessionManager.removeServerIdsByUserId(userId);
-//        this.subscriber.unsubscribe(serversId);
+////        this.webSocketSessionManager.removeServerIds(userId);
         String userId = WebSocketHelper.getUserIdFromSessionAttribute(session);
-        log.info("UserIdFromSessionAttribute: {}", userId);
-        this.webSocketSessionManager.removeWebSocketSession(userId);
-        Set<String> serversId = this.webSocketSessionManager.getServerIds(userId);
-        serversId.forEach(serverId -> {
-            this.webSocketSessionManager.removeUserIdListenerServer(serverId, userId);
-        });
-        this.webSocketSessionManager.removeServerIds(userId);
-        this.subscriber.unsubscribe(serversId);
+        log.info("afterConnectionClosed: {}", userId );
+        Set<String> serversId = this.webSocketSessionManager.getWebSocketsBySession(session).stream().map(webSocket -> webSocket.getServerId()).collect(Collectors.toUnmodifiableSet());
+        this.webSocketSessionManager.removeWsBySession(session);
+//        this.subscriber.unsubscribe(serversId);
     }
 
     @Override

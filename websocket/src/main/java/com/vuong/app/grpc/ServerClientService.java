@@ -31,4 +31,19 @@ public class ServerClientService {
             return null;
         }
     }
+
+    public GrpcGetServerIdsResponse getServerIds(GrpcGetServerIdsRequest request) {
+        try {
+            GrpcGetServerIdsResponse response = this.serverServiceBlockingStub.getServerIds(request);
+
+            return response;
+
+        } catch (Exception ex) {
+            Metadata metadata = Status.trailersFromThrowable(ex);
+            GrpcErrorResponse errorResponse = metadata.get(ProtoUtils.keyForProto(GrpcErrorResponse.getDefaultInstance()));
+            log.error(errorResponse.getErrorCode() + " : " + errorResponse.getMessage());
+
+            return null;
+        }
+    }
 }

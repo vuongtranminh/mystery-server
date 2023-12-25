@@ -2,6 +2,7 @@ package com.vuong.app.redis;
 
 import com.vuong.app.redis.serializer.ProtobufSerializer;
 import com.vuong.app.v1.event.GrpcEvent;
+import com.vuong.app.websocket.WebSocket;
 import com.vuong.app.websocket.WebSocketSessionManager;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.connection.Message;
@@ -67,20 +68,33 @@ public class RedisMessageListener implements MessageListener {
 //                .put(message.getBody())
 //                .array();
         // send message to channel subcribe
-        log.info("onMessage: {}", channel);
-        Set<String> userIds = this.webSocketSessionManager.getUserIdsListenerServer(channel);
-        log.info("UserIdsListenerServer: {}", userIds);
-        userIds.forEach(userId -> {
-            synchronized (userId) {
-                WebSocketSession ws = this.webSocketSessionManager.getWebSocketSession(userId);
-                log.info("check ws: {}", ws.getId());
-                try {
-//                    ws.sendMessage(new TextMessage(body));
-                    ws.sendMessage(new BinaryMessage(message.getBody()));
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
+
+        Set<WebSocket> webSockets = this.webSocketSessionManager.getWebSocketsByServerId(channel);
+        webSockets.forEach(webSocket -> {
+            try {
+                webSocket.getSession().sendMessage(new BinaryMessage(message.getBody()));
+            } catch (IOException e) {
+                log.error("NOT FOUND WS WITH: {}", webSocket);
             }
         });
+
+
+//        log.info("onMessage: {}", channel);
+//        Set<String> userIds = this.webSocketSessionManager.getUserIdsListenerServer(channel);
+//        log.info("UserIdsListenerServer: {}", userIds);
+//        userIds.forEach(userId -> {
+//            synchronized (userId) {
+//                Set<WebSocketSession> wss = this.webSocketSessionManager.getWebSocketSession(userId);
+////                log.info("check ws: {}", ws.getId());
+//                wss.forEach(ws -> {
+//                    try {
+////                    ws.sendMessage(new TextMessage(body));
+//                        ws.sendMessage(new BinaryMessage(message.getBody()));
+//                    } catch (IOException e) {
+//                        throw new RuntimeException(e);
+//                    }
+//                });
+//            }
+//        });
     }
 }

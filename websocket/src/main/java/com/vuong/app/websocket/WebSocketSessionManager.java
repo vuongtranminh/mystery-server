@@ -6,6 +6,7 @@ import org.springframework.web.socket.WebSocketSession;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 
 // update to store redis
@@ -13,62 +14,96 @@ import java.util.concurrent.ConcurrentHashMap;
 @Slf4j
 public class WebSocketSessionManager {
     //    Double Check Locking Singleton
-
-    private final Map<String, WebSocketSession> managerWebSocketSessionByUserId;
-    private final Map<String, Set<String>> managerUserIdsByServerId;
-    private final Map<String, Set<String>> managerServerIdsByUserId;
+    private final Set<WebSocket> managerWebSocket;
 
     public WebSocketSessionManager() {
-        this.managerWebSocketSessionByUserId = new ConcurrentHashMap<>();
-        this.managerUserIdsByServerId = new ConcurrentHashMap<>();
-        this.managerServerIdsByUserId = new ConcurrentHashMap<>();
+        this.managerWebSocket = new HashSet<>();
     }
 
-    public void addWebSocketSession(String userId, WebSocketSession webSocketSession) {
-        this.managerWebSocketSessionByUserId.put(userId, webSocketSession);
-        log.info("added session id {} for user id {}", webSocketSession.getId(), userId);
+    public void addWs(WebSocket ws) {
+        this.managerWebSocket.add(ws);
     }
 
-    public WebSocketSession getWebSocketSession(String userId) {
-        return this.managerWebSocketSessionByUserId.get(userId);
+    public void removeWsBySession(WebSocketSession session) {
+        this.managerWebSocket.removeIf(webSocket -> webSocket.getSession().getId().equals(session.getId()));
     }
 
-    public void removeWebSocketSession(String userId) {
-        this.managerWebSocketSessionByUserId.remove(userId);
-        log.info("removed session id for user id {}", userId);
+    public Set<WebSocket> getWebSocketsByServerId(String serverId) {
+        return this.managerWebSocket.stream().filter(webSocket -> webSocket.getServerId().equals(serverId)).collect(Collectors.toUnmodifiableSet());
     }
 
-    public void addUserIdListenerServer(String serverId, String userId) {
-        Set<String> userIds = this.managerUserIdsByServerId.getOrDefault(serverId, new HashSet<>());
-        userIds.add(userId);
-        this.managerUserIdsByServerId.put(serverId, userIds);
+    public Set<WebSocket> getWebSocketsBySession(WebSocketSession session) {
+        return this.managerWebSocket.stream().filter(webSocket -> webSocket.getSession().getId().equals(session.getId())).collect(Collectors.toUnmodifiableSet());
     }
 
-    public Set<String> getUserIdsListenerServer(String serverId) {
-        return this.managerUserIdsByServerId.get(serverId);
-    }
 
-    public void removeUserIdListenerServer(String serverId, String userId) {
-        Set<String> userIds = this.managerUserIdsByServerId.get(serverId);
-        userIds.remove(userId);
-        if (userIds.size() == 0) {
-            this.managerUserIdsByServerId.remove(serverId);
-        } else {
-            this.managerUserIdsByServerId.put(serverId, userIds);
-        }
-    }
 
-    public void addServerIds(String userId, Set<String> serverIds) {
-        this.managerServerIdsByUserId.put(userId, serverIds);
-    }
 
-    public Set<String> getServerIds(String userId) {
-        return this.managerServerIdsByUserId.get(userId);
-    }
 
-    public void removeServerIds(String userId) {
-        this.managerServerIdsByUserId.remove(userId);
-    }
+
+    // old
+
+//    private final Map<String, WebSocketSession> managerWebSocketSessionByUserId;
+//    private final Map<String, Set<String>> managerUserIdsByServerId;
+//    private final Map<String, Set<String>> managerServerIdsByUserId;
+//
+//    public WebSocketSessionManager() {
+//        this.managerWebSocketSessionByUserId = new ConcurrentHashMap<>();
+//        this.managerUserIdsByServerId = new ConcurrentHashMap<>();
+//        this.managerServerIdsByUserId = new ConcurrentHashMap<>();
+//    }
+//
+//    public void addWebSocketSession(String userId, WebSocketSession webSocketSession) {
+//        this.managerWebSocketSessionByUserId.put(userId, webSocketSession);
+//        log.info("added session id {} for user id {}", webSocketSession.getId(), userId);
+//    }
+//
+//    public WebSocketSession getWebSocketSession(String userId) {
+//        return this.managerWebSocketSessionByUserId.get(userId);
+//    }
+//
+//    public void removeWebSocketSession(String userId) {
+//        this.managerWebSocketSessionByUserId.remove(userId);
+//        log.info("removed session id for user id {}", userId);
+//    }
+//
+//    public void addUserIdListenerServer(String serverId, String userId) {
+//        Set<String> userIds = this.managerUserIdsByServerId.getOrDefault(serverId, new HashSet<>());
+//        userIds.add(userId);
+//        this.managerUserIdsByServerId.put(serverId, userIds);
+//    }
+//
+//    public Set<String> getUserIdsListenerServer(String serverId) {
+//        return this.managerUserIdsByServerId.get(serverId);
+//    }
+//
+//    public void removeUserIdListenerServer(String serverId, String userId) {
+//        Set<String> userIds = this.managerUserIdsByServerId.get(serverId);
+//        userIds.remove(userId);
+//        if (userIds.size() == 0) {
+//            this.managerUserIdsByServerId.remove(serverId);
+//        } else {
+//            this.managerUserIdsByServerId.put(serverId, userIds);
+//        }
+//    }
+//
+//    public void addServerIds(String userId, Set<String> serverIds) {
+//        this.managerServerIdsByUserId.put(userId, serverIds);
+//    }
+//
+//    public Set<String> getServerIds(String userId) {
+//        return this.managerServerIdsByUserId.get(userId);
+//    }
+//
+//    public void removeServerIds(String userId) {
+//        this.managerServerIdsByUserId.remove(userId);
+//    }
+
+
+
+
+
+    // old
 //
 //    private final Map<String, WebSocketSession> webSocketSessionByUserId;
 //    private final Map<String, Set<WebSocketSession>> webSocketSessionByChannel;
