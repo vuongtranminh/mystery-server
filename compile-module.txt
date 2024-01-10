@@ -1,0 +1,22 @@
+Say Parent pom.xml contains 6 modules and you want to run A, B and F.
+
+<modules>
+        <module>A</module>
+        <module>B</module>
+        <module>C</module>
+        <module>D</module>
+        <module>E</module>
+        <module>F</module>
+  </modules>
+1- cd into parent project
+
+ mvn --projects A,B,F --also-make clean install
+OR
+
+mvn -pl A,B,F -am clean install
+OR
+
+mvn -pl A,B,F -amd clean install
+Note: When you specify a project with the -am option, Maven will build all of the projects that the specified project depends upon (either directly or indirectly). Maven will examine the list of projects and walk down the dependency tree, finding all of the projects that it needs to build.
+
+While the -am command makes all of the projects required by a particular project in a multi-module build, the -amd or --also-make-dependents option configures Maven to build a project and any project that depends on that project. When using --also-make-dependents, Maven will examine all of the projects in our reactor to find projects that depend on a particular project. It will automatically build those projects and nothing else.
