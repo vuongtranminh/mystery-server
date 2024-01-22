@@ -5,15 +5,14 @@ import com.zaxxer.hikari.HikariDataSource;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import java.sql.Connection;
-import java.sql.SQLException;
+import javax.sql.DataSource;
 
 @Configuration
 public class MysteryDB {
     @Bean
-    public Connection getConnection() throws SQLException {
+    public DataSource dataSource() {
         HikariConfig config = new HikariConfig("discord-service/src/main/resources/hikari.properties");
-        HikariDataSource ds = new HikariDataSource(config);
-        return ds.getConnection();
+        DataSource ds = new HikariDataSource(config);
+        return ds;
     }
 }
