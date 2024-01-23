@@ -8,7 +8,7 @@ import java.util.List;
 
 public class JdbcTemplate {
 
-    public static void query(String sql, List<Object> params, ResultSetExtractor rse) throws SQLException {
+    public static <T> T query(String sql, List<Object> params, ResultSetExtractor<T> rse) throws SQLException {
         PreparedStatement ps = null;
         ResultSet rs = null;
         Connection con = JdbcUtils.getConnection();
@@ -22,7 +22,7 @@ public class JdbcTemplate {
 
             rs = ps.executeQuery();
 
-            rse.extractData(rs);
+            return rse.extractData(rs);
         } finally {
             JdbcUtils.closePreparedStatement(ps);
             JdbcUtils.closeResultSet(rs);
