@@ -22,9 +22,9 @@ public class JdbcClient {
             }
         }
 
-        public JdbcClientBuilder param(int parameterIndex, Object param) throws JdbcDataAccessException {
+        public JdbcClientBuilder params(PreparedStatementCallback action) throws JdbcDataAccessException {
             try {
-                this.pst.setObject(parameterIndex, param);
+                action.doInStatement(this.pst);
             } catch (SQLException e) {
                 throw new JdbcDataAccessException(e);
             }

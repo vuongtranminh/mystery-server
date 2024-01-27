@@ -3,6 +3,7 @@ package com.vuong.app.service;
 import com.vuong.app.jdbc.JdbcUtils;
 import com.vuong.app.jdbc.JdbcClient;
 import com.vuong.app.jdbc.SqlSession;
+import com.vuong.app.jdbc.exception.JdbcDataAccessException;
 import com.vuong.app.redis.MessagePublisher;
 import com.vuong.app.v1.GrpcErrorCode;
 import com.vuong.app.v1.GrpcErrorResponse;
@@ -45,7 +46,9 @@ public class ServerService extends ServerServiceGrpc.ServerServiceImplBase {
             sqlSession.openSession(false);
 
             boolean existsProfile = JdbcClient.sql(EXISTS_PROFILE_QUERY)
-                    .param(1, request.getAuthorId())
+                    .params(pst -> {
+                        pst.setString(1, request.getAuthorId());
+                    })
                     .exists();
 
             if (!existsProfile) {
@@ -67,33 +70,39 @@ public class ServerService extends ServerServiceGrpc.ServerServiceImplBase {
             String serverId = UUID.randomUUID().toString();
 
             JdbcClient.sql(INSERT_SERVER_QUERY)
-                    .param(1, serverId)
-                    .param(2, request.getName())
-                    .param(3, request.getImgUrl())
-                    .param(4, serverId)
-                    .param(5, request.getAuthorId())
-                    .param(6, now.toString())
-                    .param(7, now.toString())
+                    .params(pst -> {
+                        pst.setString(1, serverId);
+                        pst.setString(2, request.getName());
+                        pst.setString(3, request.getImgUrl());
+                        pst.setString(4, serverId);
+                        pst.setString(5, request.getAuthorId());
+                        pst.setString(6, now.toString());
+                        pst.setString(7, now.toString());
+                    })
                     .insert();
 
             String channelId = UUID.randomUUID().toString();
             JdbcClient.sql(INSERT_CHANNEL_QUERY)
-                    .param(1, channelId)
-                    .param(2, "general")
-                    .param(3, GrpcChannelType.CHANNEL_TYPE_TEXT_VALUE)
-                    .param(4, serverId)
-                    .param(5, now.toString())
-                    .param(6, now.toString())
-                    .param(7, request.getAuthorId())
+                    .params(pst -> {
+                        pst.setString(1, channelId);
+                        pst.setString(2, "general");
+                        pst.setInt(3, GrpcChannelType.CHANNEL_TYPE_TEXT_VALUE);
+                        pst.setString(4, serverId);
+                        pst.setString(5, now.toString());
+                        pst.setString(6, now.toString());
+                        pst.setString(7, request.getAuthorId());
+                    })
                     .insert();
 
             String memberId = UUID.randomUUID().toString();
             JdbcClient.sql(INSERT_MEMBER_QUERY)
-                    .param(1, memberId)
-                    .param(2, GrpcMemberRole.MEMBER_ROLE_ADMIN_VALUE)
-                    .param(3, request.getAuthorId())
-                    .param(4, serverId)
-                    .param(5, now.toString())
+                    .params(pst -> {
+                        pst.setString(1, memberId);
+                        pst.setInt(2, GrpcMemberRole.MEMBER_ROLE_ADMIN_VALUE);
+                        pst.setString(3, request.getAuthorId());
+                        pst.setString(4, serverId);
+                        pst.setString(5, now.toString());
+                    })
                     .insert();
 
             sqlSession.doCommit();
@@ -104,7 +113,7 @@ public class ServerService extends ServerServiceGrpc.ServerServiceImplBase {
 
             responseObserver.onNext(response);
             responseObserver.onCompleted();
-        } catch (DataAccessException ex) {
+        } catch (JdbcDataAccessException ex) {
             sqlSession.doRollback();
         } finally {
             sqlSession.closeConnection();
@@ -113,10 +122,10 @@ public class ServerService extends ServerServiceGrpc.ServerServiceImplBase {
 
     @Override
     public void getServersJoin(GrpcGetServersJoinRequest request, StreamObserver<GrpcGetServersJoinResponse> responseObserver) {
-        String COUNT_QUERY = "select count(m.server_id) from tbl_member as m where m.profile_id = ?";
+        final String COUNT_QUERY = "select count(m.server_id) from tbl_member as m where m.profile_id = ?";
 
-        String SERVER_ID_JOIN_QUERY = "select m.server_id as member_server_id from tbl_member as m where m.profile_id = ? order by m.join_at asc limit ? offset ?";
-        String SERVER_QUERY = "select " +
+        final String SERVER_ID_JOIN_QUERY = "select m.server_id as member_server_id from tbl_member as m where m.profile_id = ? order by m.join_at asc limit ? offset ?";
+        final String SERVER_QUERY = "select " +
                 "s.id as server_id, s.name as server_name, s.img_url as server_img_url, " +
                 "s.invite_code as server_invite_code, s.created_by as server_created_by, " +
                 "s.created_at as server_created_at, s.updated_at as server_updated_at " +
@@ -131,7 +140,9 @@ public class ServerService extends ServerServiceGrpc.ServerServiceImplBase {
             sqlSession.openSession();
 
             long totalElements = JdbcClient.sql(COUNT_QUERY)
-                    .param(1, request.getProfileId())
+                    .params(pst -> {
+                        pst.setString(1, request.getProfileId());
+                    })
                     .count();
 
             if (totalElements == 0) {
@@ -158,9 +169,11 @@ public class ServerService extends ServerServiceGrpc.ServerServiceImplBase {
             builder.setMeta(meta);
 
             JdbcClient.sql(SERVER_QUERY)
-                    .param(1, request.getProfileId())
-                    .param(2, request.getPageSize())
-                    .param(3, request.getPageNumber() * request.getPageSize())
+                    .params(pst -> {
+                        pst.setString(1, request.getProfileId());
+                        pst.setInt(2, request.getPageSize());
+                        pst.setInt(3, request.getPageNumber() * request.getPageSize());
+                    })
                     .query(rs -> {
                         while (rs.next()) {
                             builder.addContent(GrpcServer.newBuilder()
@@ -185,8 +198,8 @@ public class ServerService extends ServerServiceGrpc.ServerServiceImplBase {
 
     @Override
     public void getFirstServerJoin(GrpcGetFirstServerJoinRequest request, StreamObserver<GrpcGetFirstServerJoinResponse> responseObserver) {
-        String FIRST_SERVER_ID_JOIN_QUERY = "select m.server_id from tbl_member as m where m.profile_id = ? order by m.join_at limit 1";
-        String SERVER_QUERY = "select " +
+        final String FIRST_SERVER_ID_JOIN_QUERY = "select m.server_id from tbl_member as m where m.profile_id = ? order by m.join_at limit 1";
+        final String SERVER_QUERY = "select " +
                 "s.id as server_id, s.name as server_name, s.img_url as server_img_url, " +
                 "s.invite_code as server_invite_code, s.created_by as server_created_by, " +
                 "s.created_at as server_created_at, s.updated_at as server_updated_at " +
@@ -196,7 +209,9 @@ public class ServerService extends ServerServiceGrpc.ServerServiceImplBase {
             sqlSession.openSession();
 
             GrpcServer grpcServer = JdbcClient.sql(SERVER_QUERY)
-                    .param(1, request.getProfileId())
+                    .params(pst -> {
+                        pst.setString(1, request.getProfileId());
+                    })
                     .query(rs -> {
                         while (rs.next()) {
                             return GrpcServer.newBuilder()
@@ -240,8 +255,8 @@ public class ServerService extends ServerServiceGrpc.ServerServiceImplBase {
 
     @Override
     public void getServerJoinByServerId(GrpcGetServerJoinByServerIdRequest request, StreamObserver<GrpcGetServerJoinByServerIdResponse> responseObserver) {
-        String IS_MEMBER_QUERY = "exists (select 1 from tbl_member as m where m.profile_id = ? and m.server_id = ?)";
-        String SERVER_QUERY = "select " +
+        final String IS_MEMBER_QUERY = "exists (select 1 from tbl_member as m where m.profile_id = ? and m.server_id = ?)";
+        final String SERVER_QUERY = "select " +
                 "s.id as server_id, s.name as server_name, s.img_url as server_img_url, " +
                 "s.invite_code as server_invite_code, s.created_by as server_created_by, " +
                 "s.created_at as server_created_at, s.updated_at as server_updated_at " +
@@ -251,9 +266,11 @@ public class ServerService extends ServerServiceGrpc.ServerServiceImplBase {
             sqlSession.openSession();
 
             GrpcServer grpcServer = JdbcClient.sql(SERVER_QUERY)
-                    .param(1, request.getServerId())
-                    .param(2, request.getProfileId())
-                    .param(3, request.getServerId())
+                    .params(pst -> {
+                        pst.setString(1, request.getServerId());
+                        pst.setString(2, request.getProfileId());
+                        pst.setString(3, request.getServerId());
+                    })
                     .query(rs -> {
                         while (rs.next()) {
                             return GrpcServer.newBuilder()

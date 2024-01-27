@@ -21,9 +21,17 @@ public class SqlSession {
         return localConnection.get();
     }
 
+    private Connection fetchConnection() throws SQLException {
+        Connection con = this.dataSource.getConnection();
+        if (con == null) {
+            throw new IllegalStateException("DataSource returned null from getConnection(): " + dataSource);
+        }
+        return con;
+    }
+
     public Connection openSession() throws JdbcDataAccessException {
         try {
-            Connection con = this.dataSource.getConnection();
+            Connection con = this.fetchConnection();
             localConnection.set(con);
             return con;
         } catch (SQLException e) {
@@ -33,7 +41,7 @@ public class SqlSession {
 
     public Connection openSession(boolean autoCommit) {
         try {
-            Connection con = this.dataSource.getConnection();
+            Connection con = this.fetchConnection();
             con.setAutoCommit(autoCommit);
             localConnection.set(con);
             return con;
