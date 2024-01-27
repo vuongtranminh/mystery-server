@@ -1,5 +1,6 @@
 package com.vuong.app.config;
 
+import com.vuong.app.jdbc.SqlSession;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import org.springframework.context.annotation.Bean;
@@ -14,5 +15,10 @@ public class MysteryDB {
         HikariConfig config = new HikariConfig("discord-service/src/main/resources/hikari.properties");
         DataSource ds = new HikariDataSource(config);
         return ds;
+    }
+
+    @Bean
+    public SqlSession sqlSession(DataSource dataSource) {
+        return new SqlSession(dataSource);
     }
 }

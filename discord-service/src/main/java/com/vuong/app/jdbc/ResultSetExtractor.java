@@ -1,4 +1,4 @@
-package com.vuong.app.config;
+package com.vuong.app.jdbc;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
