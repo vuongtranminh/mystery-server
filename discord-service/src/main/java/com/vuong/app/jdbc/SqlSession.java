@@ -2,7 +2,6 @@ package com.vuong.app.jdbc;
 
 import com.vuong.app.jdbc.exception.JdbcDataAccessException;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
@@ -52,23 +51,30 @@ public class SqlSession {
 
     public static void closeConnection() {
         Connection con = localConnection.get();
-        if (con != null) {
-            try {
-                con.close();
-                localConnection.remove();
-            }
-            catch (SQLException ex) {
-                log.debug("Could not close JDBC Connection", ex);
-            }
-            catch (Throwable ex) {
-                // We don't trust the JDBC driver: It might throw RuntimeException or Error.
-                log.debug("Unexpected exception on closing JDBC Connection", ex);
-            }
+        if (con == null) {
+            throw new JdbcDataAccessException("Error:  Cannot close.  No managed session is started.");
+        }
+
+        try {
+            con.close();
+        }
+        catch (SQLException ex) {
+            log.debug("Could not close JDBC Connection", ex);
+        }
+        catch (Throwable ex) {
+            // We don't trust the JDBC driver: It might throw RuntimeException or Error.
+            log.debug("Unexpected exception on closing JDBC Connection", ex);
+        } finally {
+            localConnection.remove();
         }
     }
 
     public static void doRollback() {
         Connection con = localConnection.get();
+        if (con == null) {
+            throw new JdbcDataAccessException("Error:  Cannot close.  No managed session is started.");
+        }
+
         try {
             con.rollback();
         } catch (SQLException ex) {
@@ -78,6 +84,11 @@ public class SqlSession {
 
     public static void doCommit() {
         Connection con = localConnection.get();
+
+        if (con == null) {
+            throw new JdbcDataAccessException("Error:  Cannot close.  No managed session is started.");
+        }
+
         try {
             con.commit();
         } catch (SQLException ex) {
