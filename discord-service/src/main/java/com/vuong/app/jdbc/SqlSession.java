@@ -29,13 +29,7 @@ public class SqlSession {
     }
 
     public Connection openSession() throws JdbcDataAccessException {
-        try {
-            Connection con = this.fetchConnection();
-            localConnection.set(con);
-            return con;
-        } catch (SQLException e) {
-            throw new JdbcDataAccessException(e);
-        }
+        return openSession(false);
     }
 
     public Connection openSession(boolean autoCommit) {
@@ -49,7 +43,7 @@ public class SqlSession {
         }
     }
 
-    public static void closeConnection() {
+    public void closeConnection() {
         Connection con = localConnection.get();
         if (con == null) {
             throw new JdbcDataAccessException("Error:  Cannot close.  No managed session is started.");
@@ -69,7 +63,7 @@ public class SqlSession {
         }
     }
 
-    public static void doRollback() {
+    public void rollback() {
         Connection con = localConnection.get();
         if (con == null) {
             throw new JdbcDataAccessException("Error:  Cannot close.  No managed session is started.");
@@ -82,7 +76,7 @@ public class SqlSession {
         }
     }
 
-    public static void doCommit() {
+    public void commit() {
         Connection con = localConnection.get();
 
         if (con == null) {

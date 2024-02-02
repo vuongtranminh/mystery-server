@@ -2,6 +2,7 @@ package com.vuong.app.jdbc;
 
 import com.vuong.app.jdbc.exception.JdbcDataAccessException;
 
+import java.math.BigDecimal;
 import java.sql.*;
 
 public class JdbcClient {
@@ -22,9 +23,117 @@ public class JdbcClient {
             }
         }
 
-        public JdbcClientBuilder params(PreparedStatementCallback action) throws JdbcDataAccessException {
+        public JdbcClientBuilder setBoolean(int parameterIndex, boolean x) throws JdbcDataAccessException {
             try {
-                action.doInStatement(this.pst);
+                this.pst.setBoolean(parameterIndex, x);
+            } catch (SQLException e) {
+                throw new JdbcDataAccessException(e);
+            }
+            return this;
+        }
+
+        public JdbcClientBuilder setByte(int parameterIndex, byte x) throws JdbcDataAccessException {
+            try {
+                this.pst.setByte(parameterIndex, x);
+            } catch (SQLException e) {
+                throw new JdbcDataAccessException(e);
+            }
+            return this;
+        }
+
+        public JdbcClientBuilder setShort(int parameterIndex, short x) throws JdbcDataAccessException {
+            try {
+                this.pst.setShort(parameterIndex, x);
+            } catch (SQLException e) {
+                throw new JdbcDataAccessException(e);
+            }
+            return this;
+        }
+
+        public JdbcClientBuilder setInt(int parameterIndex, int x) throws JdbcDataAccessException {
+            try {
+                this.pst.setInt(parameterIndex, x);
+            } catch (SQLException e) {
+                throw new JdbcDataAccessException(e);
+            }
+            return this;
+        }
+
+        public JdbcClientBuilder setLong(int parameterIndex, long x) throws JdbcDataAccessException {
+            try {
+                this.pst.setLong(parameterIndex, x);
+            } catch (SQLException e) {
+                throw new JdbcDataAccessException(e);
+            }
+            return this;
+        }
+
+        public JdbcClientBuilder setFloat(int parameterIndex, float x) throws JdbcDataAccessException {
+            try {
+                this.pst.setFloat(parameterIndex, x);
+            } catch (SQLException e) {
+                throw new JdbcDataAccessException(e);
+            }
+            return this;
+        }
+
+        public JdbcClientBuilder setDouble(int parameterIndex, double x) throws JdbcDataAccessException {
+            try {
+                this.pst.setDouble(parameterIndex, x);
+            } catch (SQLException e) {
+                throw new JdbcDataAccessException(e);
+            }
+            return this;
+        }
+
+        public JdbcClientBuilder setBigDecimal(int parameterIndex, BigDecimal x) throws JdbcDataAccessException {
+            try {
+                this.pst.setBigDecimal(parameterIndex, x);
+            } catch (SQLException e) {
+                throw new JdbcDataAccessException(e);
+            }
+            return this;
+        }
+
+        public JdbcClientBuilder setString(int parameterIndex, String x) throws JdbcDataAccessException {
+            try {
+                this.pst.setString(parameterIndex, x);
+            } catch (SQLException e) {
+                throw new JdbcDataAccessException(e);
+            }
+            return this;
+        }
+
+        public JdbcClientBuilder setBytes(int parameterIndex, byte x[]) throws JdbcDataAccessException {
+            try {
+                this.pst.setBytes(parameterIndex, x);
+            } catch (SQLException e) {
+                throw new JdbcDataAccessException(e);
+            }
+            return this;
+        }
+
+        public JdbcClientBuilder setDate(int parameterIndex, java.sql.Date x) throws JdbcDataAccessException {
+            try {
+                this.pst.setDate(parameterIndex, x);
+            } catch (SQLException e) {
+                throw new JdbcDataAccessException(e);
+            }
+            return this;
+        }
+
+        public JdbcClientBuilder setTime(int parameterIndex, java.sql.Time x) throws JdbcDataAccessException {
+            try {
+                this.pst.setTime(parameterIndex, x);
+            } catch (SQLException e) {
+                throw new JdbcDataAccessException(e);
+            }
+            return this;
+        }
+
+        public JdbcClientBuilder setTimestamp(int parameterIndex, java.sql.Timestamp x) throws JdbcDataAccessException {
+            try {
+                this.pst.setTimestamp(parameterIndex, x);
             } catch (SQLException e) {
                 throw new JdbcDataAccessException(e);
             }

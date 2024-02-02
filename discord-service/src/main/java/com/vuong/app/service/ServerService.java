@@ -43,12 +43,10 @@ public class ServerService extends ServerServiceGrpc.ServerServiceImplBase {
         final String INSERT_MEMBER_QUERY = "insert into tbl_member(id, role, profile_id, server_id, join_at) values (?, ?, ?, ?, ?)";
 
         try {
-            sqlSession.openSession(false);
+            sqlSession.openSession();
 
             boolean existsProfile = JdbcClient.sql(EXISTS_PROFILE_QUERY)
-                    .params(pst -> {
-                        pst.setString(1, request.getAuthorId());
-                    })
+                    .setString(1, request.getAuthorId())
                     .exists();
 
             if (!existsProfile) {
@@ -70,42 +68,36 @@ public class ServerService extends ServerServiceGrpc.ServerServiceImplBase {
             String serverId = UUID.randomUUID().toString();
 
             JdbcClient.sql(INSERT_SERVER_QUERY)
-                    .params(pst -> {
-                        pst.setString(1, serverId);
-                        pst.setString(2, request.getName());
-                        pst.setString(3, request.getImgUrl());
-                        pst.setString(4, serverId);
-                        pst.setString(5, request.getAuthorId());
-                        pst.setString(6, now.toString());
-                        pst.setString(7, now.toString());
-                    })
+                    .setString(1, serverId)
+                    .setString(2, request.getName())
+                    .setString(3, request.getImgUrl())
+                    .setString(4, serverId)
+                    .setString(5, request.getAuthorId())
+                    .setString(6, now.toString())
+                    .setString(7, now.toString())
                     .insert();
 
             String channelId = UUID.randomUUID().toString();
             JdbcClient.sql(INSERT_CHANNEL_QUERY)
-                    .params(pst -> {
-                        pst.setString(1, channelId);
-                        pst.setString(2, "general");
-                        pst.setInt(3, GrpcChannelType.CHANNEL_TYPE_TEXT_VALUE);
-                        pst.setString(4, serverId);
-                        pst.setString(5, now.toString());
-                        pst.setString(6, now.toString());
-                        pst.setString(7, request.getAuthorId());
-                    })
+                    .setString(1, channelId)
+                    .setString(2, "general")
+                    .setInt(3, GrpcChannelType.CHANNEL_TYPE_TEXT_VALUE)
+                    .setString(4, serverId)
+                    .setString(5, now.toString())
+                    .setString(6, now.toString())
+                    .setString(7, request.getAuthorId())
                     .insert();
 
             String memberId = UUID.randomUUID().toString();
             JdbcClient.sql(INSERT_MEMBER_QUERY)
-                    .params(pst -> {
-                        pst.setString(1, memberId);
-                        pst.setInt(2, GrpcMemberRole.MEMBER_ROLE_ADMIN_VALUE);
-                        pst.setString(3, request.getAuthorId());
-                        pst.setString(4, serverId);
-                        pst.setString(5, now.toString());
-                    })
+                    .setString(1, memberId)
+                    .setInt(2, GrpcMemberRole.MEMBER_ROLE_ADMIN_VALUE)
+                    .setString(3, request.getAuthorId())
+                    .setString(4, serverId)
+                    .setString(5, now.toString())
                     .insert();
 
-            sqlSession.doCommit();
+            sqlSession.commit();
 
             GrpcCreateServerResponse response = GrpcCreateServerResponse.newBuilder()
                     .setServerId(serverId)
@@ -114,7 +106,7 @@ public class ServerService extends ServerServiceGrpc.ServerServiceImplBase {
             responseObserver.onNext(response);
             responseObserver.onCompleted();
         } catch (JdbcDataAccessException ex) {
-            sqlSession.doRollback();
+            sqlSession.rollback();
         } finally {
             sqlSession.closeConnection();
         }
@@ -140,9 +132,7 @@ public class ServerService extends ServerServiceGrpc.ServerServiceImplBase {
             sqlSession.openSession();
 
             long totalElements = JdbcClient.sql(COUNT_QUERY)
-                    .params(pst -> {
-                        pst.setString(1, request.getProfileId());
-                    })
+                    .setString(1, request.getProfileId())
                     .count();
 
             if (totalElements == 0) {
@@ -169,11 +159,9 @@ public class ServerService extends ServerServiceGrpc.ServerServiceImplBase {
             builder.setMeta(meta);
 
             JdbcClient.sql(SERVER_QUERY)
-                    .params(pst -> {
-                        pst.setString(1, request.getProfileId());
-                        pst.setInt(2, request.getPageSize());
-                        pst.setInt(3, request.getPageNumber() * request.getPageSize());
-                    })
+                    .setString(1, request.getProfileId())
+                    .setInt(2, request.getPageSize())
+                    .setInt(3, request.getPageNumber() * request.getPageSize())
                     .query(rs -> {
                         while (rs.next()) {
                             builder.addContent(GrpcServer.newBuilder()
@@ -209,9 +197,7 @@ public class ServerService extends ServerServiceGrpc.ServerServiceImplBase {
             sqlSession.openSession();
 
             GrpcServer grpcServer = JdbcClient.sql(SERVER_QUERY)
-                    .params(pst -> {
-                        pst.setString(1, request.getProfileId());
-                    })
+                    .setString(1, request.getProfileId())
                     .query(rs -> {
                         while (rs.next()) {
                             return GrpcServer.newBuilder()
@@ -266,11 +252,9 @@ public class ServerService extends ServerServiceGrpc.ServerServiceImplBase {
             sqlSession.openSession();
 
             GrpcServer grpcServer = JdbcClient.sql(SERVER_QUERY)
-                    .params(pst -> {
-                        pst.setString(1, request.getServerId());
-                        pst.setString(2, request.getProfileId());
-                        pst.setString(3, request.getServerId());
-                    })
+                    .setString(1, request.getServerId())
+                    .setString(2, request.getProfileId())
+                    .setString(3, request.getServerId())
                     .query(rs -> {
                         while (rs.next()) {
                             return GrpcServer.newBuilder()
@@ -311,220 +295,191 @@ public class ServerService extends ServerServiceGrpc.ServerServiceImplBase {
         }
     }
 
-//    @Override
-//    public void getServerJoinIds(GrpcGetServerJoinIdsRequest request, StreamObserver<GrpcGetServerJoinIdsResponse> responseObserver) {
-//        String SERVER_JOIN_IDS_QUERY = "select tbl_member.server_id from tbl_member where tbl_member.profile_id = ?";
-//
-//        try {
-//            sqlSession.openSession();
-//            JdbcUtils.initConnection(dataSource);
-//
-//            GrpcGetServerJoinIdsResponse.Builder builder = GrpcGetServerJoinIdsResponse.newBuilder();
-//
-//            JdbcTemplate.query(
-//                    SERVER_JOIN_IDS_QUERY,
-//                    List.of(
-//                            request.getProfileId()
-//                    ),
-//                    rs -> {
-//                        while (rs.next()) {
-//                            builder.addResult(rs.getString(1));
-//                        }
-//                        return null;
-//                    }
-//            );
-//
-//            responseObserver.onNext(builder.build());
-//            responseObserver.onCompleted();
-//        } catch (SQLException ex) {
-//            ex.printStackTrace();
-//        } finally {
-//            JdbcUtils.closeConnection();
-//        }
-//    }
-//
-//    @Override
-//    public void joinServerByInviteCode(GrpcJoinServerByInviteCodeRequest request, StreamObserver<GrpcJoinServerByInviteCodeResponse> responseObserver) {
-//        String EXIST_JOIN_SERVER_QUERY = "select tbl_server.id " +
-//                "from tbl_server inner join tbl_member " +
-//                "on tbl_server.id = tbl_member.id " +
-//                "where tbl_server.invite_code = ? and tbl_member.profile_id = ?";
-//
-////        String joinServerQuery = "insert into tbl_member(id, role, profile_id, server_id, join_at) " +
-////                "select ?, ?, ?, tbl_server.id, ? from tbl_server where tbl_server.invite_code = ?";
-//        String SERVER_ID_QUERY = "select tbl_server.id from tbl_server where tbl_server.invite_code = ?";
-//        String JOIN_SERVER_QUERY = "insert into tbl_member(id, role, profile_id, server_id, join_at) values (?, ?, ?, ?, ?)";
-//
-//        try {
-//
-//            JdbcUtils.openSession(dataSource);
-//
-//            String serverId = JdbcTemplate.query(
-//                    EXIST_JOIN_SERVER_QUERY,
-//                    List.of(
-//                            request.getInviteCode(),
-//                            request.getProfileId()
-//                    ),
-//                    rs -> {
-//                        while (rs.next()) {
-//                            return rs.getString(1);
-//                        }
-//                        return null;
-//                    }
-//            );
-//
-//            GrpcJoinServerByInviteCodeResponse.Builder builder = GrpcJoinServerByInviteCodeResponse.newBuilder();
-//
-//            if (serverId != null) {
-//                builder.setServerId(serverId);
-//                responseObserver.onNext(builder.build());
-//                responseObserver.onCompleted();
-//            }
-//
-//            serverId = JdbcTemplate.query(
-//                    SERVER_ID_QUERY,
-//                    List.of(
-//                            request.getInviteCode()
-//                    ),
-//                    rs -> {
-//                        while (rs.next()) {
-//                            return rs.getString(1);
-//                        }
-//
-//                        return null;
-//                    }
-//            );
-//
-//            if (serverId == null) {
-//                Metadata metadata = new Metadata();
-//                Metadata.Key<GrpcErrorResponse> responseKey = ProtoUtils.keyForProto(GrpcErrorResponse.getDefaultInstance());
-//                GrpcErrorCode errorCode = GrpcErrorCode.ERROR_CODE_NOT_FOUND;
-//                GrpcErrorResponse errorResponse = GrpcErrorResponse.newBuilder()
-//                        .setErrorCode(errorCode)
-//                        .setMessage("not found server with invite code")
-//                        .build();
-//                // pass the error object via metadata
-//                metadata.put(responseKey, errorResponse);
-//                responseObserver.onError(Status.NOT_FOUND.asRuntimeException(metadata));
-//                return;
-//            }
-//
-//            String memberId = UUID.randomUUID().toString();
-//            Instant now = Instant.now();
-//
-//            JdbcTemplate.update(
-//                    JOIN_SERVER_QUERY,
-//                    List.of(
-//                            memberId,
-//                            GrpcMemberRole.MEMBER_ROLE_GUEST_VALUE,
-//                            request.getProfileId(),
-//                            serverId,
-//                            now.toString()
-//                    )
-//            );
-//
-//            JdbcUtils.doCommit();
-//
-//            GrpcMemberEvent.GrpcAddMemberEvent grpcAddMemberEvent = GrpcMemberEvent.GrpcAddMemberEvent.newBuilder()
-//                    .build();
-//
-//            GrpcMemberEvent grpcMemberEvent = GrpcMemberEvent.newBuilder()
-//                    .setAddMemberEvent(grpcAddMemberEvent)
-//                    .build();
-//
-//            GrpcEvent grpcEvent = GrpcEvent.newBuilder()
-//                    .setMemberEvent(grpcMemberEvent)
-//                    .build();
-//
-//            this.messagePublisher.publish(serverId, grpcEvent);
-//
-//            builder.setServerId(serverId);
-//
-//            responseObserver.onNext(builder.build());
-//            responseObserver.onCompleted();
-//        } catch (SQLException ex) {
-//            ex.printStackTrace();
-//            JdbcUtils.doRollback();
-//        } finally {
-//            JdbcUtils.closeConnection();
-//        }
-//    }
-//
-//    @Override
-//    public void leaveServer(GrpcLeaveServerRequest request, StreamObserver<GrpcLeaveServerResponse> responseObserver) {
-//        String MEMBER_ID_QUERY = "select tbl_member.id from tbl_member where tbl_member.server_id = ? and tbl_member.profile_id = ? and tbl_member.role <> ?";
-//
-//        String LEAVE_SERVER_QUERY = "delete from tbl_member where tbl_member.id = ?";
-//
-//        try {
-//
-//            JdbcUtils.openSession(dataSource);
-//
-//            String memberId = JdbcTemplate.query(
-//                    MEMBER_ID_QUERY,
-//                    List.of(
-//                            request.getServerId(),
-//                            request.getProfileId(),
-//                            GrpcMemberRole.MEMBER_ROLE_ADMIN_VALUE
-//                    ),
-//                    rs -> {
-//                        while (rs.next()) {
-//                            return rs.getString(1);
-//                        }
-//                        return null;
-//                    }
-//            );
-//
-//            if (memberId == null) {
-//                Metadata metadata = new Metadata();
-//                Metadata.Key<GrpcErrorResponse> responseKey = ProtoUtils.keyForProto(GrpcErrorResponse.getDefaultInstance());
-//                GrpcErrorCode errorCode = GrpcErrorCode.ERROR_CODE_NOT_FOUND;
-//                GrpcErrorResponse errorResponse = GrpcErrorResponse.newBuilder()
-//                        .setErrorCode(errorCode)
-//                        .setMessage("not found member")
-//                        .build();
-//                // pass the error object via metadata
-//                metadata.put(responseKey, errorResponse);
-//                responseObserver.onError(Status.NOT_FOUND.asRuntimeException(metadata));
-//                return;
-//            }
-//
-//            JdbcTemplate.delete(
-//                    LEAVE_SERVER_QUERY,
-//                    List.of(
-//                            memberId
-//                    )
-//            );
-//
-//            JdbcUtils.doCommit();
-//
-//            GrpcMemberEvent.GrpcDeleteMemberEvent grpcDeleteMemberEvent = GrpcMemberEvent.GrpcDeleteMemberEvent.newBuilder()
-//                    .setServerId(request.getServerId())
-//                    .setMemberId(memberId)
-//                    .build();
-//
-//            GrpcMemberEvent grpcMemberEvent = GrpcMemberEvent.newBuilder()
-//                    .setType(GrpcMemberEvent.GrpcMemberEventType.MEMBER_EVENT_DELETE)
-//                    .setDeleteMemberEvent(grpcDeleteMemberEvent)
-//                    .build();
-//
-//            GrpcEvent grpcEvent = GrpcEvent.newBuilder()
-//                    .setMemberEvent(grpcMemberEvent)
-//                    .build();
-//
-//            this.messagePublisher.publish(request.getServerId(), grpcEvent);
-//
-//            GrpcLeaveServerResponse response = GrpcLeaveServerResponse.newBuilder()
-//                    .setMemberId(memberId)
-//                    .build();
-//
-//            responseObserver.onNext(response);
-//            responseObserver.onCompleted();
-//        } catch (SQLException ex) {
-//            ex.printStackTrace();
-//            JdbcUtils.doRollback();
-//        } finally {
-//            JdbcUtils.closeConnection();
-//        }
-//    }
+    @Override
+    public void getServerJoinIds(GrpcGetServerJoinIdsRequest request, StreamObserver<GrpcGetServerJoinIdsResponse> responseObserver) {
+        String SERVER_JOIN_IDS_QUERY = "select tbl_member.server_id from tbl_member where tbl_member.profile_id = ?";
+
+        try {
+            sqlSession.openSession();
+
+            GrpcGetServerJoinIdsResponse.Builder builder = GrpcGetServerJoinIdsResponse.newBuilder();
+
+            JdbcClient.sql(SERVER_JOIN_IDS_QUERY)
+                    .setString(1, request.getProfileId())
+                    .query(rs -> {
+                        while (rs.next()) {
+                            builder.addResult(rs.getString(1));
+                        }
+                        return null;
+                    });
+
+            responseObserver.onNext(builder.build());
+            responseObserver.onCompleted();
+        } finally {
+            sqlSession.closeConnection();
+        }
+    }
+
+    @Override
+    public void joinServerByInviteCode(GrpcJoinServerByInviteCodeRequest request, StreamObserver<GrpcJoinServerByInviteCodeResponse> responseObserver) {
+        String EXIST_JOIN_SERVER_QUERY = "select tbl_server.id " +
+                "from tbl_server inner join tbl_member " +
+                "on tbl_server.id = tbl_member.id " +
+                "where tbl_server.invite_code = ? and tbl_member.profile_id = ?";
+
+//        String joinServerQuery = "insert into tbl_member(id, role, profile_id, server_id, join_at) " +
+//                "select ?, ?, ?, tbl_server.id, ? from tbl_server where tbl_server.invite_code = ?";
+        String SERVER_ID_QUERY = "select tbl_server.id from tbl_server where tbl_server.invite_code = ?";
+        String JOIN_SERVER_QUERY = "insert into tbl_member(id, role, profile_id, server_id, join_at) values (?, ?, ?, ?, ?)";
+
+        try {
+            sqlSession.openSession();
+
+            String serverId = JdbcClient.sql(EXIST_JOIN_SERVER_QUERY)
+                    .setString(1, request.getInviteCode())
+                    .setString(2, request.getProfileId())
+                    .query(rs -> {
+                        while (rs.next()) {
+                            return rs.getString(1);
+                        }
+                        return null;
+                    });
+
+            GrpcJoinServerByInviteCodeResponse.Builder builder = GrpcJoinServerByInviteCodeResponse.newBuilder();
+
+            if (serverId != null) {
+                builder.setServerId(serverId);
+                responseObserver.onNext(builder.build());
+                responseObserver.onCompleted();
+            }
+
+            serverId = JdbcClient.sql(SERVER_ID_QUERY)
+                    .setString(1, request.getInviteCode())
+                    .query(rs -> {
+                        while (rs.next()) {
+                            return rs.getString(1);
+                        }
+
+                        return null;
+                    });
+
+            if (serverId == null) {
+                Metadata metadata = new Metadata();
+                Metadata.Key<GrpcErrorResponse> responseKey = ProtoUtils.keyForProto(GrpcErrorResponse.getDefaultInstance());
+                GrpcErrorCode errorCode = GrpcErrorCode.ERROR_CODE_NOT_FOUND;
+                GrpcErrorResponse errorResponse = GrpcErrorResponse.newBuilder()
+                        .setErrorCode(errorCode)
+                        .setMessage("not found server with invite code")
+                        .build();
+                // pass the error object via metadata
+                metadata.put(responseKey, errorResponse);
+                responseObserver.onError(Status.NOT_FOUND.asRuntimeException(metadata));
+                return;
+            }
+
+            String memberId = UUID.randomUUID().toString();
+            Instant now = Instant.now();
+
+            JdbcClient.sql(JOIN_SERVER_QUERY)
+                    .setString(1, memberId)
+                    .setInt(2, GrpcMemberRole.MEMBER_ROLE_GUEST_VALUE)
+                    .setString(3, request.getProfileId())
+                    .setString(4, serverId)
+                    .setString(5, now.toString())
+                    .update();
+
+            sqlSession.commit();
+
+            GrpcMemberEvent.GrpcAddMemberEvent grpcAddMemberEvent = GrpcMemberEvent.GrpcAddMemberEvent.newBuilder()
+                    .build();
+
+            GrpcMemberEvent grpcMemberEvent = GrpcMemberEvent.newBuilder()
+                    .setAddMemberEvent(grpcAddMemberEvent)
+                    .build();
+
+            GrpcEvent grpcEvent = GrpcEvent.newBuilder()
+                    .setMemberEvent(grpcMemberEvent)
+                    .build();
+
+            this.messagePublisher.publish(serverId, grpcEvent);
+
+            builder.setServerId(serverId);
+
+            responseObserver.onNext(builder.build());
+            responseObserver.onCompleted();
+        } catch (JdbcDataAccessException ex) {
+            sqlSession.rollback();
+        } finally {
+            sqlSession.closeConnection();
+        }
+    }
+
+    @Override
+    public void leaveServer(GrpcLeaveServerRequest request, StreamObserver<GrpcLeaveServerResponse> responseObserver) {
+        String MEMBER_ID_QUERY = "select tbl_member.id from tbl_member where tbl_member.server_id = ? and tbl_member.profile_id = ? and tbl_member.role <> ?";
+
+        String LEAVE_SERVER_QUERY = "delete from tbl_member where tbl_member.id = ?";
+
+        try {
+            sqlSession.openSession();
+
+            String memberId = JdbcClient.sql(MEMBER_ID_QUERY)
+                    .setString(1, request.getServerId())
+                    .setString(2, request.getProfileId())
+                    .setInt(3, GrpcMemberRole.MEMBER_ROLE_ADMIN_VALUE)
+                    .query(rs -> {
+                        while (rs.next()) {
+                            return rs.getString(1);
+                        }
+                        return null;
+                    });
+
+            if (memberId == null) {
+                Metadata metadata = new Metadata();
+                Metadata.Key<GrpcErrorResponse> responseKey = ProtoUtils.keyForProto(GrpcErrorResponse.getDefaultInstance());
+                GrpcErrorCode errorCode = GrpcErrorCode.ERROR_CODE_NOT_FOUND;
+                GrpcErrorResponse errorResponse = GrpcErrorResponse.newBuilder()
+                        .setErrorCode(errorCode)
+                        .setMessage("not found member")
+                        .build();
+                // pass the error object via metadata
+                metadata.put(responseKey, errorResponse);
+                responseObserver.onError(Status.NOT_FOUND.asRuntimeException(metadata));
+                return;
+            }
+
+            JdbcClient.sql(LEAVE_SERVER_QUERY)
+                    .setString(1, memberId)
+                    .delete();
+
+            sqlSession.commit();
+
+            GrpcMemberEvent.GrpcDeleteMemberEvent grpcDeleteMemberEvent = GrpcMemberEvent.GrpcDeleteMemberEvent.newBuilder()
+                    .setServerId(request.getServerId())
+                    .setMemberId(memberId)
+                    .build();
+
+            GrpcMemberEvent grpcMemberEvent = GrpcMemberEvent.newBuilder()
+                    .setType(GrpcMemberEvent.GrpcMemberEventType.MEMBER_EVENT_DELETE)
+                    .setDeleteMemberEvent(grpcDeleteMemberEvent)
+                    .build();
+
+            GrpcEvent grpcEvent = GrpcEvent.newBuilder()
+                    .setMemberEvent(grpcMemberEvent)
+                    .build();
+
+            this.messagePublisher.publish(request.getServerId(), grpcEvent);
+
+            GrpcLeaveServerResponse response = GrpcLeaveServerResponse.newBuilder()
+                    .setMemberId(memberId)
+                    .build();
+
+            responseObserver.onNext(response);
+            responseObserver.onCompleted();
+        } catch (JdbcDataAccessException ex) {
+            sqlSession.rollback();
+        } finally {
+            sqlSession.closeConnection();
+        }
+    }
 }
