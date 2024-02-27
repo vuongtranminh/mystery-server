@@ -245,141 +245,141 @@ public class ChannelService extends ChannelServiceGrpc.ChannelServiceImplBase {
         }
     }
 
-    @Override
-    public void getChannelByChannelId(GrpcGetChannelByChannelIdRequest request, StreamObserver<GrpcGetChannelByChannelIdResponse> responseObserver) {
-        String CHANNEL_QUERY = "select tbl_channel.id, tbl_channel.name, tbl_channel.type, tbl_channel.server_id, tbl_channel.created_at, tbl_channel.updated_at " +
-                "from tbl_channel inner join tbl_member " +
-                "on tbl_channel.server_id = tbl_member.server_id " +
-                "where tbl_channel.id = ? and tbl_member.profile_id = ?";
-
-        try {
-            sqlSession.openSession()
-            JdbcUtils.openSession(dataSource);
-
-            GrpcChannel channel = JdbcTemplate.query(
-                    CHANNEL_QUERY,
-                    List.of(
-                            request.getChannelId(),
-                            request.getProfileId()
-                    ),
-                    rs -> {
-                        while (rs.next()) {
-                            return GrpcChannel.newBuilder()
-                                    .setChannelId(rs.getString(1))
-                                    .setName(rs.getString(2))
-                                    .setType(GrpcChannelType.forNumber(rs.getInt(3)))
-                                    .setServerId(rs.getString(4))
-                                    .setCreatedAt(rs.getString(5))
-                                    .setUpdatedAt(rs.getString(6))
-                                    .build();
-                        }
-                        return null;
-                    }
-            );
-
-            if (channel == null) {
-                Metadata metadata = new Metadata();
-                Metadata.Key<GrpcErrorResponse> responseKey = ProtoUtils.keyForProto(GrpcErrorResponse.getDefaultInstance());
-                GrpcErrorCode errorCode = GrpcErrorCode.ERROR_CODE_NOT_FOUND;
-                GrpcErrorResponse errorResponse = GrpcErrorResponse.newBuilder()
-                        .setErrorCode(errorCode)
-                        .setMessage("not has first server join")
-                        .build();
-                // pass the error object via metadata
-                metadata.put(responseKey, errorResponse);
-                responseObserver.onError(Status.NOT_FOUND.asRuntimeException(metadata));
-                return;
-            }
-
-            GrpcGetChannelByChannelIdResponse response = GrpcGetChannelByChannelIdResponse.newBuilder()
-                    .setResult(channel)
-                    .build();
-
-            responseObserver.onNext(response);
-            responseObserver.onCompleted();
-        } catch (SQLException ex) {
-            ex.printStackTrace();
-        } finally {
-            JdbcUtils.closeConnection();
-        }
-    }
-
-    @Override
-    public void getChannelsByServerId(GrpcGetChannelsByServerIdRequest request, StreamObserver<GrpcGetChannelsByServerIdResponse> responseObserver) {
-        String IS_MEMBER_QUERY = "exists (select 1 from tbl_member as m where m.profile_id = ? and m.server_id = ?)";
-
-        String COUNT_QUERY = "select count(c.id) from tbl_channel as c where c.server_id = ? and " + IS_MEMBER_QUERY;
-        String CHANNEL_QUERY = "select c.id, c.name, c.type, c.server_id, c.created_at, c.updated_at from tbl_channel as c " +
-                "where c.server_id = ? and " + IS_MEMBER_QUERY + " limit ? offset ?";
-
-        GrpcGetChannelsByServerIdResponse.Builder builder = GrpcGetChannelsByServerIdResponse.newBuilder();
-
-        try {
-            JdbcUtils.initConnection(dataSource);
-
-            long totalElements = JdbcTemplate.count(
-                    COUNT_QUERY,
-                    List.of(
-                            request.getServerId(),
-                            request.getProfileId(),
-                            request.getServerId()
-                    )
-            );
-
-            if (totalElements == 0) {
-                GrpcMeta meta = GrpcMeta.newBuilder()
-                        .setTotalElements(0)
-                        .setTotalPages(0)
-                        .setPageNumber(request.getPageNumber())
-                        .setPageSize(request.getPageSize())
-                        .build();
-                builder.setMeta(meta);
-
-                responseObserver.onNext(builder.build());
-                responseObserver.onCompleted();
-                return;
-            }
-
-            GrpcMeta meta = GrpcMeta.newBuilder()
-                    .setTotalElements(totalElements)
-                    .setTotalPages(totalElements == 0 ? 1 : (int)Math.ceil((double)totalElements / (double)request.getPageSize()))
-                    .setPageNumber(request.getPageNumber())
-                    .setPageSize(request.getPageSize())
-                    .build();
-
-            builder.setMeta(meta);
-
-            JdbcTemplate.query(
-                    CHANNEL_QUERY,
-                    List.of(
-                            request.getServerId(),
-                            request.getProfileId(),
-                            request.getServerId(),
-                            request.getPageSize(),
-                            request.getPageNumber() * request.getPageSize()
-                    ),
-                    rs -> {
-                        while (rs.next()) {
-                            builder.addContent(GrpcChannel.newBuilder()
-                                    .setChannelId(rs.getString(1))
-                                    .setName(rs.getString(2))
-                                    .setType(GrpcChannelType.forNumber(rs.getInt(3)))
-                                    .setServerId(rs.getString(4))
-                                    .setCreatedAt(rs.getString(5))
-                                    .setUpdatedAt(rs.getString(6))
-                                    .build());
-                        }
-
-                        return null;
-                    }
-            );
-
-            responseObserver.onNext(builder.build());
-            responseObserver.onCompleted();
-        } catch (SQLException ex) {
-            ex.printStackTrace();
-        } finally {
-            JdbcUtils.closeConnection();
-        }
-    }
+//    @Override
+//    public void getChannelByChannelId(GrpcGetChannelByChannelIdRequest request, StreamObserver<GrpcGetChannelByChannelIdResponse> responseObserver) {
+//        String CHANNEL_QUERY = "select tbl_channel.id, tbl_channel.name, tbl_channel.type, tbl_channel.server_id, tbl_channel.created_at, tbl_channel.updated_at " +
+//                "from tbl_channel inner join tbl_member " +
+//                "on tbl_channel.server_id = tbl_member.server_id " +
+//                "where tbl_channel.id = ? and tbl_member.profile_id = ?";
+//
+//        try {
+//            sqlSession.openSession()
+//            JdbcUtils.openSession(dataSource);
+//
+//            GrpcChannel channel = JdbcTemplate.query(
+//                    CHANNEL_QUERY,
+//                    List.of(
+//                            request.getChannelId(),
+//                            request.getProfileId()
+//                    ),
+//                    rs -> {
+//                        while (rs.next()) {
+//                            return GrpcChannel.newBuilder()
+//                                    .setChannelId(rs.getString(1))
+//                                    .setName(rs.getString(2))
+//                                    .setType(GrpcChannelType.forNumber(rs.getInt(3)))
+//                                    .setServerId(rs.getString(4))
+//                                    .setCreatedAt(rs.getString(5))
+//                                    .setUpdatedAt(rs.getString(6))
+//                                    .build();
+//                        }
+//                        return null;
+//                    }
+//            );
+//
+//            if (channel == null) {
+//                Metadata metadata = new Metadata();
+//                Metadata.Key<GrpcErrorResponse> responseKey = ProtoUtils.keyForProto(GrpcErrorResponse.getDefaultInstance());
+//                GrpcErrorCode errorCode = GrpcErrorCode.ERROR_CODE_NOT_FOUND;
+//                GrpcErrorResponse errorResponse = GrpcErrorResponse.newBuilder()
+//                        .setErrorCode(errorCode)
+//                        .setMessage("not has first server join")
+//                        .build();
+//                // pass the error object via metadata
+//                metadata.put(responseKey, errorResponse);
+//                responseObserver.onError(Status.NOT_FOUND.asRuntimeException(metadata));
+//                return;
+//            }
+//
+//            GrpcGetChannelByChannelIdResponse response = GrpcGetChannelByChannelIdResponse.newBuilder()
+//                    .setResult(channel)
+//                    .build();
+//
+//            responseObserver.onNext(response);
+//            responseObserver.onCompleted();
+//        } catch (SQLException ex) {
+//            ex.printStackTrace();
+//        } finally {
+//            JdbcUtils.closeConnection();
+//        }
+//    }
+//
+//    @Override
+//    public void getChannelsByServerId(GrpcGetChannelsByServerIdRequest request, StreamObserver<GrpcGetChannelsByServerIdResponse> responseObserver) {
+//        String IS_MEMBER_QUERY = "exists (select 1 from tbl_member as m where m.profile_id = ? and m.server_id = ?)";
+//
+//        String COUNT_QUERY = "select count(c.id) from tbl_channel as c where c.server_id = ? and " + IS_MEMBER_QUERY;
+//        String CHANNEL_QUERY = "select c.id, c.name, c.type, c.server_id, c.created_at, c.updated_at from tbl_channel as c " +
+//                "where c.server_id = ? and " + IS_MEMBER_QUERY + " limit ? offset ?";
+//
+//        GrpcGetChannelsByServerIdResponse.Builder builder = GrpcGetChannelsByServerIdResponse.newBuilder();
+//
+//        try {
+//            JdbcUtils.initConnection(dataSource);
+//
+//            long totalElements = JdbcTemplate.count(
+//                    COUNT_QUERY,
+//                    List.of(
+//                            request.getServerId(),
+//                            request.getProfileId(),
+//                            request.getServerId()
+//                    )
+//            );
+//
+//            if (totalElements == 0) {
+//                GrpcMeta meta = GrpcMeta.newBuilder()
+//                        .setTotalElements(0)
+//                        .setTotalPages(0)
+//                        .setPageNumber(request.getPageNumber())
+//                        .setPageSize(request.getPageSize())
+//                        .build();
+//                builder.setMeta(meta);
+//
+//                responseObserver.onNext(builder.build());
+//                responseObserver.onCompleted();
+//                return;
+//            }
+//
+//            GrpcMeta meta = GrpcMeta.newBuilder()
+//                    .setTotalElements(totalElements)
+//                    .setTotalPages(totalElements == 0 ? 1 : (int)Math.ceil((double)totalElements / (double)request.getPageSize()))
+//                    .setPageNumber(request.getPageNumber())
+//                    .setPageSize(request.getPageSize())
+//                    .build();
+//
+//            builder.setMeta(meta);
+//
+//            JdbcTemplate.query(
+//                    CHANNEL_QUERY,
+//                    List.of(
+//                            request.getServerId(),
+//                            request.getProfileId(),
+//                            request.getServerId(),
+//                            request.getPageSize(),
+//                            request.getPageNumber() * request.getPageSize()
+//                    ),
+//                    rs -> {
+//                        while (rs.next()) {
+//                            builder.addContent(GrpcChannel.newBuilder()
+//                                    .setChannelId(rs.getString(1))
+//                                    .setName(rs.getString(2))
+//                                    .setType(GrpcChannelType.forNumber(rs.getInt(3)))
+//                                    .setServerId(rs.getString(4))
+//                                    .setCreatedAt(rs.getString(5))
+//                                    .setUpdatedAt(rs.getString(6))
+//                                    .build());
+//                        }
+//
+//                        return null;
+//                    }
+//            );
+//
+//            responseObserver.onNext(builder.build());
+//            responseObserver.onCompleted();
+//        } catch (SQLException ex) {
+//            ex.printStackTrace();
+//        } finally {
+//            JdbcUtils.closeConnection();
+//        }
+//    }
 }
