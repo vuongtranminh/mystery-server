@@ -1,9 +1,12 @@
 package com.vuong.app.jdbc.sql;
 
+import lombok.extern.slf4j.Slf4j;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
+@Slf4j
 public class InsertBuilder extends AbstractSqlBuilder implements Serializable {
 
     private static final long serialVersionUID = 1;
@@ -49,6 +52,8 @@ public class InsertBuilder extends AbstractSqlBuilder implements Serializable {
         sql.append(") values (");
         appendList(sql, values, "", ", ");
         sql.append(")");
+
+        log.info(sql.toString());
         return sql.toString();
     }
 }

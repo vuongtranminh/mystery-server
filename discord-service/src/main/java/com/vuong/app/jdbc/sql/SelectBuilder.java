@@ -1,9 +1,12 @@
 package com.vuong.app.jdbc.sql;
 
+import lombok.extern.slf4j.Slf4j;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
+@Slf4j
 public class SelectBuilder extends AbstractSqlBuilder implements Cloneable, Serializable {
 
     private static final long serialVersionUID = 1;
@@ -224,6 +227,7 @@ public class SelectBuilder extends AbstractSqlBuilder implements Cloneable, Seri
         if(offset > 0)
             sql.append(", " + offset);
 
+        log.debug(sql.toString());
         return sql.toString();
     }
 

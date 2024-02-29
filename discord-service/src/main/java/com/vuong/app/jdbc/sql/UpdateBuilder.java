@@ -1,9 +1,12 @@
 package com.vuong.app.jdbc.sql;
 
+import lombok.extern.slf4j.Slf4j;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
+@Slf4j
 public class UpdateBuilder extends AbstractSqlBuilder implements Serializable {
 
     private static final long serialVersionUID = 1;
@@ -28,6 +31,7 @@ public class UpdateBuilder extends AbstractSqlBuilder implements Serializable {
         StringBuilder sql = new StringBuilder("update ").append(table);
         appendList(sql, sets, " set ", ", ");
         appendList(sql, wheres, " where ", " and ");
+        log.info(sql.toString());
         return sql.toString();
     }
 
