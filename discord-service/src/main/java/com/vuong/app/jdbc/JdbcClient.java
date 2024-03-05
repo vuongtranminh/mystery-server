@@ -140,6 +140,15 @@ public class JdbcClient {
             return this;
         }
 
+        public JdbcClientBuilder addBatch() throws JdbcDataAccessException {
+            try {
+                this.pst.addBatch();
+            } catch (SQLException e) {
+                throw new JdbcDataAccessException(e);
+            }
+            return this;
+        }
+
         public <T> T query(ResultSetExtractor<T> rse) throws JdbcDataAccessException {
             ResultSet rs = null;
             try {
@@ -190,6 +199,20 @@ public class JdbcClient {
             } finally {
                 JdbcUtils.closePreparedStatement(this.pst);
             }
+        }
+
+        private int[] executeBatch() throws JdbcDataAccessException {
+            try {
+                return this.pst.executeBatch();
+            } catch (SQLException e) {
+                throw new JdbcDataAccessException(e);
+            } finally {
+                JdbcUtils.closePreparedStatement(this.pst);
+            }
+        }
+
+        public int[] insertAll() throws JdbcDataAccessException {
+            return this.executeBatch();
         }
 
         public int insert() throws JdbcDataAccessException {
