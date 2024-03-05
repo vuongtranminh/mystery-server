@@ -4,10 +4,6 @@ import com.vuong.app.jdbc.JdbcUtils;
 import com.vuong.app.jdbc.JdbcClient;
 import com.vuong.app.jdbc.SqlSession;
 import com.vuong.app.jdbc.exception.JdbcDataAccessException;
-import com.vuong.app.jdbc.sql.ExistsBuilder;
-import com.vuong.app.jdbc.sql.InsertBuilder;
-import com.vuong.app.jdbc.sql.SelectBuilder;
-import com.vuong.app.jdbc.sql.SubSelectBuilder;
 import com.vuong.app.redis.MessagePublisher;
 import com.vuong.app.v1.GrpcErrorCode;
 import com.vuong.app.v1.GrpcErrorResponse;
@@ -41,40 +37,10 @@ public class ServerService extends ServerServiceGrpc.ServerServiceImplBase {
 
     @Override
     public void createServer(GrpcCreateServerRequest request, StreamObserver<GrpcCreateServerResponse> responseObserver) {
-//        final String EXISTS_PROFILE_QUERY = "select 1 from tbl_profile as p where p.id = ?";
-//        final String INSERT_SERVER_QUERY = "insert into tbl_server(id, name, img_url, invite_code, created_by, created_at, updated_at) values(?, ?, ?, ?, ?, ?, ?)";
-//        final String INSERT_CHANNEL_QUERY = "insert into tbl_channel(id, name, type, server_id, created_at, updated_at, updated_by) values(?, ?, ?, ?, ?, ?, ?)";
-//        final String INSERT_MEMBER_QUERY = "insert into tbl_member(id, role, profile_id, server_id, join_at) values (?, ?, ?, ?, ?)";
-        final String EXISTS_PROFILE_QUERY = new SelectBuilder()
-                .column("1")
-                .from("tbl_profile")
-                .where("tbl_profile.id = ?")
-                .toString();
-        final String INSERT_SERVER_QUERY = new InsertBuilder("tbl_server")
-                .set("id", "?")
-                .set("name", "?")
-                .set("img_url", "?")
-                .set("invite_code", "?")
-                .set("created_by", "?")
-                .set("created_at", "?")
-                .set("updated_at", "?")
-                .toString();
-        final String INSERT_CHANNEL_QUERY = new InsertBuilder("tbl_channel")
-                .set("id", "?")
-                .set("name", "?")
-                .set("type", "?")
-                .set("server_id", "?")
-                .set("created_at", "?")
-                .set("updated_at", "?")
-                .set("updated_by", "?")
-                .toString();
-        final String INSERT_MEMBER_QUERY = new InsertBuilder("tbl_member")
-                .set("id", "?")
-                .set("role", "?")
-                .set("profile_id", "?")
-                .set("server_id", "?")
-                .set("join_at", "?")
-                .toString();
+        final String EXISTS_PROFILE_QUERY = "select 1 from tbl_profile as p where p.id = ?";
+        final String INSERT_SERVER_QUERY = "insert into tbl_server(id, name, img_url, invite_code, created_by, created_at, updated_at) values(?, ?, ?, ?, ?, ?, ?)";
+        final String INSERT_CHANNEL_QUERY = "insert into tbl_channel(id, name, type, server_id, created_at, updated_at, updated_by) values(?, ?, ?, ?, ?, ?, ?)";
+        final String INSERT_MEMBER_QUERY = "insert into tbl_member(id, role, profile_id, server_id, join_at) values (?, ?, ?, ?, ?)";
 
         try {
             sqlSession.openSession();
@@ -148,39 +114,15 @@ public class ServerService extends ServerServiceGrpc.ServerServiceImplBase {
 
     @Override
     public void getServersJoin(GrpcGetServersJoinRequest request, StreamObserver<GrpcGetServersJoinResponse> responseObserver) {
-//        final String COUNT_QUERY = "select count(m.server_id) from tbl_member as m where m.profile_id = ?";
-//
-//        final String SERVER_ID_JOIN_QUERY = "select m.server_id as member_server_id from tbl_member as m where m.profile_id = ? order by m.join_at asc limit ? offset ?";
-//        final String SERVER_QUERY = "select " +
-//                "s.id as server_id, s.name as server_name, s.img_url as server_img_url, " +
-//                "s.invite_code as server_invite_code, s.created_by as server_created_by, " +
-//                "s.created_at as server_created_at, s.updated_at as server_updated_at " +
-//                "from tbl_server as s inner join (" + SERVER_ID_JOIN_QUERY + ") as sm " +
-//                "on s.id = sm.member_server_id";
+        final String COUNT_QUERY = "select count(m.server_id) from tbl_member as m where m.profile_id = ?";
 
-        final String COUNT_QUERY = new SelectBuilder()
-                .column("count(m.server_id)")
-                .from("tbl_member")
-                .where("tbl_member.profile_id = ?")
-                .toString();
-
-        final String SERVER_QUERY = new SelectBuilder()
-                .column("tbl_server.id")
-                .column("tbl_server.name")
-                .column("tbl_server.img_url")
-                .column("tbl_server.invite_code")
-                .column("tbl_server.created_by")
-                .column("tbl_server.created_at")
-                .column("tbl_server.updated_at")
-                .from("tbl_server")
-                .join(new SubSelectBuilder("sm")
-                        .column("tbl_member.server_id")
-                        .from("tbl_member")
-                        .where("tbl_member.profile_id = ?")
-                        .orderBy("tbl_member.join_at", true)
-                        .limit(request.getPageSize(), request.getPageNumber() * request.getPageSize())
-                        .toString() + " on tbl_server.id = sm.member_server_id")
-                .toString();
+        final String SERVER_ID_JOIN_QUERY = "select m.server_id as member_server_id from tbl_member as m where m.profile_id = ? order by m.join_at asc limit ? offset ?";
+        final String SERVER_QUERY = "select " +
+                "s.id as server_id, s.name as server_name, s.img_url as server_img_url, " +
+                "s.invite_code as server_invite_code, s.created_by as server_created_by, " +
+                "s.created_at as server_created_at, s.updated_at as server_updated_at " +
+                "from tbl_server as s inner join (" + SERVER_ID_JOIN_QUERY + ") as sm " +
+                "on s.id = sm.member_server_id";
 
 //        limit not work on subquery "in"
 
@@ -242,30 +184,12 @@ public class ServerService extends ServerServiceGrpc.ServerServiceImplBase {
 
     @Override
     public void getFirstServerJoin(GrpcGetFirstServerJoinRequest request, StreamObserver<GrpcGetFirstServerJoinResponse> responseObserver) {
-//        final String FIRST_SERVER_ID_JOIN_QUERY = "select m.server_id from tbl_member as m where m.profile_id = ? order by m.join_at limit 1";
-//        final String SERVER_QUERY = "select " +
-//                "s.id as server_id, s.name as server_name, s.img_url as server_img_url, " +
-//                "s.invite_code as server_invite_code, s.created_by as server_created_by, " +
-//                "s.created_at as server_created_at, s.updated_at as server_updated_at " +
-//                "from tbl_server as s where s.id = (" + FIRST_SERVER_ID_JOIN_QUERY + ")";
-
-        final String SERVER_QUERY = new SelectBuilder()
-                .column("tbl_server.id")
-                .column("tbl_server.name")
-                .column("tbl_server.img_url")
-                .column("tbl_server.invite_code")
-                .column("tbl_server.created_by")
-                .column("tbl_server.created_at")
-                .column("tbl_server.updated_at")
-                .from("tbl_server")
-                .where("tbl_server.id = (" + new SelectBuilder()
-                        .column("tbl_member.server_id")
-                        .from("tbl_member")
-                        .where("tbl_member.profile_id = ?")
-                        .orderBy("tbl_member.join_at")
-                        .limit(1)
-                        .toString() + ")")
-                .toString();
+        final String FIRST_SERVER_ID_JOIN_QUERY = "select m.server_id from tbl_member as m where m.profile_id = ? order by m.join_at limit 1";
+        final String SERVER_QUERY = "select " +
+                "s.id as server_id, s.name as server_name, s.img_url as server_img_url, " +
+                "s.invite_code as server_invite_code, s.created_by as server_created_by, " +
+                "s.created_at as server_created_at, s.updated_at as server_updated_at " +
+                "from tbl_server as s where s.id = (" + FIRST_SERVER_ID_JOIN_QUERY + ")";
 
         try {
             sqlSession.openSession();
@@ -315,32 +239,12 @@ public class ServerService extends ServerServiceGrpc.ServerServiceImplBase {
 
     @Override
     public void getServerJoinByServerId(GrpcGetServerJoinByServerIdRequest request, StreamObserver<GrpcGetServerJoinByServerIdResponse> responseObserver) {
-//        final String IS_MEMBER_QUERY = "exists (select 1 from tbl_member as m where m.profile_id = ? and m.server_id = ?)";
-//        final String SERVER_QUERY = "select " +
-//                "s.id as server_id, s.name as server_name, s.img_url as server_img_url, " +
-//                "s.invite_code as server_invite_code, s.created_by as server_created_by, " +
-//                "s.created_at as server_created_at, s.updated_at as server_updated_at " +
-//                "from tbl_server as s where s.id = ? and " + IS_MEMBER_QUERY;
-
-        final String SERVER_QUERY = new SelectBuilder()
-                .column("tbl_server.id")
-                .column("tbl_server.name")
-                .column("tbl_server.img_url")
-                .column("tbl_server.invite_code")
-                .column("tbl_server.created_by")
-                .column("tbl_server.created_at")
-                .column("tbl_server.updated_at")
-                .from("tbl_server")
-                .where("tbl_server = ?")
-                .and("(" + new ExistsBuilder(new SelectBuilder()
-                        .column("1")
-                        .from("tbl_member")
-                        .where("tbl_member.profile_id = ?")
-                        .and("tbl_member.server_id = ?")
-                )
-                        .toString()
-                        + ")")
-                .toString();
+        final String IS_MEMBER_QUERY = "exists (select 1 from tbl_member as m where m.profile_id = ? and m.server_id = ?)";
+        final String SERVER_QUERY = "select " +
+                "s.id as server_id, s.name as server_name, s.img_url as server_img_url, " +
+                "s.invite_code as server_invite_code, s.created_by as server_created_by, " +
+                "s.created_at as server_created_at, s.updated_at as server_updated_at " +
+                "from tbl_server as s where s.id = ? and " + IS_MEMBER_QUERY;
 
         try {
             sqlSession.openSession();
