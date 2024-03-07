@@ -1,0 +1,69 @@
+syntax = "proto3";
+
+package vuong.app.v1;
+option java_package = "com.vuong.app.v1";
+option java_multiple_files = true;
+option java_outer_classname = "MessageProto";
+
+message ClientSendMessage {
+  string topic_id = 1;
+  string client_message_id = 2;
+  bytes content = 3;
+}
+
+message ClientTyping {
+  string topic_id = 1;
+}
+
+message ClientSub {
+  string topic_id = 1;
+}
+
+message ClientLeave {
+  string topic_id = 1;
+}
+
+message ClientSeen {
+  string topic_id = 1;
+  string message_id = 3;
+}
+
+message ClientDeleteMessage {
+  string topic_id = 1;
+  string message_id = 2;
+}
+
+message ClientUpdateMessage {
+  string topic_id = 1;
+  string message_id = 2;
+  bytes content = 3;
+}
+
+message ClientMsg {
+  map<string, bytes> head = 1; // token
+
+  oneof Message {
+    ClientSendMessage send = 2;
+    ClientTyping typing = 3;
+    ClientSub sub = 4;
+    ClientLeave leave = 5;
+    ClientSeen seen = 6;
+    ClientDeleteMessage delete = 7;
+    ClientUpdateMessage update = 8;
+  }
+}
+
+message ServerMessageStatus {
+  string topic_id = 1;
+  string client_message_id = 2;
+  string message_id = 3;
+  bytes status = 4;
+  repeated string seen_user_id = 5;
+  bytes content = 6;
+}
+
+message ServerClientStatus {
+  string topic_id = 1;
+  string user_id = 2;
+  bytes status = 3;
+}

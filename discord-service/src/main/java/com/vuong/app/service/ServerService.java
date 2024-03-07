@@ -480,4 +480,9 @@ public class ServerService extends ServerServiceGrpc.ServerServiceImplBase {
             sqlSession.closeConnection();
         }
     }
+
+    @Override
+    public void getServerIds(GrpcGetServerIdsRequest request, StreamObserver<GrpcGetServerIdsResponse> responseObserver) {
+
+    }
 }
