@@ -42,7 +42,7 @@ message ClientUpdateMessage {
 message ClientMsg {
   map<string, bytes> head = 1; // token
 
-  oneof Message {
+  oneof message {
     ClientSendMessage send = 2;
     ClientTyping typing = 3;
     ClientSub sub = 4;

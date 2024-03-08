@@ -1,21 +1,21 @@
 package com.vuong.app.websocket;
 
+import com.google.protobuf.ByteString;
 import com.vuong.app.grpc.ServerClientService;
 import com.vuong.app.redis.RedisMessageSubscriber;
-import com.vuong.app.v1.discord.GrpcGetServerJoinByServerIdRequest;
-import com.vuong.app.v1.discord.GrpcGetServerJoinByServerIdResponse;
+import com.vuong.app.redis.serializer.ProtobufSerializer;
+import com.vuong.app.v1.ClientMsg;
+import com.vuong.app.v1.ClientSendMessage;
 import com.vuong.app.v1.discord.GrpcGetServerJoinIdsRequest;
 import com.vuong.app.v1.discord.GrpcGetServerJoinIdsResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.socket.*;
 import org.springframework.web.socket.handler.AbstractWebSocketHandler;
-import org.springframework.web.socket.handler.TextWebSocketHandler;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -26,11 +26,13 @@ public class SocketTextHandler extends AbstractWebSocketHandler {
     private final WebSocketSessionManager webSocketSessionManager;
     private final RedisMessageSubscriber subscriber;
     private final ServerClientService serverClientService;
+    private final ProtobufSerializer<ClientMsg> serializer;
 
     public SocketTextHandler(RedisMessageSubscriber subscriber, ServerClientService serverClientService, WebSocketSessionManager webSocketSessionManager) {
         this.webSocketSessionManager = webSocketSessionManager;
         this.subscriber = subscriber;
         this.serverClientService = serverClientService;
+        this.serializer = new ProtobufSerializer<>(ClientMsg.class);
     }
 
     @Override
@@ -72,7 +74,10 @@ public class SocketTextHandler extends AbstractWebSocketHandler {
     protected void handleTextMessage(WebSocketSession session, TextMessage message) throws IOException {
         if (message.getPayload().equals("ping")) {
             session.sendMessage(new TextMessage("pong"));
+        } else {
+            log.info("handleTextMessage: {}", message);
         }
+
 //        String payload = message.getPayload();
 //        String[] payLoadSplit = payload.split("->");
 //        String targetUserId  = payLoadSplit[0].trim();
@@ -84,6 +89,24 @@ public class SocketTextHandler extends AbstractWebSocketHandler {
 
     @Override
     protected void handleBinaryMessage(WebSocketSession session, BinaryMessage message) throws Exception {
+        log.info("handleBinaryMessage: {}", message);
+        ClientMsg clientMsg = serializer.deserialize(message.getPayload().array());
+        Map<String, ByteString> head = clientMsg.getHeadMap();
+        String token = head.get("token").toStringUtf8();
+        log.info("TOKEN: {}", token);
+        switch (clientMsg.getMessageCase()) {
+            case SEND:
+                ClientSendMessage send = clientMsg.getSend();
+                String content = send.getContent().toStringUtf8();
+                // send to kafka insert to db
+                // success to redis send to client
+                log.info("content: {}", content);
+                break;
+            case SEEN:
+                break;
+            default:
+                return;
+        }
         super.handleBinaryMessage(session, message);
     }
 

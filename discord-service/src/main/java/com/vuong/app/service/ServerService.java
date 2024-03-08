@@ -160,6 +160,8 @@ public class ServerService extends ServerServiceGrpc.ServerServiceImplBase {
 
             JdbcClient.sql(SERVER_QUERY)
                     .setString(1, request.getProfileId())
+                    .setInt(2, request.getPageSize())
+                    .setInt(3, request.getPageNumber() * request.getPageSize())
                     .query(rs -> {
                         while (rs.next()) {
                             builder.addContent(GrpcServer.newBuilder()
