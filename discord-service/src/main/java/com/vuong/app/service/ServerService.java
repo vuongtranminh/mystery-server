@@ -23,6 +23,7 @@ import org.springframework.dao.DataAccessException;
 import javax.sql.DataSource;
 import java.sql.SQLException;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -485,6 +486,28 @@ public class ServerService extends ServerServiceGrpc.ServerServiceImplBase {
 
     @Override
     public void getServerIds(GrpcGetServerIdsRequest request, StreamObserver<GrpcGetServerIdsResponse> responseObserver) {
+        String SERVER_IDS_QUERRY = "select tbl_server.id from tbl_server";
 
+        try {
+            sqlSession.openSession();
+
+            GrpcGetServerIdsResponse.Builder builder = GrpcGetServerIdsResponse.newBuilder();
+            JdbcClient.sql(SERVER_IDS_QUERRY)
+                    .query(rs -> {
+                        while (rs.next()) {
+                            builder.addResult(rs.getString(1));
+                        }
+                        return null;
+                    });
+
+            GrpcGetServerIdsResponse response = builder.build();
+
+            responseObserver.onNext(response);
+            responseObserver.onCompleted();
+        } catch (JdbcDataAccessException ex) {
+            sqlSession.rollback();
+        } finally {
+            sqlSession.closeConnection();
+        }
     }
 }

@@ -1,41 +1,27 @@
 package com.vuong.app.websocket;
 
-import com.vuong.app.grpc.ServerClientService;
-import com.vuong.app.redis.RedisMessageSubscriber;
-import com.vuong.app.v1.discord.GrpcGetServerIdsRequest;
-import com.vuong.app.v1.discord.GrpcGetServerIdsResponse;
-import com.vuong.app.v1.discord.GrpcGetServerJoinIdsRequest;
-import com.vuong.app.v1.discord.GrpcGetServerJoinIdsResponse;
 import lombok.RequiredArgsConstructor;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.server.ServerHttpRequest;
-import org.springframework.http.server.ServerHttpResponse;
-import org.springframework.web.socket.WebSocketHandler;
 import org.springframework.web.socket.config.annotation.EnableWebSocket;
 import org.springframework.web.socket.config.annotation.WebSocketConfigurer;
 import org.springframework.web.socket.config.annotation.WebSocketHandlerRegistry;
-import org.springframework.web.socket.server.HandshakeInterceptor;
 
 import javax.annotation.PostConstruct;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
 
 @Configuration
 @EnableWebSocket
 @RequiredArgsConstructor
 public class WebSocketConfig implements WebSocketConfigurer {
 
-    private final SocketTextHandler socketTextHandler;
+    private final WebSocketHandler webSocketHandler;
     private final WebSocketAuthInterceptor webSocketAuthInterceptor;
 
     @Override
     public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
-        registry.addHandler(this.socketTextHandler, "/mystery/*")
+        registry.addHandler(this.webSocketHandler, "/mystery/*")
                 .addInterceptors(webSocketAuthInterceptor)
                 .setAllowedOrigins("*");
-        registry.addHandler(this.socketTextHandler, "/mystery")
+        registry.addHandler(this.webSocketHandler, "/mystery")
                 .addInterceptors(webSocketAuthInterceptor)
                 .setAllowedOrigins("*");
     }

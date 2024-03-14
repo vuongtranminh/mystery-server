@@ -48,6 +48,12 @@
 			<groupId>org.springframework.kafka</groupId>
 			<artifactId>spring-kafka</artifactId>
 		</dependency>
+		<!-- https://mvnrepository.com/artifact/io.confluent/kafka-protobuf-serializer -->
+		<dependency>
+			<groupId>io.confluent</groupId>
+			<artifactId>kafka-protobuf-serializer</artifactId>
+			<version>7.6.0</version>
+		</dependency>
 
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -73,6 +79,15 @@
 			<version>0.0.1</version>
 		</dependency>
 	</dependencies>
+
+	<repositories>
+		<!-- do kafka-protobuf-serializer: this artifact is located at Confluent repository (https://packages.confluent.io/maven/) -->
+		<repository>
+			<id>confluent</id>
+			<name>confluent</name>
+			<url>https://packages.confluent.io/maven/</url>
+		</repository>
+	</repositories>
 
 	<build>
 		<plugins>

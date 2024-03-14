@@ -2,6 +2,7 @@ package com.vuong.app.websocket;
 
 import com.google.protobuf.ByteString;
 import com.vuong.app.grpc.ServerClientService;
+import com.vuong.app.kafka.KafKaProducerService;
 import com.vuong.app.redis.RedisMessageSubscriber;
 import com.vuong.app.redis.serializer.ProtobufSerializer;
 import com.vuong.app.v1.ClientMsg;
@@ -17,21 +18,22 @@ import java.io.IOException;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 @Service
 @Slf4j
-public class SocketTextHandler extends AbstractWebSocketHandler {
+public class WebSocketHandler extends AbstractWebSocketHandler {
 
     private final WebSocketSessionManager webSocketSessionManager;
     private final RedisMessageSubscriber subscriber;
     private final ServerClientService serverClientService;
     private final ProtobufSerializer<ClientMsg> serializer;
+    private final KafKaProducerService kafKaProducerService;
 
-    public SocketTextHandler(RedisMessageSubscriber subscriber, ServerClientService serverClientService, WebSocketSessionManager webSocketSessionManager) {
+    public WebSocketHandler(RedisMessageSubscriber subscriber, ServerClientService serverClientService, WebSocketSessionManager webSocketSessionManager, KafKaProducerService kafKaProducerService) {
         this.webSocketSessionManager = webSocketSessionManager;
         this.subscriber = subscriber;
         this.serverClientService = serverClientService;
+        this.kafKaProducerService = kafKaProducerService;
         this.serializer = new ProtobufSerializer<>(ClientMsg.class);
     }
 
@@ -43,13 +45,18 @@ public class SocketTextHandler extends AbstractWebSocketHandler {
                 .build());
         Set<String> serversId = new HashSet<>();
         response.getResultList().stream().forEach(serverId -> {
-            this.webSocketSessionManager.addWs(WebSocket.builder()
-                    .session(session)
-                    .userId(userId)
-                    .serverId(serverId)
-                    .build());
+//            this.webSocketSessionManager.addWs(WebSocket.builder()
+//                    .session(session)
+//                    .userId(userId)
+//                    .serverId(serverId)
+//                    .build());
+            this.webSocketSessionManager.addWebSocketSessionIdToManagerWebSocketSessionIdsByServerId(session.getId(), serverId);
             serversId.add(serverId);
         });
+
+        WebSocketHelper.addServerIdsToSessionAttribute(session, serversId);
+        this.webSocketSessionManager.addWebSocketSessionToManagerWebSocketSessionByWebSocketSessionId(session);
+
 //        this.subscriber.subscribe(serversId);
     }
 
@@ -65,8 +72,13 @@ public class SocketTextHandler extends AbstractWebSocketHandler {
 ////        this.webSocketSessionManager.removeServerIds(userId);
         String userId = WebSocketHelper.getUserIdFromSessionAttribute(session);
         log.info("afterConnectionClosed: {}", userId );
-        Set<String> serversId = this.webSocketSessionManager.getWebSocketsBySession(session).stream().map(webSocket -> webSocket.getServerId()).collect(Collectors.toUnmodifiableSet());
-        this.webSocketSessionManager.removeWsBySession(session);
+//        Set<String> serversId = this.webSocketSessionManager.getWebSocketsBySession(session).stream().map(webSocket -> webSocket.getServerId()).collect(Collectors.toUnmodifiableSet());
+//        this.webSocketSessionManager.removeWsBySession(session);
+        Set<String> serverIds = WebSocketHelper.getServerIdsFromSessionAttribute(session);
+        serverIds.forEach(serverId -> {
+            this.webSocketSessionManager.removeWebSocketSessionIdFromManagerWebSocketSessionIdsByServerId(serverId, session.getId());
+        });
+        this.webSocketSessionManager.removeWebSocketSessionFromManagerWebSocketSessionByWebSocketSessionId(session);
 //        this.subscriber.unsubscribe(serversId);
     }
 
@@ -98,11 +110,13 @@ public class SocketTextHandler extends AbstractWebSocketHandler {
             case SEND:
                 ClientSendMessage send = clientMsg.getSend();
                 String content = send.getContent().toStringUtf8();
+                kafKaProducerService.sendMessage("add", clientMsg);
                 // send to kafka insert to db
                 // success to redis send to client
                 log.info("content: {}", content);
                 break;
             case SEEN:
+                kafKaProducerService.sendMessage("add", clientMsg);
                 break;
             default:
                 return;

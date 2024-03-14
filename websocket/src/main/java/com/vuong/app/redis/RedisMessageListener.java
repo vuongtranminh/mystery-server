@@ -69,12 +69,23 @@ public class RedisMessageListener implements MessageListener {
 //                .array();
         // send message to channel subcribe
 
-        Set<WebSocket> webSockets = this.webSocketSessionManager.getWebSocketsByServerId(channel);
-        webSockets.forEach(webSocket -> {
+//        Set<String> webSockets = this.webSocketSessionManager.getWebSocketsByServerId(channel);
+//        webSockets.forEach(webSocket -> {
+//            try {
+//                webSocket.getSession().sendMessage(new BinaryMessage(message.getBody()));
+//            } catch (IOException e) {
+//                log.error("NOT FOUND WS WITH: {}", webSocket);
+//            }
+//        });
+
+        Set<String> webSocketSessionIds = this.webSocketSessionManager.getWebSocketSessionIdsByServerId(channel);
+
+        webSocketSessionIds.forEach(webSocketSessionId -> {
+            WebSocketSession webSocketSession = this.webSocketSessionManager.getWebSocketSessionByWebSocketSessionId(webSocketSessionId);
             try {
-                webSocket.getSession().sendMessage(new BinaryMessage(message.getBody()));
+                webSocketSession.sendMessage(new BinaryMessage(message.getBody()));
             } catch (IOException e) {
-                log.error("NOT FOUND WS WITH: {}", webSocket);
+                log.error("NOT FOUND WS WITH: {}", webSocketSession);
             }
         });
 

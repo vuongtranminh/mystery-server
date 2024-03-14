@@ -24,11 +24,11 @@ public class OperationRunner implements CommandLineRunner {
     public void run(String... args) throws Exception {
         System.out.println("RUN 1");
         System.out.println("Insert data to db when start app in here!!!");
-//        GrpcGetServerIdsResponse response = this.serverClientService.getServerIds(GrpcGetServerIdsRequest.newBuilder().build());
-//        Set<String> serversId = new HashSet<>();
-//        response.getResultList().stream().forEach(serverId -> {
-//            serversId.add(serverId);
-//        });
-//        this.subscriber.subscribe(serversId);
+        GrpcGetServerIdsResponse response = this.serverClientService.getServerIds(GrpcGetServerIdsRequest.newBuilder().build());
+        Set<String> serversId = new HashSet<>();
+        response.getResultList().stream().forEach(serverId -> {
+            serversId.add(serverId);
+        });
+        this.subscriber.subscribe(serversId);
     }
 }

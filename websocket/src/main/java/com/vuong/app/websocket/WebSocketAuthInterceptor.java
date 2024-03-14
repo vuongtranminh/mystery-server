@@ -45,7 +45,7 @@ public class WebSocketAuthInterceptor implements HandshakeInterceptor {
         }
 
         String userId = tokenProvider.extractUserIdFromAccessToken(jwt);
-        attributes.put(WebSocketHelper.userIdKey, userId);
+        attributes.put(WebSocketHelper.USER_ID_KEY, userId);
 
         return true;
     }
