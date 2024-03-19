@@ -1,6 +1,7 @@
 package com.vuong.app.kafka;
 
 import com.google.protobuf.Message;
+import com.vuong.app.v1.discord.GrpcCreateMessageRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.producer.ProducerRecord;
@@ -19,6 +20,8 @@ public class KafKaProducerService {
 
     private static final String TOPIC = "user-topic";
 
+    private static final String PROTOBUF_TOPIC = "protobuf-topic";
+
 //    @Qualifier(KafkaProducerConfig.CREATE_USER_KAFKA_TEMPLATE_BEAN)
 //    private final KafkaTemplate<String, CreateUserEvent> createUserKafkaTemplate;
 //
@@ -26,25 +29,26 @@ public class KafKaProducerService {
 //    private final KafkaTemplate<String, UpdateUserEvent> updateUserKafkaTemplate;
 
     @Qualifier(KafkaProducerConfig.PROTOBUF_KAFKA_TEMPLATE_BEAN)
-    private final KafkaTemplate<String, Message> userKafkaTemplate;
+    private final KafkaTemplate<String, GrpcCreateMessageRequest> protobufKafkaTemplate;
 
 //    public KafKaProducerService(@Qualifier(KafkaProducerConfig.USER_KAFKA_TEMPLATE_BEAN) KafkaTemplate<String, UserEvent> userKafkaTemplate) {
 //        this.userKafkaTemplate = userKafkaTemplate;
 //    }
 
-    public void sendMessage(String key, Message data) {
-        ListenableFuture<SendResult<String, Message>> future = userKafkaTemplate.send(TOPIC, key, data);
-        future.addCallback(new KafkaSendCallback<String, Message>() {
+    public void sendMessage(String key, GrpcCreateMessageRequest data) {
+        log.info("Kafka pub: {} : {}", PROTOBUF_TOPIC, key);
+        ListenableFuture<SendResult<String, GrpcCreateMessageRequest>> future = protobufKafkaTemplate.send(PROTOBUF_TOPIC, key, data);
+        future.addCallback(new KafkaSendCallback<String, GrpcCreateMessageRequest>() {
 
             @Override
-            public void onSuccess(SendResult<String, Message> result) {
+            public void onSuccess(SendResult<String, GrpcCreateMessageRequest> result) {
                 log.info("Sent message: " + data
                         + " with offset: " + result.getRecordMetadata().offset());
             }
 
             @Override
             public void onFailure(KafkaProducerException ex) {
-                ProducerRecord<String, Message> failed = ex.getFailedProducerRecord();
+                ProducerRecord<String, GrpcCreateMessageRequest> failed = ex.getFailedProducerRecord();
                 log.error("Unable to send message : " + data, ex);
             }
 

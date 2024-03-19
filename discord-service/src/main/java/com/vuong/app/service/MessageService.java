@@ -22,6 +22,7 @@ import javax.sql.DataSource;
 import java.sql.SQLException;
 import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @GrpcService
@@ -30,6 +31,93 @@ public class MessageService extends MessageServiceGrpc.MessageServiceImplBase {
 
     private final SqlSession sqlSession;
     private final MessagePublisher messagePublisher;
+
+    public void createMessageWS(GrpcCreateMessageRequest request) {
+        String GET_MEMBER_QUERY = "select " +
+                "tbl_member.id as member_id, tbl_member.role as member_role, tbl_member.server_id as member_server_id, tbl_member.join_at as member_join_at, " +
+                "tbl_profile.id as profile_id, tbl_profile.name as profile_name, tbl_profile.avt_url as profile_avt_url " +
+                "from tbl_member inner join tbl_profile " +
+                "on tbl_member.profile_id = tbl_profile.id " +
+                "where tbl_member.profile_id = ? and tbl_member.server_id = (select tbl_channel.server_id from tbl_channel where tbl_channel.id = ?)";
+        String INSERT_MESSAGE_QUERY = "insert into tbl_message(id, content, file_url, channel_id, created_by, created_at, updated_at) values(?, ?, ?, ?, ?, ?, ?)";
+
+        try {
+            sqlSession.openSession();
+
+            GrpcMessageEvent.GrpcMemberProfile memberProfile = JdbcClient.sql(GET_MEMBER_QUERY)
+                    .setString(1, request.getProfileId())
+                    .setString(2, request.getChannelId())
+                    .query(rs -> {
+                        while (rs.next()) { // no permistion
+                            return GrpcMessageEvent.GrpcMemberProfile.newBuilder()
+                                    .setMemberId(rs.getString(1))
+                                    .setRole(GrpcMessageEvent.GrpcMemberRole.forNumber(rs.getInt(2)))
+                                    .setServerId(rs.getString(3))
+                                    .setJoinAt(rs.getString(4))
+                                    .setProfileId(rs.getString(5))
+                                    .setName(rs.getString(6))
+                                    .setAvtUrl(rs.getString(7))
+                                    .build();
+                        }
+
+                        return null;
+                    });
+
+            if (memberProfile == null) {
+                return; // return error
+            }
+
+            String messageId = UUID.randomUUID().toString();
+            Instant now = Instant.now();
+            String createdAt = now.toString();
+            String updatedAt = now.toString();
+
+            JdbcClient.sql(INSERT_MESSAGE_QUERY)
+                    .setString(1, messageId)
+                    .setString(2, request.hasContent() ? request.getContent() : null)
+                    .setString(3, request.hasFileUrl() ? request.getFileUrl() : null)
+                    .setString(4, request.getChannelId())
+                    .setString(5, memberProfile.getProfileId())
+                    .setString(6, createdAt)
+                    .setString(7, updatedAt)
+                    .insert();
+
+            GrpcMessageEvent.GrpcMessage.Builder builder = GrpcMessageEvent.GrpcMessage.newBuilder();
+            builder.setMessageId(messageId);
+            if (request.hasContent()) {
+                builder.setContent(request.getContent());
+            }
+            if (request.hasFileUrl()) {
+                builder.setFileUrl(request.getFileUrl());
+            }
+            builder.setChannelId(request.getChannelId());
+            builder.setCreatedAt(createdAt);
+            builder.setUpdatedAt(updatedAt);
+            builder.setAuthor(memberProfile);
+
+            GrpcMessageEvent.GrpcMessage grpcMessage = builder.build();
+
+            GrpcMessageEvent grpcMessageEvent = GrpcMessageEvent.newBuilder()
+                    .setType(GrpcMessageEvent.GrpcMessageEventType.MESSAGE_EVENT_TYPE_ADD)
+                    .setData(grpcMessage)
+                    .build();
+
+            GrpcEvent grpcEvent = GrpcEvent.newBuilder()
+                    .setMessageEvent(grpcMessageEvent)
+                    .build();
+
+//            this.messagePublisher.publish(memberProfile.getServerId(), grpcEvent);
+
+            GrpcCreateMessageResponse response = GrpcCreateMessageResponse.newBuilder()
+                    .setMessageId(messageId)
+                    .build();
+
+        } catch (JdbcDataAccessException ex) {
+            sqlSession.rollback();
+        } finally {
+            sqlSession.closeConnection();
+        }
+    }
 
     @Override
     public void createMessage(GrpcCreateMessageRequest request, StreamObserver<GrpcCreateMessageResponse> responseObserver) {
@@ -189,9 +277,10 @@ public class MessageService extends MessageServiceGrpc.MessageServiceImplBase {
                             String profileIdOwnerMessage = rs.getString(6);
                             memberProfileBuilder.setProfileId(profileIdOwnerMessage);
                             memberProfileBuilder.setName(rs.getString(7));
-                            if (rs.getString(8) != null) {
-                                memberProfileBuilder.setAvtUrl(rs.getString(8));
-                            }
+//                            if (rs.getString(8) != null) {
+//                                memberProfileBuilder.setAvtUrl(rs.getString(8));
+//                            }
+                            Optional.ofNullable(rs.getString(8)).ifPresent(memberProfileBuilder::setAvtUrl);
                             return List.of(serverId, profileIdOwnerMessage);
                         }
                         return null;

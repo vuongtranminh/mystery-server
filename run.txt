@@ -1,3 +1,5 @@
 run redis
 run kafka
 gen GRPC: mvn clean compile
+
+mvn --projects websocket --also-make clean dependency:copy-dependencies install

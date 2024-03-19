@@ -1,6 +1,7 @@
 package com.vuong.app.kafka;
 
 import com.google.protobuf.Message;
+import com.vuong.app.v1.discord.GrpcCreateMessageRequest;
 import io.confluent.kafka.serializers.protobuf.KafkaProtobufSerializer;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.StringSerializer;
@@ -39,16 +40,17 @@ public class KafkaProducerConfig {
 
     // 3. Send Event objects to Kafka
     @Bean
-    public ProducerFactory<String, Message> protobufProducerFactory() {
+    public ProducerFactory<String, GrpcCreateMessageRequest> protobufProducerFactory() {
         Map<String, Object> configProps = new HashMap<>();
         configProps.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
-        configProps.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
-        configProps.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, KafkaProtobufSerializer.class);
+        configProps.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
+        configProps.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, KafkaProtobufSerializer.class.getName());
+        configProps.put("schema.registry.url", "http://127.0.0.1:8081");
         return new DefaultKafkaProducerFactory<>(configProps);
     }
 
     @Bean(PROTOBUF_KAFKA_TEMPLATE_BEAN)
-    public KafkaTemplate<String, Message> protobufKafkaTemplate(ProducerFactory<String, Message> protobufProducerFactory) {
+    public KafkaTemplate<String, GrpcCreateMessageRequest> protobufKafkaTemplate(ProducerFactory<String, GrpcCreateMessageRequest> protobufProducerFactory) {
         return new KafkaTemplate<>(protobufProducerFactory);
     }
 

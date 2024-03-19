@@ -7,6 +7,7 @@ import com.vuong.app.redis.RedisMessageSubscriber;
 import com.vuong.app.redis.serializer.ProtobufSerializer;
 import com.vuong.app.v1.ClientMsg;
 import com.vuong.app.v1.ClientSendMessage;
+import com.vuong.app.v1.discord.GrpcCreateMessageRequest;
 import com.vuong.app.v1.discord.GrpcGetServerJoinIdsRequest;
 import com.vuong.app.v1.discord.GrpcGetServerJoinIdsResponse;
 import lombok.extern.slf4j.Slf4j;
@@ -29,6 +30,8 @@ public class WebSocketHandler extends AbstractWebSocketHandler {
     private final ProtobufSerializer<ClientMsg> serializer;
     private final KafKaProducerService kafKaProducerService;
 
+    private static final String CREATE_MESSAGE_KEY = "create-message-key";
+
     public WebSocketHandler(RedisMessageSubscriber subscriber, ServerClientService serverClientService, WebSocketSessionManager webSocketSessionManager, KafKaProducerService kafKaProducerService) {
         this.webSocketSessionManager = webSocketSessionManager;
         this.subscriber = subscriber;
@@ -36,6 +39,13 @@ public class WebSocketHandler extends AbstractWebSocketHandler {
         this.kafKaProducerService = kafKaProducerService;
         this.serializer = new ProtobufSerializer<>(ClientMsg.class);
     }
+
+//    public WebSocketHandler(RedisMessageSubscriber subscriber, ServerClientService serverClientService, WebSocketSessionManager webSocketSessionManager) {
+//        this.webSocketSessionManager = webSocketSessionManager;
+//        this.subscriber = subscriber;
+//        this.serverClientService = serverClientService;
+//        this.serializer = new ProtobufSerializer<>(ClientMsg.class);
+//    }
 
     @Override
     public void afterConnectionEstablished(WebSocketSession session) {
@@ -110,13 +120,25 @@ public class WebSocketHandler extends AbstractWebSocketHandler {
             case SEND:
                 ClientSendMessage send = clientMsg.getSend();
                 String content = send.getContent().toStringUtf8();
-                kafKaProducerService.sendMessage("add", clientMsg);
+                log.info("content: {}", content);
+
+                GrpcCreateMessageRequest request = GrpcCreateMessageRequest.newBuilder()
+                        .setContent(content)
+                        .setFileUrl("")
+                        .setChannelId(send.getTopicId())
+                        .setProfileId(WebSocketHelper.getUserIdFromSessionAttribute(session))
+                        .build();
+                try {
+                    kafKaProducerService.sendMessage(CREATE_MESSAGE_KEY, request);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+
                 // send to kafka insert to db
                 // success to redis send to client
-                log.info("content: {}", content);
                 break;
             case SEEN:
-                kafKaProducerService.sendMessage("add", clientMsg);
+//                kafKaProducerService.sendMessage("add", clientMsg);
                 break;
             default:
                 return;
