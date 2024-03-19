@@ -128,11 +128,8 @@ public class WebSocketHandler extends AbstractWebSocketHandler {
                         .setChannelId(send.getTopicId())
                         .setProfileId(WebSocketHelper.getUserIdFromSessionAttribute(session))
                         .build();
-                try {
-                    kafKaProducerService.sendMessage(CREATE_MESSAGE_KEY, request);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
+
+                kafKaProducerService.sendMessage(CREATE_MESSAGE_KEY, request);
 
                 // send to kafka insert to db
                 // success to redis send to client
