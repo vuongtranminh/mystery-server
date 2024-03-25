@@ -51,14 +51,4 @@
 		<module>websocket</module>
 	</modules>
 
-	<build>
-		<plugins>
-			<plugin>
-				<groupId>org.springframework.boot</groupId>
-				<artifactId>spring-boot-maven-plugin</artifactId>
-			</plugin>
-		</plugins>
-		<finalName>${project.artifactId}-v${project.version}</finalName>
-	</build>
-
 </project>

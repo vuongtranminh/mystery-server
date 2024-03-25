@@ -1,0 +1,43 @@
+Say Parent pom.xml contains 6 modules and you want to run A, B and F.
+
+<modules>
+        <module>A</module>
+        <module>B</module>
+        <module>C</module>
+        <module>D</module>
+        <module>E</module>
+        <module>F</module>
+  </modules>
+1- cd into parent project
+
+ mvn --projects A,B,F --also-make clean install
+OR
+
+mvn -pl A,B,F -am clean install
+OR
+
+mvn -pl A,B,F -amd clean install
+Note: When you specify a project with the -am option, Maven will build all of the projects that the specified project depends upon (either directly or indirectly). Maven will examine the list of projects and walk down the dependency tree, finding all of the projects that it needs to build.
+
+While the -am command makes all of the projects required by a particular project in a multi-module build, the -amd or --also-make-dependents option configures Maven to build a project and any project that depends on that project. When using --also-make-dependents, Maven will examine all of the projects in our reactor to find projects that depend on a particular project. It will automatically build those projects and nothing else.
+
+
+
+
+Sao chép thư viện phụ thuộc
+Nếu bạn sử dụng thư viện phụ thuộc được cấu hình trong thẻ <dependencies></dependencies> (giống như thư viện junit) thì sử dụng lệnh sau để tải các thư viện vào thư mục /dependency
+
+mvn clean dependency:copy-dependencies package
+
+Guide to installing 3rd party JARs
+mvn install:install-file -Dfile=<path-to-file> -DgroupId=<group-id> -DartifactId=<artifact-id> -Dversion=<version> -Dpackaging=<packaging>
+
+exe: mvn install:install-file -Dfile=common-core-v0.0.1.jar -DgroupId=com.vuong -DartifactId=common-core -Dversion=0.0.1 -Dpackaging=jar
+
+
+* Note: Lỗi không tìm thấy class khi package module con thành công nhưng package module cha lỗi: do k tìm thấy các class con ở module cha, nhưng chạy compile thì được
+- Xóa phần build chung ở pom chung, để module con không chứa phần build
+- Xóa các class spring boot main, test trong module con đi, hoặc dùng script nào đó của maven thêm vào pom để loại bỏ main và test class của spring boot đi
+
+.\mvnw là maven wrapper cho phép chạy maven khi k cần cài trong máy tính
+.\mvnw package <=> mvn package
