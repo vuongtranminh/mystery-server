@@ -1,0 +1,9 @@
+
+version: '3'
+services:
+  proxy-client-container:
+    image: mystery/proxy-client-app:0.0.1
+    ports:
+      - 8900:8900
+    environment:
+      - SPRING_PROFILES_ACTIVE=dev

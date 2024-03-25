@@ -1,3 +1,5 @@
+https://maven.apache.org/guides/mini/guide-multiple-modules.html
+
 Say Parent pom.xml contains 6 modules and you want to run A, B and F.
 
 <modules>
@@ -41,3 +43,6 @@ exe: mvn install:install-file -Dfile=common-core-v0.0.1.jar -DgroupId=com.vuong 
 
 .\mvnw là maven wrapper cho phép chạy maven khi k cần cài trong máy tính
 .\mvnw package <=> mvn package
+
+
+selim@:~/ecommerce-microservice-backend-app$ docker-compose -f compose.yml up
